@@ -6,6 +6,7 @@ import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 
 import '../../features/access/presentation/pages/access_page.dart';
 import '../../features/billing/presentation/pages/billing_page.dart';
+import '../../features/facility/presentation/pages/facility_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -44,6 +45,10 @@ class AppRouter {
             builder: (context, state) => const ProfilePage(),
           ),
         ],
+      ),
+      GoRoute(
+        path: '/facility',
+        builder: (context, state) => const FacilityPage(),
       ),
     ],
   );
