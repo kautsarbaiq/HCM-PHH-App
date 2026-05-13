@@ -5,12 +5,7 @@ import '../../features/main/presentation/pages/main_navigation_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 
 import '../../features/access/presentation/pages/access_page.dart';
-
-class BillsPage extends StatelessWidget {
-  const BillsPage({super.key});
-  @override
-  Widget build(BuildContext context) => const Center(child: Text('Bills Page'));
-}
+import '../../features/billing/presentation/pages/billing_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -42,7 +37,7 @@ class AppRouter {
           ),
           GoRoute(
             path: '/bills',
-            builder: (context, state) => const BillsPage(),
+            builder: (context, state) => const BillingPage(),
           ),
           GoRoute(
             path: '/profile',
