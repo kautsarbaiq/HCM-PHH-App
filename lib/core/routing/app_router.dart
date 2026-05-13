@@ -4,12 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/main/presentation/pages/main_navigation_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 
-// Placeholder Pages for now
-class AccessPage extends StatelessWidget {
-  const AccessPage({super.key});
-  @override
-  Widget build(BuildContext context) => const Center(child: Text('Access Page'));
-}
+import '../../features/access/presentation/pages/access_page.dart';
 
 class BillsPage extends StatelessWidget {
   const BillsPage({super.key});
