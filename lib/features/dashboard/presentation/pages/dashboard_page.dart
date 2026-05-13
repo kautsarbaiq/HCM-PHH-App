@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../../theme/app_colors.dart';
+import 'package:hcm_app/theme/app_colors.dart';
 import '../widgets/notice_slider.dart';
 import '../widgets/quick_action_item.dart';
 

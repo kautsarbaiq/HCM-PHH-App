@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import '../../../theme/app_colors.dart';
+import 'package:hcm_app/theme/app_colors.dart';
 
 class MainNavigationPage extends StatelessWidget {
   final Widget child;
