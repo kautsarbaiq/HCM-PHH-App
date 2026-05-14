@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/widgets/action_button.dart';
 import '../../../../theme/app_colors.dart';
@@ -61,9 +63,21 @@ class CommunityPage extends ConsumerWidget {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
               child: _buildHeader(),
             ),
+            // Category Filter Chips
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: [
+                  _buildFilterChip(context, icon: PhosphorIconsRegular.calendarCheck, label: 'Events', route: '/events'),
+                  const SizedBox(width: 10),
+                  _buildFilterChip(context, icon: PhosphorIconsRegular.chartBar, label: 'E-Polling', route: '/epolling'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: _buildSegmentedControl(ref, tabIndex),
@@ -208,6 +222,30 @@ class CommunityPage extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildFilterChip(BuildContext context, {required IconData icon, required String label, required String route}) {
+    return GestureDetector(
+      onTap: () => context.push(route),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.primaryWhite.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.glassBorder),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: AppColors.sageGreen),
+            const SizedBox(width: 6),
+            Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+            const SizedBox(width: 4),
+            Icon(PhosphorIconsRegular.caretRight, size: 14, color: AppColors.textSecondary.withOpacity(0.5)),
+          ],
+        ),
+      ),
     );
   }
 }

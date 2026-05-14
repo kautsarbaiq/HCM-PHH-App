@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:hcm_app/theme/app_colors.dart';
+import '../../../emergency/presentation/widgets/emergency_bottom_sheet.dart';
+import '../widgets/app_drawer.dart';
+
+final GlobalKey<ScaffoldState> mainScaffoldKey = GlobalKey<ScaffoldState>();
 
 class MainNavigationPage extends StatelessWidget {
   final Widget child;
@@ -20,18 +24,10 @@ class MainNavigationPage extends StatelessWidget {
 
   void _onItemTapped(int index, BuildContext context) {
     switch (index) {
-      case 0:
-        context.go('/home');
-        break;
-      case 1:
-        context.go('/access');
-        break;
-      case 2:
-        context.go('/bills');
-        break;
-      case 3:
-        context.go('/community');
-        break;
+      case 0: context.go('/home'); break;
+      case 1: context.go('/access'); break;
+      case 2: context.go('/bills'); break;
+      case 3: context.go('/community'); break;
     }
   }
 
@@ -40,9 +36,42 @@ class MainNavigationPage extends StatelessWidget {
     final int currentIndex = _calculateSelectedIndex(context);
 
     return Scaffold(
+      key: mainScaffoldKey,
+      drawer: const AppDrawer(),
       body: Stack(
         children: [
           child,
+          // SOS FAB
+          Positioned(
+            right: 24,
+            bottom: 120,
+            child: GestureDetector(
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => const EmergencyBottomSheet(),
+                );
+              },
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444).withOpacity(0.12),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.25), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(color: const Color(0xFFEF4444).withOpacity(0.15), blurRadius: 20, spreadRadius: 2),
+                  ],
+                ),
+                child: const Center(
+                  child: Icon(PhosphorIconsFill.warning, color: Color(0xFFEF4444), size: 24),
+                ),
+              ),
+            ),
+          ),
+          // Floating Nav Bar
           Positioned(
             left: 24,
             right: 24,
@@ -65,53 +94,16 @@ class MainNavigationPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.primaryWhite.withOpacity(0.7),
             borderRadius: BorderRadius.circular(32),
-            border: Border.all(
-              color: AppColors.glassBorder,
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadowColor,
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            border: Border.all(color: AppColors.glassBorder, width: 1.5),
+            boxShadow: [BoxShadow(color: AppColors.shadowColor, blurRadius: 24, offset: const Offset(0, 8))],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(
-                context,
-                index: 0,
-                currentIndex: currentIndex,
-                icon: PhosphorIconsRegular.house,
-                activeIcon: PhosphorIconsFill.house,
-                label: 'Home',
-              ),
-              _buildNavItem(
-                context,
-                index: 1,
-                currentIndex: currentIndex,
-                icon: PhosphorIconsRegular.qrCode,
-                activeIcon: PhosphorIconsFill.qrCode,
-                label: 'Access',
-              ),
-              _buildNavItem(
-                context,
-                index: 2,
-                currentIndex: currentIndex,
-                icon: PhosphorIconsRegular.receipt,
-                activeIcon: PhosphorIconsFill.receipt,
-                label: 'Bills',
-              ),
-              _buildNavItem(
-                context,
-                index: 3,
-                currentIndex: currentIndex,
-                icon: PhosphorIconsRegular.users,
-                activeIcon: PhosphorIconsFill.users,
-                label: 'Community',
-              ),
+              _buildNavItem(context, index: 0, currentIndex: currentIndex, icon: PhosphorIconsRegular.house, activeIcon: PhosphorIconsFill.house, label: 'Home'),
+              _buildNavItem(context, index: 1, currentIndex: currentIndex, icon: PhosphorIconsRegular.qrCode, activeIcon: PhosphorIconsFill.qrCode, label: 'Access'),
+              _buildNavItem(context, index: 2, currentIndex: currentIndex, icon: PhosphorIconsRegular.receipt, activeIcon: PhosphorIconsFill.receipt, label: 'Bills'),
+              _buildNavItem(context, index: 3, currentIndex: currentIndex, icon: PhosphorIconsRegular.users, activeIcon: PhosphorIconsFill.users, label: 'Community'),
             ],
           ),
         ),
@@ -119,16 +111,8 @@ class MainNavigationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(
-    BuildContext context, {
-    required int index,
-    required int currentIndex,
-    required IconData icon,
-    required IconData activeIcon,
-    required String label,
-  }) {
+  Widget _buildNavItem(BuildContext context, {required int index, required int currentIndex, required IconData icon, required IconData activeIcon, required String label}) {
     final isSelected = index == currentIndex;
-    
     return GestureDetector(
       onTap: () => _onItemTapped(index, context),
       behavior: HitTestBehavior.opaque,
@@ -142,20 +126,9 @@ class MainNavigationPage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: isSelected ? AppColors.sageGreen : AppColors.textSecondary,
-              size: 24,
-            ),
+            Icon(isSelected ? activeIcon : icon, color: isSelected ? AppColors.sageGreen : AppColors.textSecondary, size: 24),
             const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? AppColors.sageGreen : AppColors.textSecondary,
-              ),
-            ),
+            Text(label, style: TextStyle(fontSize: 10, fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500, color: isSelected ? AppColors.sageGreen : AppColors.textSecondary)),
           ],
         ),
       ),
