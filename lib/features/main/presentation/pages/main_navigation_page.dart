@@ -14,7 +14,7 @@ class MainNavigationPage extends StatelessWidget {
     if (location.startsWith('/home')) return 0;
     if (location.startsWith('/access')) return 1;
     if (location.startsWith('/bills')) return 2;
-    if (location.startsWith('/profile')) return 3;
+    if (location.startsWith('/community')) return 3;
     return 0;
   }
 
@@ -30,7 +30,7 @@ class MainNavigationPage extends StatelessWidget {
         context.go('/bills');
         break;
       case 3:
-        context.go('/profile');
+        context.go('/community');
         break;
     }
   }
@@ -108,9 +108,9 @@ class MainNavigationPage extends StatelessWidget {
                 context,
                 index: 3,
                 currentIndex: currentIndex,
-                icon: PhosphorIconsRegular.user,
-                activeIcon: PhosphorIconsFill.user,
-                label: 'Profile',
+                icon: PhosphorIconsRegular.users,
+                activeIcon: PhosphorIconsFill.users,
+                label: 'Community',
               ),
             ],
           ),

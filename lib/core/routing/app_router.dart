@@ -8,11 +8,7 @@ import '../../features/access/presentation/pages/access_page.dart';
 import '../../features/billing/presentation/pages/billing_page.dart';
 import '../../features/facility/presentation/pages/facility_page.dart';
 
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
-  @override
-  Widget build(BuildContext context) => const Center(child: Text('Profile Page'));
-}
+import '../../features/community/presentation/pages/community_page.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
@@ -41,8 +37,8 @@ class AppRouter {
             builder: (context, state) => const BillingPage(),
           ),
           GoRoute(
-            path: '/profile',
-            builder: (context, state) => const ProfilePage(),
+            path: '/community',
+            builder: (context, state) => const CommunityPage(),
           ),
         ],
       ),
