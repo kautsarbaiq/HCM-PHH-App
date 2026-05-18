@@ -7,7 +7,7 @@ import 'package:hcm_app/theme/app_colors.dart';
 import '../../../main/presentation/pages/main_navigation_page.dart';
 import '../../../access/presentation/widgets/smart_access_modal.dart';
 import '../../../emergency/presentation/widgets/emergency_bottom_sheet.dart';
-import '../widgets/notice_slider.dart';
+import '../widgets/booking_reminder_card.dart';
 import '../widgets/quick_action_item.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -24,7 +24,7 @@ class DashboardPage extends StatelessWidget {
             children: [
               _buildHeader(context),
               const SizedBox(height: 32),
-              const NoticeSlider().animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0),
+              const BookingReminderCard().animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0),
               const SizedBox(height: 32),
               _buildQuickActions(context),
               const SizedBox(height: 100),
@@ -36,46 +36,110 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            GestureDetector(
-              onTap: () => mainScaffoldKey.currentState?.openDrawer(),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.primaryWhite,
+        borderRadius: BorderRadius.circular(50),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Inner Pill for Profile & Name
+          Expanded(
+            child: GestureDetector(
+              onTap: () => context.push('/profile'),
               child: Container(
-                width: 44,
-                height: 44,
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryWhite,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.glassBorder, width: 1.5),
-                  boxShadow: [BoxShadow(color: AppColors.shadowColor, blurRadius: 10, offset: const Offset(0, 4))],
+                  color: AppColors.backgroundGrey.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(40),
+                  border: Border.all(color: Colors.black.withOpacity(0.03)),
                 ),
-                child: const Center(child: Icon(PhosphorIconsRegular.list, color: AppColors.deepSlate, size: 22)),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.primaryWhite,
+                      ),
+                      child: ClipOval(
+                        child: Image.network(
+                          'https://i.pravatar.cc/150?u=alex',
+                          errorBuilder: (context, error, stackTrace) => const Icon(PhosphorIconsRegular.user, color: AppColors.sageGreen),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Alex Morgan',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.deepSlate,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.transparent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(PhosphorIconsRegular.houseLine, size: 20, color: AppColors.deepSlate),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Good Morning,', style: TextStyle(fontSize: 16, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 4),
-                Text('Alex Morgan', style: TextStyle(fontSize: 28, color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ],
-        ).animate().fade(duration: 400.ms).slideX(begin: -0.1, end: 0),
-        Container(
-          width: 48, height: 48,
-          decoration: BoxDecoration(
-            color: AppColors.sageGreen.withOpacity(0.1), shape: BoxShape.circle,
-            border: Border.all(color: AppColors.sageGreen.withOpacity(0.3), width: 1.5),
           ),
-          child: const Center(child: Icon(PhosphorIconsRegular.bell, color: AppColors.sageGreen, size: 24)),
-        ).animate().fade(duration: 400.ms).scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1)),
-      ],
-    );
+          const SizedBox(width: 10),
+          // Menu Button (replacing the QR in the image)
+          GestureDetector(
+            onTap: () => mainScaffoldKey.currentState?.openDrawer(),
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.sageGreen.withOpacity(0.3),
+                  style: BorderStyle.none, // Match the dashed look if needed, but let's keep it clean
+                ),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Dotted border effect simulation
+                  const SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: CircularProgressIndicator(
+                      value: 0.8,
+                      strokeWidth: 1,
+                      backgroundColor: Colors.transparent,
+                      color: AppColors.sageGreen,
+                    ),
+                  ),
+                  const Icon(PhosphorIconsRegular.list, color: AppColors.deepSlate, size: 24),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fade(duration: 400.ms).slideY(begin: -0.2, end: 0);
   }
 
   Widget _buildQuickActions(BuildContext context) {

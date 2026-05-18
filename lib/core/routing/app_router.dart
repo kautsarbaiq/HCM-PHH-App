@@ -7,6 +7,7 @@ import '../../features/access/presentation/pages/access_page.dart';
 import '../../features/billing/presentation/pages/billing_page.dart';
 import '../../features/facility/presentation/pages/facility_page.dart';
 import '../../features/community/presentation/pages/community_page.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/egovernance/presentation/pages/eform_page.dart';
 import '../../features/egovernance/presentation/pages/edocument_page.dart';
 import '../../features/events/presentation/pages/events_page.dart';
@@ -37,6 +38,7 @@ class AppRouter {
         ],
       ),
       // Standalone pages (no bottom nav)
+      GoRoute(path: '/profile', builder: (context, state) => const ProfilePage()),
       GoRoute(path: '/facility', builder: (context, state) => const FacilityPage()),
       GoRoute(path: '/eform', builder: (context, state) => const EFormPage()),
       GoRoute(path: '/edocument', builder: (context, state) => const EDocumentPage()),

@@ -25,7 +25,7 @@ class AppDrawer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildProfileHeader(),
+                  _buildProfileHeader(context),
                   const SizedBox(height: 8),
                   Expanded(
                     child: ListView(
@@ -114,56 +114,56 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: AppColors.sageGreen.withOpacity(0.15),
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.sageGreen.withOpacity(0.3), width: 2),
-            ),
-            child: const Center(
-              child: Text(
-                'AM',
-                style: TextStyle(
-                  color: AppColors.sageGreen,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
+  Widget _buildProfileHeader(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        context.push('/profile');
+      },
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.sageGreen.withOpacity(0.3), width: 2),
+                image: const DecorationImage(
+                  image: NetworkImage('https://i.pravatar.cc/150?u=alex'),
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Alex Morgan',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Alex Morgan',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Unit A-12-03',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                  const SizedBox(height: 2),
+                  Text(
+                    'Unit A-18-08',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            Icon(PhosphorIconsRegular.caretRight, size: 18, color: AppColors.textSecondary.withOpacity(0.5)),
+          ],
+        ),
       ),
     );
   }

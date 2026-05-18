@@ -8,6 +8,7 @@ import '../../../../core/widgets/action_button.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/notice_card.dart';
 import '../widgets/ticket_card.dart';
+import 'package:hcm_app/features/dashboard/presentation/widgets/notice_slider.dart';
 
 // State Management
 final communityTabIndexProvider = StateProvider<int>((ref) => 0);
@@ -167,19 +168,30 @@ class CommunityPage extends ConsumerWidget {
   Widget _buildNoticeBoard(WidgetRef ref) {
     final notices = ref.watch(noticesProvider);
 
-    return ListView.separated(
+    return ListView(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
-      itemCount: notices.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        final notice = notices[index];
-        return NoticeCard(
-          title: notice['title'],
-          description: notice['description'],
-          date: notice['date'],
-          isUrgent: notice['isUrgent'],
-        );
-      },
+      children: [
+        const NoticeSlider().animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0),
+        const SizedBox(height: 24),
+        const Text(
+          'All Announcements',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...notices.map((notice) => Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: NoticeCard(
+            title: notice['title'],
+            description: notice['description'],
+            date: notice['date'],
+            isUrgent: notice['isUrgent'],
+          ),
+        )),
+      ],
     );
   }
 

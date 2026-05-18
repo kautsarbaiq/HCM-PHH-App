@@ -85,25 +85,42 @@ class MainNavigationPage extends StatelessWidget {
 
   Widget _buildFloatingNavBar(BuildContext context, int currentIndex) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(32),
+      borderRadius: BorderRadius.circular(35),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
-          height: 72,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          height: 80,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
-            color: AppColors.primaryWhite.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(32),
-            border: Border.all(color: AppColors.glassBorder, width: 1.5),
-            boxShadow: [BoxShadow(color: AppColors.shadowColor, blurRadius: 24, offset: const Offset(0, 8))],
+            color: AppColors.primaryWhite.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(35),
+            border: Border.all(
+              color: AppColors.sageGreen.withOpacity(0.3),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              )
+            ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(context, index: 0, currentIndex: currentIndex, icon: PhosphorIconsRegular.house, activeIcon: PhosphorIconsFill.house, label: 'Home'),
-              _buildNavItem(context, index: 1, currentIndex: currentIndex, icon: PhosphorIconsRegular.qrCode, activeIcon: PhosphorIconsFill.qrCode, label: 'Access'),
-              _buildNavItem(context, index: 2, currentIndex: currentIndex, icon: PhosphorIconsRegular.receipt, activeIcon: PhosphorIconsFill.receipt, label: 'Bills'),
-              _buildNavItem(context, index: 3, currentIndex: currentIndex, icon: PhosphorIconsRegular.users, activeIcon: PhosphorIconsFill.users, label: 'Community'),
+              Expanded(
+                child: _buildNavItem(context, index: 0, currentIndex: currentIndex, icon: PhosphorIconsRegular.house, activeIcon: PhosphorIconsFill.house, label: 'Home'),
+              ),
+              Expanded(
+                child: _buildNavItem(context, index: 1, currentIndex: currentIndex, icon: PhosphorIconsRegular.qrCode, activeIcon: PhosphorIconsFill.qrCode, label: 'Access'),
+              ),
+              Expanded(
+                child: _buildNavItem(context, index: 2, currentIndex: currentIndex, icon: PhosphorIconsRegular.receipt, activeIcon: PhosphorIconsFill.receipt, label: 'Bills'),
+              ),
+              Expanded(
+                child: _buildNavItem(context, index: 3, currentIndex: currentIndex, icon: PhosphorIconsRegular.users, activeIcon: PhosphorIconsFill.users, label: 'Community'),
+              ),
             ],
           ),
         ),
@@ -118,7 +135,7 @@ class MainNavigationPage extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.sageGreen.withOpacity(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
