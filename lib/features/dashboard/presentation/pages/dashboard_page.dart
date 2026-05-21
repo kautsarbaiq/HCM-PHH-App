@@ -287,20 +287,24 @@ class _DashboardPageState extends State<DashboardPage> {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              // Bottom-right decorative illustration icons (trees, bicycle, buildings)
+              // Beautiful Overlapping Cityscape Skyline Silhouette
               Positioned(
-                bottom: -20,
-                right: -10,
+                bottom: -24,
+                right: -12,
                 child: Opacity(
                   opacity: 0.08,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: const [
-                      Icon(PhosphorIconsRegular.tree, size: 36, color: AppColors.deepSlate),
-                      SizedBox(width: 6),
-                      Icon(PhosphorIconsRegular.bicycle, size: 30, color: AppColors.deepSlate),
-                      SizedBox(width: 6),
-                      Icon(PhosphorIconsRegular.buildings, size: 48, color: AppColors.deepSlate),
+                      Icon(PhosphorIconsFill.tree, size: 34, color: AppColors.deepSlate),
+                      SizedBox(width: 12),
+                      Icon(PhosphorIconsFill.building, size: 42, color: AppColors.deepSlate),
+                      SizedBox(width: 12),
+                      Icon(PhosphorIconsFill.buildings, size: 58, color: AppColors.deepSlate),
+                      SizedBox(width: 10),
+                      Icon(PhosphorIconsFill.tree, size: 30, color: AppColors.deepSlate),
+                      SizedBox(width: 10),
+                      Icon(PhosphorIconsFill.building, size: 46, color: AppColors.deepSlate),
                     ],
                   ),
                 ),
@@ -315,7 +319,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   
                   // Slider container
                   SizedBox(
-                    height: 125,
+                    height: 155,
                     child: PageView.builder(
                       controller: _pageController,
                       onPageChanged: (index) {
