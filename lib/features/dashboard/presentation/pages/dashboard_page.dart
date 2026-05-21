@@ -72,7 +72,7 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             _buildTopHeader(context),
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+              padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
               child: _buildOutstandingBanner(context),
             ),
             Padding(
