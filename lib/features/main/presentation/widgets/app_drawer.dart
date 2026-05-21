@@ -131,7 +131,7 @@ class AppDrawer extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.sageGreen.withOpacity(0.3), width: 2),
                 image: const DecorationImage(
-                  image: NetworkImage('https://i.pravatar.cc/150?u=alex'),
+                  image: NetworkImage('https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80'),
                   fit: BoxFit.cover,
                 ),
               ),

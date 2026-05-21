@@ -72,6 +72,10 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             _buildTopHeader(context),
             Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+              child: _buildOutstandingBanner(context),
+            ),
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: _buildQuickActions(context),
             ),
@@ -80,6 +84,125 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildOutstandingBanner(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFE3F3FD), // Soft baby sky blue
+            Color(0xFFFEF9C3), // Soft pale golden yellow
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.black.withOpacity(0.04),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Your Outstanding',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary.withOpacity(0.8),
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF10B981), // Vibrant modern emerald green
+                            Color(0xFF059669), // Premium forest green
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF10B981).withOpacity(0.35),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          PhosphorIconsBold.check,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'All Cleared!',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.deepSlate,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () => context.go('/bills'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0284C7),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0284C7).withOpacity(0.25),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Text(
+                'View Invoice',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -120,7 +243,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                       child: ClipOval(
                         child: Image.network(
-                          'https://i.pravatar.cc/150?u=alex',
+                          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80',
                           errorBuilder: (context, error, stackTrace) => const Icon(PhosphorIconsRegular.user, color: AppColors.sageGreen),
                           fit: BoxFit.cover,
                         ),
@@ -160,27 +283,16 @@ class _DashboardPageState extends State<DashboardPage> {
               height: 48,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                color: AppColors.backgroundGrey.withOpacity(0.5),
                 border: Border.all(
-                  color: AppColors.sageGreen.withOpacity(0.3),
-                  style: BorderStyle.none, // Match the dashed look if needed, but let's keep it clean
+                  color: Colors.black.withOpacity(0.03),
+                  width: 1,
                 ),
               ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Dotted border effect simulation
-                  const SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: CircularProgressIndicator(
-                      value: 0.8,
-                      strokeWidth: 1,
-                      backgroundColor: Colors.transparent,
-                      color: AppColors.sageGreen,
-                    ),
-                  ),
-                  const Icon(PhosphorIconsRegular.list, color: AppColors.deepSlate, size: 24),
-                ],
+              child: const Icon(
+                PhosphorIconsRegular.list,
+                color: AppColors.deepSlate,
+                size: 24,
               ),
             ),
           ),
@@ -271,7 +383,7 @@ class _DashboardPageState extends State<DashboardPage> {
       child: ClipPath(
         clipper: TopHeaderWaveClipper(),
         child: Container(
-          padding: EdgeInsets.fromLTRB(24, topPadding + 16, 24, 64),
+          padding: EdgeInsets.fromLTRB(24, topPadding + 12, 24, 40),
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -287,25 +399,45 @@ class _DashboardPageState extends State<DashboardPage> {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              // Beautiful Overlapping Cityscape Skyline Silhouette
+              // Beautiful Cityscape Skyline Silhouette
+              // 🌳 Tree 1 (Large) positioned perfectly on the left part of the wave
               Positioned(
-                bottom: -24,
-                right: -12,
+                bottom: -8,
+                right: 160,
                 child: Opacity(
                   opacity: 0.08,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: const [
-                      Icon(PhosphorIconsFill.tree, size: 34, color: AppColors.deepSlate),
-                      SizedBox(width: 12),
-                      Icon(PhosphorIconsFill.building, size: 42, color: AppColors.deepSlate),
-                      SizedBox(width: 12),
-                      Icon(PhosphorIconsFill.buildings, size: 58, color: AppColors.deepSlate),
-                      SizedBox(width: 10),
-                      Icon(PhosphorIconsFill.tree, size: 30, color: AppColors.deepSlate),
-                      SizedBox(width: 10),
-                      Icon(PhosphorIconsFill.building, size: 46, color: AppColors.deepSlate),
-                    ],
+                  child: const Icon(
+                    PhosphorIconsFill.tree,
+                    size: 48,
+                    color: AppColors.deepSlate,
+                  ),
+                ),
+              ),
+              
+              // 🌳 Tree 2 (Medium) positioned in the middle-left, sitting perfectly on the wave curve
+              Positioned(
+                bottom: 4,
+                right: 110,
+                child: Opacity(
+                  opacity: 0.08,
+                  child: const Icon(
+                    PhosphorIconsFill.tree,
+                    size: 38,
+                    color: AppColors.deepSlate,
+                  ),
+                ),
+              ),
+              
+              // 🏢 Buildings (Apartment) positioned further down on the far right dipping part of the wave
+              Positioned(
+                bottom: -20,
+                right: -4,
+                child: Opacity(
+                  opacity: 0.08,
+                  child: const Icon(
+                    PhosphorIconsFill.building,
+                    size: 92,
+                    color: AppColors.deepSlate,
                   ),
                 ),
               ),
@@ -315,7 +447,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeader(context),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
                   
                   // Slider container
                   SizedBox(
@@ -394,7 +526,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   
                   // Slider indicators at the bottom left with micro-animations
                   Row(

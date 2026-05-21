@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../theme/app_colors.dart';
 import '../widgets/bill_card.dart';
@@ -72,7 +74,7 @@ class BillingPage extends ConsumerWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-              child: _buildHeader(),
+              child: _buildHeader(context),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -94,16 +96,41 @@ class BillingPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader() {
-    return const Row(
+  Widget _buildHeader(BuildContext context) {
+    return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
+        const Text(
           'Billing',
           style: TextStyle(
             fontSize: 28,
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
+          ),
+        ),
+        GestureDetector(
+          onTap: () => context.push('/profile'),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.sageGreen.withOpacity(0.3), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                )
+              ],
+            ),
+            child: ClipOval(
+              child: Image.network(
+                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80',
+                errorBuilder: (context, error, stackTrace) => const Icon(PhosphorIconsRegular.user, color: AppColors.sageGreen),
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
         ),
       ],
