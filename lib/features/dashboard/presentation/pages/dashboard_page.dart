@@ -310,26 +310,32 @@ class _DashboardPageState extends State<DashboardPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            QuickActionItem(
-              icon: PhosphorIconsRegular.warningCircle,
-              label: 'Panic\nButton',
-              color: AppColors.error,
-              onTap: () {
-                showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
-                  builder: (context) => const EmergencyBottomSheet());
-              },
+            Expanded(
+              child: QuickActionItem(
+                icon: PhosphorIconsFill.bellSimpleRinging,
+                label: 'Emergency',
+                color: AppColors.error,
+                onTap: () {
+                  showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
+                    builder: (context) => const EmergencyBottomSheet());
+                },
+              ),
             ),
-            QuickActionItem(
-              icon: PhosphorIconsRegular.qrCode,
-              label: 'Visitor\nAccess',
-              color: AppColors.sageGreen,
-              onTap: () => context.go('/access'),
+            Expanded(
+              child: QuickActionItem(
+                icon: PhosphorIconsFill.identificationCard,
+                label: 'Visitor Pass',
+                color: AppColors.sageGreen,
+                onTap: () => context.go('/access'),
+              ),
             ),
-            QuickActionItem(
-              icon: PhosphorIconsRegular.receipt,
-              label: 'Pay\nBills',
-              color: AppColors.deepSlate,
-              onTap: () => context.go('/bills'),
+            Expanded(
+              child: QuickActionItem(
+                icon: PhosphorIconsFill.wallet,
+                label: 'Bills & Pay',
+                color: AppColors.deepSlate,
+                onTap: () => context.go('/bills'),
+              ),
             ),
           ],
         ).animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0),
@@ -337,29 +343,35 @@ class _DashboardPageState extends State<DashboardPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            QuickActionItem(
-              icon: PhosphorIconsRegular.phone,
-              label: 'Mobile\nIntercom',
-              color: const Color(0xFF3B82F6),
-              onTap: () {
-                showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
-                  builder: (context) => const SmartAccessModal());
-              },
+            Expanded(
+              child: QuickActionItem(
+                icon: PhosphorIconsFill.phoneCall,
+                label: 'Intercom',
+                color: const Color(0xFF3B82F6),
+                onTap: () {
+                  showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
+                    builder: (context) => const SmartAccessModal(initialView: 1));
+                },
+              ),
             ),
-            QuickActionItem(
-              icon: PhosphorIconsRegular.lockOpen,
-              label: 'Access\nControl',
-              color: const Color(0xFF8B5CF6),
-              onTap: () {
-                showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
-                  builder: (context) => const SmartAccessModal());
-              },
+            Expanded(
+              child: QuickActionItem(
+                icon: PhosphorIconsFill.shieldCheck,
+                label: 'Smart Lock',
+                color: const Color(0xFF8B5CF6),
+                onTap: () {
+                  showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
+                    builder: (context) => const SmartAccessModal(initialView: 2));
+                },
+              ),
             ),
-            QuickActionItem(
-              icon: PhosphorIconsRegular.buildings,
-              label: 'Book\nFacility',
-              color: const Color(0xFFF59E0B),
-              onTap: () => context.push('/facility'),
+            Expanded(
+              child: QuickActionItem(
+                icon: PhosphorIconsFill.calendarCheck,
+                label: 'Bookings',
+                color: const Color(0xFFF59E0B),
+                onTap: () => context.push('/facility'),
+              ),
             ),
           ],
         ).animate().fade(duration: 400.ms, delay: 100.ms).slideY(begin: 0.1, end: 0),
