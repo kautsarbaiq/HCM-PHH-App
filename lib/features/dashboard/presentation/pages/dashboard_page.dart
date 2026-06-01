@@ -129,48 +129,52 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFF10B981), // Vibrant modern emerald green
-                            Color(0xFF059669), // Premium forest green
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF10B981), // Vibrant modern emerald green
+                              Color(0xFF059669), // Premium forest green
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF10B981).withOpacity(0.35),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
                           ],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF10B981).withOpacity(0.35),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
+                        child: const Center(
+                          child: Icon(
+                            PhosphorIconsBold.check,
+                            color: Colors.white,
+                            size: 14,
                           ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          PhosphorIconsBold.check,
-                          color: Colors.white,
-                          size: 14,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'All Cleared!',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.deepSlate,
-                        letterSpacing: -0.5,
+                      const SizedBox(width: 10),
+                      const Text(
+                        'All Cleared!',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.deepSlate,
+                          letterSpacing: -0.5,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
