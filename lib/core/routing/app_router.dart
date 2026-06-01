@@ -17,8 +17,20 @@ import '../../features/directory/presentation/pages/security_guard_page.dart';
 import '../../features/directory/presentation/pages/econtact_page.dart';
 import '../../features/marketplace/presentation/pages/market_square_page.dart';
 
+// Admin imports
+import '../../features/admin/presentation/pages/admin_login_page.dart';
+import '../../features/admin/presentation/widgets/admin_layout.dart';
+import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
+import '../../features/admin/presentation/pages/residents_admin_page.dart';
+import '../../features/admin/presentation/pages/houses_admin_page.dart';
+import '../../features/admin/presentation/pages/announcements_admin_page.dart';
+import '../../features/admin/presentation/pages/banners_admin_page.dart';
+import '../../features/admin/presentation/pages/billings_admin_page.dart';
+import '../../features/admin/presentation/pages/visitors_admin_page.dart';
+
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
+final GlobalKey<NavigatorState> _adminShellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'admin_shell');
 
 class AppRouter {
   static final router = GoRouter(
@@ -48,6 +60,24 @@ class AppRouter {
       GoRoute(path: '/security-guard', builder: (context, state) => const SecurityGuardPage()),
       GoRoute(path: '/econtact', builder: (context, state) => const EContactPage()),
       GoRoute(path: '/market-square', builder: (context, state) => const MarketSquarePage()),
+
+      // Admin Routes
+      GoRoute(path: '/admin', builder: (context, state) => const AdminLoginPage()),
+      ShellRoute(
+        navigatorKey: _adminShellNavigatorKey,
+        builder: (context, state, child) {
+          return AdminLayout(child: child);
+        },
+        routes: [
+          GoRoute(path: '/admin/dashboard', builder: (context, state) => const AdminDashboardPage()),
+          GoRoute(path: '/admin/residents', builder: (context, state) => const ResidentsAdminPage()),
+          GoRoute(path: '/admin/houses', builder: (context, state) => const HousesAdminPage()),
+          GoRoute(path: '/admin/announcements', builder: (context, state) => const AnnouncementsAdminPage()),
+          GoRoute(path: '/admin/banners', builder: (context, state) => const BannersAdminPage()),
+          GoRoute(path: '/admin/billings', builder: (context, state) => const BillingsAdminPage()),
+          GoRoute(path: '/admin/visitors', builder: (context, state) => const VisitorsAdminPage()),
+        ],
+      ),
     ],
   );
 }
