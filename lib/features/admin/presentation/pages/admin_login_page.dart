@@ -38,8 +38,8 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       body: Center(
         child: SingleChildScrollView(
           child: Container(
-            width: 400,
-            padding: const EdgeInsets.all(40),
+            constraints: const BoxConstraints(maxWidth: 400),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),

@@ -8,7 +8,6 @@ class AdminLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Check if the screen is wide enough for a persistent sidebar
     final isDesktop = MediaQuery.of(context).size.width >= 1024;
 
     return Scaffold(
@@ -29,30 +28,18 @@ class AdminLayout extends StatelessWidget {
               ),
             ),
       body: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (isDesktop) _buildSidebar(context, isDesktop: true),
           Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (isDesktop) _buildTopBar(context),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: child,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+                    child: child, // Removed the constrained white container so pages can define their own cards
                   ),
                 ),
               ],
@@ -64,7 +51,6 @@ class AdminLayout extends StatelessWidget {
   }
 
   Widget _buildTopBar(BuildContext context) {
-    // Get current path to determine title
     final String location = GoRouterState.of(context).uri.path;
     String title = 'Dashboard';
     if (location.contains('residents')) title = 'Residents';
@@ -80,26 +66,28 @@ class AdminLayout extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Pages / Admin / $title',
-                style: const TextStyle(
-                  color: Color(0xFFA3AED0),
-                  fontSize: 14,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Pages / Admin / $title',
+                  style: const TextStyle(
+                    color: Color(0xFFA3AED0),
+                    fontSize: 14,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Color(0xFF2B3674),
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 4),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Color(0xFF2B3674),
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -115,6 +103,7 @@ class AdminLayout extends StatelessWidget {
               ],
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 const CircleAvatar(
                   radius: 18,
@@ -282,15 +271,16 @@ class _SidebarItem extends StatelessWidget {
                 size: 24,
               ),
               const SizedBox(width: 16),
-              Text(
-                title,
-                style: TextStyle(
-                  color: isSelected ? const Color(0xFF2B3674) : const Color(0xFFA3AED0),
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  fontSize: 16,
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: isSelected ? const Color(0xFF2B3674) : const Color(0xFFA3AED0),
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    fontSize: 16,
+                  ),
                 ),
               ),
-              if (isSelected) const Spacer(),
               if (isSelected)
                 Container(
                   width: 4,

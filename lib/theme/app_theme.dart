@@ -9,6 +9,15 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.backgroundGrey,
+      dividerColor: const Color(0xFFE0E5F2),
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFFE0E5F2),
+        thickness: 1,
+      ),
+      dataTableTheme: DataTableThemeData(
+        dividerThickness: 1,
+        headingRowColor: MaterialStateProperty.all(const Color(0xFFF4F7FE)),
+      ),
       colorScheme: const ColorScheme.light(
         primary: AppColors.sageGreen,
         secondary: AppColors.deepSlate,

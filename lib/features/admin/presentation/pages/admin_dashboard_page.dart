@@ -69,7 +69,7 @@ class AdminDashboardPage extends StatelessWidget {
 
   Widget _buildStatCard(String title, String value, IconData icon, Color iconColor) {
     return Container(
-      width: 250,
+      constraints: const BoxConstraints(minWidth: 200, maxWidth: 300),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -91,27 +91,29 @@ class AdminDashboardPage extends StatelessWidget {
             child: Icon(icon, color: iconColor, size: 28),
           ),
           const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Color(0xFFA3AED0),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Color(0xFFA3AED0),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: const TextStyle(
-                  color: Color(0xFF2B3674),
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: Color(0xFF2B3674),
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
