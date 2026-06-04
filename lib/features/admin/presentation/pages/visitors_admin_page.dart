@@ -364,105 +364,116 @@ class _VisitorsAdminPageState extends State<VisitorsAdminPage> {
                   borderRadius: BorderRadius.circular(16),
                   child: _visitors.isEmpty
                       ? const Center(child: Text('No visitors logged today', style: TextStyle(color: Color(0xFFA3AED0))))
-                      : Column(
-                          children: [
-                            // Full-width Table Header
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                              color: const Color(0xFFF4F7FE),
-                              child: Row(
-                                children: const [
-                                  Expanded(flex: 3, child: Text('Visitor Name', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 3, child: Text('Host (Resident)', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('Created By', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('Time In', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)), textAlign: TextAlign.right)),
-                                ],
-                              ),
-                            ),
-                            // Scrollable list of rows stretching to 100% width
-                            Expanded(
-                              child: ListView.builder(
-                                itemCount: _visitors.length,
-                                itemBuilder: (context, index) {
-                                  final v = _visitors[index];
-                                  final isCheckedIn = v.status == 'Checked In';
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                                    decoration: const BoxDecoration(
-                                      border: Border(bottom: BorderSide(color: Color(0xFFE0E5F2), width: 1)),
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            final tableWidth = constraints.maxWidth > 1000 ? constraints.maxWidth : 1000.0;
+                            return SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: SizedBox(
+                                width: tableWidth,
+                                child: Column(
+                                  children: [
+                                    // Full-width Table Header
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                      color: const Color(0xFFF4F7FE),
+                                      child: Row(
+                                        children: const [
+                                          Expanded(flex: 3, child: Text('Visitor Name', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 3, child: Text('Host (Resident)', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('Created By', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('Time In', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)), textAlign: TextAlign.right)),
+                                        ],
+                                      ),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(flex: 3, child: Text(v.visitorName, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)))),
-                                        Expanded(flex: 3, child: Text(v.hostResident, style: const TextStyle(color: Color(0xFF2B3674)))),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Align(
-                                            alignment: Alignment.centerLeft,
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFF4F7FE),
-                                                borderRadius: BorderRadius.circular(4),
-                                              ),
-                                              child: Text(v.createdBy, style: const TextStyle(color: Color(0xFF2B3674), fontSize: 12)),
+                                    // Scrollable list of rows stretching to 100% width
+                                    Expanded(
+                                      child: ListView.builder(
+                                        itemCount: _visitors.length,
+                                        itemBuilder: (context, index) {
+                                          final v = _visitors[index];
+                                          final isCheckedIn = v.status == 'Checked In';
+                                          return Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                            decoration: const BoxDecoration(
+                                              border: Border(bottom: BorderSide(color: Color(0xFFE0E5F2), width: 1)),
                                             ),
-                                          ),
-                                        ),
-                                        Expanded(flex: 2, child: Text(v.timeIn, style: const TextStyle(color: Color(0xFF2B3674)))),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Align(
-                                            alignment: Alignment.centerLeft,
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                              decoration: BoxDecoration(
-                                                color: (isCheckedIn ? const Color(0xFF05CD99) : const Color(0xFFFFB547)).withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(20),
-                                              ),
-                                              child: Text(
-                                                v.status,
-                                                style: TextStyle(
-                                                  color: isCheckedIn ? const Color(0xFF05CD99) : const Color(0xFFFFB547),
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 12,
+                                            child: Row(
+                                              children: [
+                                                Expanded(flex: 3, child: Text(v.visitorName, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)))),
+                                                Expanded(flex: 3, child: Text(v.hostResident, style: const TextStyle(color: Color(0xFF2B3674)))),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Align(
+                                                    alignment: Alignment.centerLeft,
+                                                    child: Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                      decoration: BoxDecoration(
+                                                        color: const Color(0xFFF4F7FE),
+                                                        borderRadius: BorderRadius.circular(4),
+                                                      ),
+                                                      child: Text(v.createdBy, style: const TextStyle(color: Color(0xFF2B3674), fontSize: 12)),
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
+                                                Expanded(flex: 2, child: Text(v.timeIn, style: const TextStyle(color: Color(0xFF2B3674)))),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Align(
+                                                    alignment: Alignment.centerLeft,
+                                                    child: Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                      decoration: BoxDecoration(
+                                                        color: (isCheckedIn ? const Color(0xFF05CD99) : const Color(0xFFFFB547)).withOpacity(0.1),
+                                                        borderRadius: BorderRadius.circular(20),
+                                                      ),
+                                                      child: Text(
+                                                        v.status,
+                                                        style: TextStyle(
+                                                          color: isCheckedIn ? const Color(0xFF05CD99) : const Color(0xFFFFB547),
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Row(
+                                                    mainAxisAlignment: MainAxisAlignment.end,
+                                                    children: [
+                                                      IconButton(
+                                                        icon: const Icon(Icons.visibility, color: Color(0xFF4318FF), size: 18),
+                                                        onPressed: () => _showDetails(v),
+                                                        tooltip: 'View Details',
+                                                      ),
+                                                      IconButton(
+                                                        icon: const Icon(Icons.edit, color: Colors.orange, size: 18),
+                                                        onPressed: () => _showForm(visitor: v),
+                                                        tooltip: 'Edit Visitor',
+                                                      ),
+                                                      IconButton(
+                                                        icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                                                        onPressed: () => _deleteVisitor(v),
+                                                        tooltip: 'Delete Visitor',
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.end,
-                                            children: [
-                                              IconButton(
-                                                icon: const Icon(Icons.visibility, color: Color(0xFF4318FF), size: 18),
-                                                onPressed: () => _showDetails(v),
-                                                tooltip: 'View Details',
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(Icons.edit, color: Colors.orange, size: 18),
-                                                onPressed: () => _showForm(visitor: v),
-                                                tooltip: 'Edit Visitor',
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                                                onPressed: () => _deleteVisitor(v),
-                                                tooltip: 'Delete Visitor',
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  );
-                                },
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            );
+                          }
                         ),
                 ),
               ),

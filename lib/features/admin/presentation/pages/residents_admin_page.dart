@@ -367,91 +367,102 @@ class _ResidentsAdminPageState extends State<ResidentsAdminPage> {
                   borderRadius: BorderRadius.circular(16),
                   child: _filteredResidents.isEmpty
                       ? const Center(child: Text('No residents found', style: TextStyle(color: Color(0xFFA3AED0))))
-                      : Column(
-                          children: [
-                            // Full-width Table Header
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                              color: const Color(0xFFF4F7FE),
-                              child: Row(
-                                children: const [
-                                  Expanded(flex: 3, child: Text('Name', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('House/Unit', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 3, child: Text('Email', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('Phone', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)), textAlign: TextAlign.right)),
-                                ],
-                              ),
-                            ),
-                            // Scrollable list of rows stretching to 100% width
-                            Expanded(
-                              child: ListView.builder(
-                                itemCount: _filteredResidents.length,
-                                itemBuilder: (context, index) {
-                                  final r = _filteredResidents[index];
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                                    decoration: const BoxDecoration(
-                                      border: Border(bottom: BorderSide(color: Color(0xFFE0E5F2), width: 1)),
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            final tableWidth = constraints.maxWidth > 1000 ? constraints.maxWidth : 1000.0;
+                            return SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: SizedBox(
+                                width: tableWidth,
+                                child: Column(
+                                  children: [
+                                    // Full-width Table Header
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                      color: const Color(0xFFF4F7FE),
+                                      child: Row(
+                                        children: const [
+                                          Expanded(flex: 3, child: Text('Name', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('House/Unit', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 3, child: Text('Email', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('Phone', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)), textAlign: TextAlign.right)),
+                                        ],
+                                      ),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(flex: 3, child: Text(r.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)))),
-                                        Expanded(flex: 2, child: Text(r.houseUnit, style: const TextStyle(color: Color(0xFF2B3674)))),
-                                        Expanded(flex: 3, child: Text(r.email, style: const TextStyle(color: Color(0xFF2B3674)))),
-                                        Expanded(flex: 2, child: Text(r.phone, style: const TextStyle(color: Color(0xFF2B3674)))),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Align(
-                                            alignment: Alignment.centerLeft,
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                              decoration: BoxDecoration(
-                                                color: (r.status == 'Active' ? const Color(0xFF05CD99) : Colors.orange).withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(20),
-                                              ),
-                                              child: Text(
-                                                r.status,
-                                                style: TextStyle(
-                                                  color: r.status == 'Active' ? const Color(0xFF05CD99) : Colors.orange,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
+                                    // Scrollable list of rows stretching to 100% width
+                                    Expanded(
+                                      child: ListView.builder(
+                                        itemCount: _filteredResidents.length,
+                                        itemBuilder: (context, index) {
+                                          final r = _filteredResidents[index];
+                                          return Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                            decoration: const BoxDecoration(
+                                              border: Border(bottom: BorderSide(color: Color(0xFFE0E5F2), width: 1)),
                                             ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.end,
-                                            children: [
-                                              IconButton(
-                                                icon: const Icon(Icons.visibility, color: Color(0xFF4318FF), size: 18),
-                                                onPressed: () => _showDetails(r),
-                                                tooltip: 'View Details',
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(Icons.edit, color: Colors.orange, size: 18),
-                                                onPressed: () => _showForm(resident: r),
-                                                tooltip: 'Edit Resident',
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                                                onPressed: () => _deleteResident(r),
-                                                tooltip: 'Delete Resident',
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
+                                            child: Row(
+                                              children: [
+                                                Expanded(flex: 3, child: Text(r.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)))),
+                                                Expanded(flex: 2, child: Text(r.houseUnit, style: const TextStyle(color: Color(0xFF2B3674)))),
+                                                Expanded(flex: 3, child: Text(r.email, style: const TextStyle(color: Color(0xFF2B3674)))),
+                                                Expanded(flex: 2, child: Text(r.phone, style: const TextStyle(color: Color(0xFF2B3674)))),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Align(
+                                                    alignment: Alignment.centerLeft,
+                                                    child: Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                      decoration: BoxDecoration(
+                                                        color: (r.status == 'Active' ? const Color(0xFF05CD99) : Colors.orange).withOpacity(0.1),
+                                                        borderRadius: BorderRadius.circular(20),
+                                                      ),
+                                                      child: Text(
+                                                        r.status,
+                                                        style: TextStyle(
+                                                          color: r.status == 'Active' ? const Color(0xFF05CD99) : Colors.orange,
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Row(
+                                                    mainAxisAlignment: MainAxisAlignment.end,
+                                                    children: [
+                                                      IconButton(
+                                                        icon: const Icon(Icons.visibility, color: Color(0xFF4318FF), size: 18),
+                                                        onPressed: () => _showDetails(r),
+                                                        tooltip: 'View Details',
+                                                      ),
+                                                      IconButton(
+                                                        icon: const Icon(Icons.edit, color: Colors.orange, size: 18),
+                                                        onPressed: () => _showForm(resident: r),
+                                                        tooltip: 'Edit Resident',
+                                                      ),
+                                                      IconButton(
+                                                        icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                                                        onPressed: () => _deleteResident(r),
+                                                        tooltip: 'Delete Resident',
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  );
-                                },
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            );
+                          }
                         ),
                 ),
               ),

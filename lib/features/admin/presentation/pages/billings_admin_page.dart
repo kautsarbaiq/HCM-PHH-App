@@ -340,93 +340,104 @@ class _BillingsAdminPageState extends State<BillingsAdminPage> {
                   borderRadius: BorderRadius.circular(16),
                   child: _billings.isEmpty
                       ? const Center(child: Text('No invoices found', style: TextStyle(color: Color(0xFFA3AED0))))
-                      : Column(
-                          children: [
-                            // Full-width Table Header
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                              color: const Color(0xFFF4F7FE),
-                              child: Row(
-                                children: const [
-                                  Expanded(flex: 3, child: Text('Invoice No', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 3, child: Text('Resident', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('Amount', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('Due Date', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)), textAlign: TextAlign.right)),
-                                ],
-                              ),
-                            ),
-                            // Scrollable list of rows stretching to 100% width
-                            Expanded(
-                              child: ListView.builder(
-                                itemCount: _billings.length,
-                                itemBuilder: (context, index) {
-                                  final b = _billings[index];
-                                  final isPaid = b.status == 'Paid';
-                                  final formattedAmount = 'Rp ${b.amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}';
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                                    decoration: const BoxDecoration(
-                                      border: Border(bottom: BorderSide(color: Color(0xFFE0E5F2), width: 1)),
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            final tableWidth = constraints.maxWidth > 1000 ? constraints.maxWidth : 1000.0;
+                            return SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: SizedBox(
+                                width: tableWidth,
+                                child: Column(
+                                  children: [
+                                    // Full-width Table Header
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                      color: const Color(0xFFF4F7FE),
+                                      child: Row(
+                                        children: const [
+                                          Expanded(flex: 3, child: Text('Invoice No', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 3, child: Text('Resident', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('Amount', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('Due Date', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)), textAlign: TextAlign.right)),
+                                        ],
+                                      ),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(flex: 3, child: Text(b.invoiceNo, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)))),
-                                        Expanded(flex: 3, child: Text(b.resident, style: const TextStyle(color: Color(0xFF2B3674)))),
-                                        Expanded(flex: 2, child: Text(formattedAmount, style: const TextStyle(color: Color(0xFF2B3674)))),
-                                        Expanded(flex: 2, child: Text(b.dueDate, style: const TextStyle(color: Color(0xFF2B3674)))),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Align(
-                                            alignment: Alignment.centerLeft,
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                              decoration: BoxDecoration(
-                                                color: (isPaid ? const Color(0xFF05CD99) : Colors.red).withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(20),
-                                              ),
-                                              child: Text(
-                                                b.status,
-                                                style: TextStyle(
-                                                  color: isPaid ? const Color(0xFF05CD99) : Colors.red,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
+                                    // Scrollable list of rows stretching to 100% width
+                                    Expanded(
+                                      child: ListView.builder(
+                                        itemCount: _billings.length,
+                                        itemBuilder: (context, index) {
+                                          final b = _billings[index];
+                                          final isPaid = b.status == 'Paid';
+                                          final formattedAmount = 'Rp ${b.amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}';
+                                          return Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                            decoration: const BoxDecoration(
+                                              border: Border(bottom: BorderSide(color: Color(0xFFE0E5F2), width: 1)),
                                             ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.end,
-                                            children: [
-                                              IconButton(
-                                                icon: const Icon(Icons.visibility, color: Color(0xFF4318FF), size: 18),
-                                                onPressed: () => _showDetails(b),
-                                                tooltip: 'View Invoice Details',
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(Icons.edit, color: Colors.orange, size: 18),
-                                                onPressed: () => _showForm(billing: b),
-                                                tooltip: 'Edit Invoice',
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                                                onPressed: () => _deleteBilling(b),
-                                                tooltip: 'Delete Invoice',
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
+                                            child: Row(
+                                              children: [
+                                                Expanded(flex: 3, child: Text(b.invoiceNo, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)))),
+                                                Expanded(flex: 3, child: Text(b.resident, style: const TextStyle(color: Color(0xFF2B3674)))),
+                                                Expanded(flex: 2, child: Text(formattedAmount, style: const TextStyle(color: Color(0xFF2B3674)))),
+                                                Expanded(flex: 2, child: Text(b.dueDate, style: const TextStyle(color: Color(0xFF2B3674)))),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Align(
+                                                    alignment: Alignment.centerLeft,
+                                                    child: Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                      decoration: BoxDecoration(
+                                                        color: (isPaid ? const Color(0xFF05CD99) : Colors.red).withOpacity(0.1),
+                                                        borderRadius: BorderRadius.circular(20),
+                                                      ),
+                                                      child: Text(
+                                                        b.status,
+                                                        style: TextStyle(
+                                                          color: isPaid ? const Color(0xFF05CD99) : Colors.red,
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Row(
+                                                    mainAxisAlignment: MainAxisAlignment.end,
+                                                    children: [
+                                                      IconButton(
+                                                        icon: const Icon(Icons.visibility, color: Color(0xFF4318FF), size: 18),
+                                                        onPressed: () => _showDetails(b),
+                                                        tooltip: 'View Invoice Details',
+                                                      ),
+                                                      IconButton(
+                                                        icon: const Icon(Icons.edit, color: Colors.orange, size: 18),
+                                                        onPressed: () => _showForm(billing: b),
+                                                        tooltip: 'Edit Invoice',
+                                                      ),
+                                                      IconButton(
+                                                        icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                                                        onPressed: () => _deleteBilling(b),
+                                                        tooltip: 'Delete Invoice',
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  );
-                                },
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            );
+                          }
                         ),
                 ),
               ),

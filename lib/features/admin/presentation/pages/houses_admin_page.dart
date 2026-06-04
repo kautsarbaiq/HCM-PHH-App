@@ -331,90 +331,101 @@ class _HousesAdminPageState extends State<HousesAdminPage> {
                   borderRadius: BorderRadius.circular(16),
                   child: _houses.isEmpty
                       ? const Center(child: Text('No houses found', style: TextStyle(color: Color(0xFFA3AED0))))
-                      : Column(
-                          children: [
-                            // Full-width Table Header
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                              color: const Color(0xFFF4F7FE),
-                              child: Row(
-                                children: const [
-                                  Expanded(flex: 3, child: Text('House No', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 3, child: Text('Owner', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('Type', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                  Expanded(flex: 2, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)), textAlign: TextAlign.right)),
-                                ],
-                              ),
-                            ),
-                            // Scrollable list of rows stretching to 100% width
-                            Expanded(
-                              child: ListView.builder(
-                                itemCount: _houses.length,
-                                itemBuilder: (context, index) {
-                                  final h = _houses[index];
-                                  final isOccupied = h.status == 'Occupied';
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                                    decoration: const BoxDecoration(
-                                      border: Border(bottom: BorderSide(color: Color(0xFFE0E5F2), width: 1)),
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            final tableWidth = constraints.maxWidth > 1000 ? constraints.maxWidth : 1000.0;
+                            return SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: SizedBox(
+                                width: tableWidth,
+                                child: Column(
+                                  children: [
+                                    // Full-width Table Header
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                      color: const Color(0xFFF4F7FE),
+                                      child: Row(
+                                        children: const [
+                                          Expanded(flex: 3, child: Text('House No', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 3, child: Text('Owner', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('Type', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                          Expanded(flex: 2, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)), textAlign: TextAlign.right)),
+                                        ],
+                                      ),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(flex: 3, child: Text(h.houseNo, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)))),
-                                        Expanded(flex: 3, child: Text(h.owner, style: const TextStyle(color: Color(0xFF2B3674)))),
-                                        Expanded(flex: 2, child: Text(h.type, style: const TextStyle(color: Color(0xFF2B3674)))),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Align(
-                                            alignment: Alignment.centerLeft,
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                              decoration: BoxDecoration(
-                                                color: (isOccupied ? const Color(0xFF05CD99) : const Color(0xFFFFB547)).withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(20),
-                                              ),
-                                              child: Text(
-                                                h.status,
-                                                style: TextStyle(
-                                                  color: isOccupied ? const Color(0xFF05CD99) : const Color(0xFFFFB547),
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
+                                    // Scrollable list of rows stretching to 100% width
+                                    Expanded(
+                                      child: ListView.builder(
+                                        itemCount: _houses.length,
+                                        itemBuilder: (context, index) {
+                                          final h = _houses[index];
+                                          final isOccupied = h.status == 'Occupied';
+                                          return Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                            decoration: const BoxDecoration(
+                                              border: Border(bottom: BorderSide(color: Color(0xFFE0E5F2), width: 1)),
                                             ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.end,
-                                            children: [
-                                              IconButton(
-                                                icon: const Icon(Icons.visibility, color: Color(0xFF4318FF), size: 18),
-                                                onPressed: () => _showDetails(h),
-                                                tooltip: 'View Details',
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(Icons.edit, color: Colors.orange, size: 18),
-                                                onPressed: () => _showForm(house: h),
-                                                tooltip: 'Edit House',
-                                              ),
-                                              IconButton(
-                                                icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                                                onPressed: () => _deleteHouse(h),
-                                                tooltip: 'Delete House',
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
+                                            child: Row(
+                                              children: [
+                                                Expanded(flex: 3, child: Text(h.houseNo, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)))),
+                                                Expanded(flex: 3, child: Text(h.owner, style: const TextStyle(color: Color(0xFF2B3674)))),
+                                                Expanded(flex: 2, child: Text(h.type, style: const TextStyle(color: Color(0xFF2B3674)))),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Align(
+                                                    alignment: Alignment.centerLeft,
+                                                    child: Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                      decoration: BoxDecoration(
+                                                        color: (isOccupied ? const Color(0xFF05CD99) : const Color(0xFFFFB547)).withOpacity(0.1),
+                                                        borderRadius: BorderRadius.circular(20),
+                                                      ),
+                                                      child: Text(
+                                                        h.status,
+                                                        style: TextStyle(
+                                                          color: isOccupied ? const Color(0xFF05CD99) : const Color(0xFFFFB547),
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Row(
+                                                    mainAxisAlignment: MainAxisAlignment.end,
+                                                    children: [
+                                                      IconButton(
+                                                        icon: const Icon(Icons.visibility, color: Color(0xFF4318FF), size: 18),
+                                                        onPressed: () => _showDetails(h),
+                                                        tooltip: 'View Details',
+                                                      ),
+                                                      IconButton(
+                                                        icon: const Icon(Icons.edit, color: Colors.orange, size: 18),
+                                                        onPressed: () => _showForm(house: h),
+                                                        tooltip: 'Edit House',
+                                                      ),
+                                                      IconButton(
+                                                        icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                                                        onPressed: () => _deleteHouse(h),
+                                                        tooltip: 'Delete House',
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  );
-                                },
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            );
+                          }
                         ),
                 ),
               ),
