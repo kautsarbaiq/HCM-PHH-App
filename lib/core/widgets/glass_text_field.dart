@@ -50,13 +50,13 @@ class _GlassTextFieldState extends State<GlassTextField> {
         color: AppColors.primaryWhite.withOpacity(0.6),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _isFocused ? AppColors.sageGreen : AppColors.glassBorder,
+          color: _isFocused ? AppColors.primaryBlue : AppColors.glassBorder,
           width: _isFocused ? 1.5 : 1.0,
         ),
         boxShadow: _isFocused
             ? [
                 BoxShadow(
-                  color: AppColors.sageGreen.withOpacity(0.1),
+                  color: AppColors.primaryBlue.withOpacity(0.1),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 )
@@ -92,7 +92,7 @@ class _GlassTextFieldState extends State<GlassTextField> {
               prefixIcon: widget.prefixIcon != null
                   ? Icon(
                       widget.prefixIcon,
-                      color: _isFocused ? AppColors.sageGreen : AppColors.textSecondary,
+                      color: _isFocused ? AppColors.primaryBlue : AppColors.textSecondary,
                       size: 20,
                     )
                   : null,

@@ -28,9 +28,18 @@ import '../../features/admin/presentation/pages/banners_admin_page.dart';
 import '../../features/admin/presentation/pages/billings_admin_page.dart';
 import '../../features/admin/presentation/pages/visitors_admin_page.dart';
 
+// Guard imports
+import '../../features/guard/presentation/pages/guard_login_page.dart';
+import '../../features/guard/presentation/widgets/guard_layout.dart';
+import '../../features/guard/presentation/pages/guard_houses_page.dart';
+import '../../features/guard/presentation/pages/guard_visitors_page.dart';
+import '../../features/guard/presentation/pages/guard_qr_scanner_page.dart';
+import '../../features/guard/presentation/pages/guard_register_visitor_page.dart';
+
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
 final GlobalKey<NavigatorState> _adminShellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'admin_shell');
+final GlobalKey<NavigatorState> _guardShellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'guard_shell');
 
 class AppRouter {
   static final router = GoRouter(
@@ -76,6 +85,21 @@ class AppRouter {
           GoRoute(path: '/admin/banners', builder: (context, state) => const BannersAdminPage()),
           GoRoute(path: '/admin/billings', builder: (context, state) => const BillingsAdminPage()),
           GoRoute(path: '/admin/visitors', builder: (context, state) => const VisitorsAdminPage()),
+        ],
+      ),
+
+      // Guard Routes
+      GoRoute(path: '/guard', builder: (context, state) => const GuardLoginPage()),
+      ShellRoute(
+        navigatorKey: _guardShellNavigatorKey,
+        builder: (context, state, child) {
+          return GuardLayout(child: child);
+        },
+        routes: [
+          GoRoute(path: '/guard/houses', builder: (context, state) => const GuardHousesPage()),
+          GoRoute(path: '/guard/visitors', builder: (context, state) => const GuardVisitorsPage()),
+          GoRoute(path: '/guard/scan', builder: (context, state) => const GuardQrScannerPage()),
+          GoRoute(path: '/guard/register', builder: (context, state) => const GuardRegisterVisitorPage()),
         ],
       ),
     ],

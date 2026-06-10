@@ -139,7 +139,7 @@ class BillCard extends StatelessWidget {
               label: 'Pay Now',
               onPressed: onPay,
               height: 48,
-              backgroundColor: AppColors.sageGreen,
+              backgroundColor: AppColors.primaryBlue,
             ),
           ]
         ],

@@ -52,13 +52,13 @@ class VisitorPassCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.sageGreen.withOpacity(0.15),
+                  color: AppColors.primaryBlue.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
                   'Active',
                   style: TextStyle(
-                    color: AppColors.sageGreen,
+                    color: AppColors.primaryBlue,
                     fontWeight: FontWeight.w600,
                     fontSize: 12,
                   ),

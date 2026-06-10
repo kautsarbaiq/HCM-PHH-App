@@ -66,10 +66,10 @@ class ProfilePage extends StatelessWidget {
               height: 130,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.sageGreen.withOpacity(0.2), width: 4),
+                border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2), width: 4),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.sageGreen.withOpacity(0.1),
+                    color: AppColors.primaryBlue.withOpacity(0.1),
                     blurRadius: 20,
                     spreadRadius: 5,
                   )

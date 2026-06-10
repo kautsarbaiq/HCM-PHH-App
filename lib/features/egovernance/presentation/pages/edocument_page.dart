@@ -90,10 +90,10 @@ class EDocumentPage extends ConsumerWidget {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: AppColors.sageGreen.withOpacity(0.12),
+                                        color: AppColors.primaryBlue.withOpacity(0.12),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
-                                      child: Text(doc['category'], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.sageGreen)),
+                                      child: Text(doc['category'], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
                                     ),
                                     const SizedBox(width: 8),
                                     Text(doc['size'], style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
@@ -105,7 +105,7 @@ class EDocumentPage extends ConsumerWidget {
                           GestureDetector(
                             onTap: () {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Downloading ${doc['title']}...'), backgroundColor: AppColors.sageGreen),
+                                SnackBar(content: Text('Downloading ${doc['title']}...'), backgroundColor: AppColors.primaryBlue),
                               );
                             },
                             child: Container(

@@ -58,7 +58,7 @@ class FacilityCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppColors.sageGreen,
+                color: AppColors.primaryBlue,
               ),
             ),
           ],

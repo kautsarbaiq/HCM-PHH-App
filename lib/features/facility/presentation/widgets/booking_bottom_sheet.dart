@@ -27,7 +27,7 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: AppColors.sageGreen,
+              primary: AppColors.primaryBlue,
               onPrimary: AppColors.primaryWhite,
               onSurface: AppColors.textPrimary,
             ),
@@ -49,7 +49,7 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: AppColors.sageGreen,
+              primary: AppColors.primaryBlue,
               onPrimary: AppColors.primaryWhite,
               onSurface: AppColors.textPrimary,
             ),
@@ -143,7 +143,7 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Successfully booked ${widget.facilityName}!'),
-                          backgroundColor: AppColors.sageGreen,
+                          backgroundColor: AppColors.primaryBlue,
                         ),
                       );
                     } else {
@@ -181,7 +181,7 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 20, color: AppColors.sageGreen),
+            Icon(icon, size: 20, color: AppColors.primaryBlue),
             const SizedBox(width: 8),
             Text(
               label,

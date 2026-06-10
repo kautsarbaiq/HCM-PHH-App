@@ -31,17 +31,17 @@ class CommitteePage extends ConsumerWidget {
             sliver: SliverList(delegate: SliverChildBuilderDelegate((context, index) {
               final m = members[index];
               return Padding(padding: const EdgeInsets.only(bottom: 16), child: GlassCard(padding: const EdgeInsets.all(20), child: Row(children: [
-                Container(width: 52, height: 52, decoration: BoxDecoration(color: AppColors.sageGreen.withOpacity(0.12), shape: BoxShape.circle),
-                  child: Center(child: Text(m['initials'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.sageGreen)))),
+                Container(width: 52, height: 52, decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.12), shape: BoxShape.circle),
+                  child: Center(child: Text(m['initials'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryBlue)))),
                 const SizedBox(width: 16),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(m['name'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                   const SizedBox(height: 2),
-                  Text(m['role'], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.sageGreen)),
+                  Text(m['role'], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primaryBlue)),
                   Text('Unit ${m['unit']}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                 ])),
-                Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: AppColors.sageGreen.withOpacity(0.1), shape: BoxShape.circle),
-                  child: const Icon(PhosphorIconsRegular.phone, color: AppColors.sageGreen, size: 20)),
+                Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), shape: BoxShape.circle),
+                  child: const Icon(PhosphorIconsRegular.phone, color: AppColors.primaryBlue, size: 20)),
               ])));
             }, childCount: members.length)),
           ),

@@ -76,7 +76,7 @@ class _DashboardPageState extends State<DashboardPage> {
               child: _buildOutstandingBanner(context),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: _buildQuickActions(context),
             ),
             const SizedBox(height: 100),
@@ -248,7 +248,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       child: ClipOval(
                         child: Image.network(
                           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80',
-                          errorBuilder: (context, error, stackTrace) => const Icon(PhosphorIconsRegular.user, color: AppColors.sageGreen),
+                          errorBuilder: (context, error, stackTrace) => const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -329,7 +329,7 @@ class _DashboardPageState extends State<DashboardPage> {
               child: QuickActionItem(
                 icon: PhosphorIconsFill.identificationCard,
                 label: 'Visitor Pass',
-                color: AppColors.sageGreen,
+                color: AppColors.primaryBlue,
                 onTap: () => context.go('/access'),
               ),
             ),
@@ -399,7 +399,7 @@ class _DashboardPageState extends State<DashboardPage> {
       child: ClipPath(
         clipper: TopHeaderWaveClipper(),
         child: Container(
-          padding: EdgeInsets.fromLTRB(24, topPadding + 12, 24, 40),
+          padding: EdgeInsets.fromLTRB(24, topPadding + 12, 24, 24),
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -467,7 +467,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   
                   // Slider container
                   SizedBox(
-                    height: 155,
+                    height: 140,
                     child: PageView.builder(
                       controller: _pageController,
                       onPageChanged: (index) {

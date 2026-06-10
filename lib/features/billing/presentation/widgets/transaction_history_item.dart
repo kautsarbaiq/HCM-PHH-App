@@ -49,7 +49,7 @@ class TransactionHistoryItem extends StatelessWidget {
             ),
             child: Icon(
               PhosphorIconsRegular.receipt,
-              color: isSuccess ? AppColors.sageGreen : AppColors.error,
+              color: isSuccess ? AppColors.primaryBlue : AppColors.error,
               size: 20,
             ),
           ),
@@ -94,7 +94,7 @@ class TransactionHistoryItem extends StatelessWidget {
                 children: [
                   Icon(
                     isSuccess ? PhosphorIconsFill.checkCircle : PhosphorIconsFill.warningCircle,
-                    color: isSuccess ? AppColors.sageGreen : AppColors.error,
+                    color: isSuccess ? AppColors.primaryBlue : AppColors.error,
                     size: 14,
                   ),
                   const SizedBox(width: 4),
@@ -103,7 +103,7 @@ class TransactionHistoryItem extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: isSuccess ? AppColors.sageGreen : AppColors.error,
+                      color: isSuccess ? AppColors.primaryBlue : AppColors.error,
                     ),
                   ),
                 ],

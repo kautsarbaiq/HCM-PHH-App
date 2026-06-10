@@ -69,12 +69,12 @@ class EPollingPage extends ConsumerWidget {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: hasVoted ? AppColors.sageGreen.withOpacity(0.15) : AppColors.warning.withOpacity(0.15),
+                                  color: hasVoted ? AppColors.primaryBlue.withOpacity(0.15) : AppColors.warning.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   hasVoted ? 'VOTED' : 'ACTIVE',
-                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: hasVoted ? AppColors.sageGreen : AppColors.warning),
+                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: hasVoted ? AppColors.primaryBlue : AppColors.warning),
                                 ),
                               ),
                               Text(poll['endDate'], style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
@@ -96,7 +96,7 @@ class EPollingPage extends ConsumerWidget {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(option['label'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary)),
-                                        Text('${(option['percent'] * 100).toInt()}%', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.sageGreen)),
+                                        Text('${(option['percent'] * 100).toInt()}%', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
                                       ],
                                     ),
                                     const SizedBox(height: 6),
@@ -107,7 +107,7 @@ class EPollingPage extends ConsumerWidget {
                                         minHeight: 8,
                                         backgroundColor: AppColors.backgroundGrey,
                                         valueColor: AlwaysStoppedAnimation<Color>(
-                                          i == 0 ? AppColors.sageGreen : AppColors.deepSlate.withOpacity(0.4),
+                                          i == 0 ? AppColors.primaryBlue : AppColors.deepSlate.withOpacity(0.4),
                                         ),
                                       ),
                                     ),

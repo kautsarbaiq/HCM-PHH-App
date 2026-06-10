@@ -40,7 +40,7 @@ class TicketCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: isResolved
-                      ? AppColors.sageGreen.withOpacity(0.15)
+                      ? AppColors.primaryBlue.withOpacity(0.15)
                       : const Color(0xFFFFA07A).withOpacity(0.15), // Soft Coral/Orange
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -50,7 +50,7 @@ class TicketCard extends StatelessWidget {
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1,
-                    color: isResolved ? AppColors.sageGreen : const Color(0xFFFF7F50),
+                    color: isResolved ? AppColors.primaryBlue : const Color(0xFFFF7F50),
                   ),
                 ),
               ),

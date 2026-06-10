@@ -126,7 +126,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.sageGreen.withOpacity(0.3), width: 1.5),
+              border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -138,7 +138,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
             child: ClipOval(
               child: Image.network(
                 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80',
-                errorBuilder: (context, error, stackTrace) => const Icon(PhosphorIconsRegular.user, color: AppColors.sageGreen),
+                errorBuilder: (context, error, stackTrace) => const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
                 fit: BoxFit.cover,
               ),
             ),
@@ -231,13 +231,13 @@ class _AccessPageState extends ConsumerState<AccessPage> {
           _isSubmitting
               ? const Center(
                   child: CircularProgressIndicator(
-                    color: AppColors.sageGreen,
+                    color: AppColors.primaryBlue,
                   ),
                 )
               : ActionButton(
                   label: 'Generate Pass',
                   onPressed: _submitForm,
-                  backgroundColor: AppColors.sageGreen,
+                  backgroundColor: AppColors.primaryBlue,
                   icon: PhosphorIconsRegular.qrCode,
                 ),
         ],

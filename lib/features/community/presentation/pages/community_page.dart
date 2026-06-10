@@ -118,7 +118,7 @@ class CommunityPage extends ConsumerWidget {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.sageGreen.withOpacity(0.3), width: 1.5),
+              border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -130,7 +130,7 @@ class CommunityPage extends ConsumerWidget {
             child: ClipOval(
               child: Image.network(
                 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80',
-                errorBuilder: (context, error, stackTrace) => const Icon(PhosphorIconsRegular.user, color: AppColors.sageGreen),
+                errorBuilder: (context, error, stackTrace) => const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
                 fit: BoxFit.cover,
               ),
             ),
@@ -233,11 +233,11 @@ class CommunityPage extends ConsumerWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text('Opening ticket creation form...'),
-                  backgroundColor: AppColors.sageGreen,
+                  backgroundColor: AppColors.primaryBlue,
                 ),
               );
             },
-            backgroundColor: AppColors.deepSlate,
+            backgroundColor: AppColors.primaryBlue,
             height: 48,
           ),
         ),
@@ -275,7 +275,7 @@ class CommunityPage extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: AppColors.sageGreen),
+            Icon(icon, size: 16, color: AppColors.primaryBlue),
             const SizedBox(width: 6),
             Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
             const SizedBox(width: 4),

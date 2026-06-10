@@ -19,7 +19,7 @@ class AppTheme {
         headingRowColor: MaterialStateProperty.all(const Color(0xFFF4F7FE)),
       ),
       colorScheme: const ColorScheme.light(
-        primary: AppColors.sageGreen,
+        primary: AppColors.primaryBlue,
         secondary: AppColors.deepSlate,
         surface: AppColors.primaryWhite,
         error: AppColors.error,

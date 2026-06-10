@@ -88,7 +88,7 @@ class EFormPage extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              color: isSubmitted ? AppColors.sageGreen.withOpacity(0.15) : AppColors.deepSlate.withOpacity(0.08),
+                              color: isSubmitted ? AppColors.primaryBlue.withOpacity(0.15) : AppColors.deepSlate.withOpacity(0.08),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -96,7 +96,7 @@ class EFormPage extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: isSubmitted ? AppColors.sageGreen : AppColors.deepSlate,
+                                color: isSubmitted ? AppColors.primaryBlue : AppColors.deepSlate,
                               ),
                             ),
                           ),

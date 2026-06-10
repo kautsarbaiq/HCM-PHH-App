@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
@@ -22,6 +23,12 @@ class _SmartAccessModalState extends State<SmartAccessModal> with TickerProvider
   double _volume = 0.8;
   int _activeGateIndex = 0;
   
+  Timer? _autoLockTimer;
+  int _autoLockSeconds = 10;
+  
+  Timer? _intercomTimer;
+  int _intercomSeconds = 0;
+  
   // Animations
   late AnimationController _pulseController;
   late AnimationController _lockController;
@@ -40,18 +47,55 @@ class _SmartAccessModalState extends State<SmartAccessModal> with TickerProvider
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+
+    if (widget.initialView == 1) {
+      _startIntercomTimer();
+    }
+  }
+
+  void _startIntercomTimer() {
+    _intercomSeconds = 0;
+    _intercomTimer?.cancel();
+    _intercomTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _intercomSeconds++;
+        });
+      }
+    });
+  }
+
+  void _startAutoLockTimer() {
+    _autoLockSeconds = 10;
+    _autoLockTimer?.cancel();
+    _autoLockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          if (_autoLockSeconds > 1) {
+            _autoLockSeconds--;
+          } else {
+            _autoLockSeconds = 0;
+            _isGateUnlocked = false;
+            _lockController.reverse();
+            _autoLockTimer?.cancel();
+          }
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
     _lockController.dispose();
+    _autoLockTimer?.cancel();
+    _intercomTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final sheetHeight = MediaQuery.of(context).size.height * 0.85;
+    final sheetHeight = MediaQuery.of(context).size.height * 0.95;
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
@@ -142,7 +186,10 @@ class _SmartAccessModalState extends State<SmartAccessModal> with TickerProvider
                 title: 'Mobile Intercom',
                 subtitle: 'Call Guardhouse',
                 color: const Color(0xFF3B82F6),
-                onTap: () => setState(() => _currentView = 1),
+                onTap: () {
+                  setState(() => _currentView = 1);
+                  _startIntercomTimer();
+                },
               ),
             ),
             const SizedBox(width: 16),
@@ -463,9 +510,9 @@ class _SmartAccessModalState extends State<SmartAccessModal> with TickerProvider
                           ),
                         ).animate(onPlay: (controller) => controller.repeat()).scale(duration: 800.ms, begin: const Offset(0.8, 0.8), end: const Offset(1.3, 1.3)),
                         const SizedBox(width: 6),
-                        const Text(
-                          'Calling Security Guard...',
-                          style: TextStyle(fontSize: 12.5, color: Color(0xFF10B981), fontWeight: FontWeight.bold),
+                        Text(
+                          _intercomSeconds < 3 ? 'Calling Security Guard...' : 'Connected - 00:${_intercomSeconds.toString().padLeft(2, '0')}',
+                          style: const TextStyle(fontSize: 12.5, color: Color(0xFF10B981), fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -704,14 +751,16 @@ class _SmartAccessModalState extends State<SmartAccessModal> with TickerProvider
             Center(
               child: GestureDetector(
                 onTap: () {
-                  setInnerState(() {
+                  setState(() {
                     _isGateUnlocked = !_isGateUnlocked;
+                    if (_isGateUnlocked) {
+                      _lockController.forward();
+                      _startAutoLockTimer();
+                    } else {
+                      _lockController.reverse();
+                      _autoLockTimer?.cancel();
+                    }
                   });
-                  if (_isGateUnlocked) {
-                    _lockController.forward();
-                  } else {
-                    _lockController.reverse();
-                  }
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 350),
@@ -793,7 +842,7 @@ class _SmartAccessModalState extends State<SmartAccessModal> with TickerProvider
             const SizedBox(height: 4),
             Center(
               child: Text(
-                _isGateUnlocked ? 'Will lock automatically in 10s...' : 'Tap to toggle lock wirelessly',
+                _isGateUnlocked ? 'Will lock automatically in ${_autoLockSeconds}s...' : 'Tap to toggle lock wirelessly',
                 style: TextStyle(
                   fontSize: 13, 
                   color: _isGateUnlocked ? const Color(0xFF10B981) : AppColors.textSecondary,

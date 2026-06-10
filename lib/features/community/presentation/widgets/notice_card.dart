@@ -31,7 +31,7 @@ class NoticeCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isUrgent
                       ? AppColors.error.withOpacity(0.15)
-                      : AppColors.sageGreen.withOpacity(0.15),
+                      : AppColors.primaryBlue.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -40,7 +40,7 @@ class NoticeCard extends StatelessWidget {
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1,
-                    color: isUrgent ? AppColors.error : AppColors.sageGreen,
+                    color: isUrgent ? AppColors.error : AppColors.primaryBlue,
                   ),
                 ),
               ),

@@ -77,10 +77,10 @@ class EventsPage extends ConsumerWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: AppColors.sageGreen.withOpacity(0.15),
+                                    color: AppColors.primaryBlue.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: const Text('GOING', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.sageGreen, letterSpacing: 1)),
+                                  child: const Text('GOING', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primaryBlue, letterSpacing: 1)),
                                 ),
                             ],
                           ),
@@ -111,11 +111,11 @@ class EventsPage extends ConsumerWidget {
                                 child: ElevatedButton(
                                   onPressed: () {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(isRsvpd ? 'RSVP cancelled' : 'RSVP confirmed!'), backgroundColor: AppColors.sageGreen),
+                                      SnackBar(content: Text(isRsvpd ? 'RSVP cancelled' : 'RSVP confirmed!'), backgroundColor: AppColors.primaryBlue),
                                     );
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: isRsvpd ? AppColors.backgroundGrey : AppColors.sageGreen,
+                                    backgroundColor: isRsvpd ? AppColors.backgroundGrey : AppColors.primaryBlue,
                                     foregroundColor: isRsvpd ? AppColors.textSecondary : Colors.white,
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

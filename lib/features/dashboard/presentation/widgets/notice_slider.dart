@@ -29,7 +29,7 @@ class NoticeSlider extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.sageGreen,
+                color: AppColors.primaryBlue,
               ),
             ),
           ],
@@ -65,7 +65,7 @@ class NoticeSlider extends StatelessWidget {
               children: [
                 Icon(
                   isUrgent ? PhosphorIconsRegular.warningCircle : PhosphorIconsRegular.info,
-                  color: isUrgent ? AppColors.error : AppColors.sageGreen,
+                  color: isUrgent ? AppColors.error : AppColors.primaryBlue,
                   size: 20,
                 ),
                 const SizedBox(width: 8),

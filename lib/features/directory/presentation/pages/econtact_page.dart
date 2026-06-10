@@ -38,13 +38,13 @@ class EContactPage extends ConsumerWidget {
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(c['name'], style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                   const SizedBox(height: 4),
-                  Text(c['phone'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.sageGreen)),
+                  Text(c['phone'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.primaryBlue)),
                   Text(c['hours'], style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                 ])),
                 GestureDetector(
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Calling ${c['name']}...'), backgroundColor: AppColors.sageGreen)),
-                  child: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: AppColors.sageGreen.withOpacity(0.1), shape: BoxShape.circle),
-                    child: const Icon(PhosphorIconsRegular.phone, color: AppColors.sageGreen, size: 20))),
+                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Calling ${c['name']}...'), backgroundColor: AppColors.primaryBlue)),
+                  child: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), shape: BoxShape.circle),
+                    child: const Icon(PhosphorIconsRegular.phone, color: AppColors.primaryBlue, size: 20))),
               ])));
             }, childCount: contacts.length)),
           ),

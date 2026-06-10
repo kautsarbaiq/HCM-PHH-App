@@ -40,8 +40,8 @@ class MarketSquarePage extends ConsumerWidget {
                   const SizedBox(height: 14),
                   Text(s['name'], textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                   const SizedBox(height: 4),
-                  Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: AppColors.sageGreen.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
-                    child: Text(s['category'], style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.sageGreen))),
+                  Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+                    child: Text(s['category'], style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryBlue))),
                   const SizedBox(height: 8),
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                     const Icon(PhosphorIconsFill.star, size: 14, color: Color(0xFFF59E0B)),

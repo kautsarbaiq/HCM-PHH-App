@@ -6,7 +6,7 @@ class AppColors {
   static const Color backgroundGrey = Color(0xFFF8F9FA);
   
   // Accents
-  static const Color sageGreen = Color(0xFF84A59D);
+  static const Color primaryBlue = Color(0xFF0EA5E9);
   static const Color deepSlate = Color(0xFF2B2D42);
   
   // Text

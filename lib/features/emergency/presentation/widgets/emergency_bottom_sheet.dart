@@ -95,7 +95,7 @@ class EmergencyBottomSheet extends StatelessWidget {
                   icon: PhosphorIconsFill.phone,
                   title: 'Emergency Contacts',
                   subtitle: 'Call fire, police, or medical services',
-                  color: AppColors.sageGreen,
+                  color: AppColors.primaryBlue,
                 ),
                 const SizedBox(height: 8),
               ],
