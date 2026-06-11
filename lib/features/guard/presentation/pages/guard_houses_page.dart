@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/repositories/house_repository.dart';
 
-class GuardHousesPage extends StatelessWidget {
+final guardHousesProvider = FutureProvider<List<House>>((ref) async {
+  final repo = ref.read(houseRepositoryProvider);
+  return repo.getAllHouses();
+});
+
+class GuardHousesPage extends ConsumerWidget {
   const GuardHousesPage({super.key});
 
-  final List<Map<String, dynamic>> _houses = const [
-    {'house_no': 'A-01', 'owner': 'John Doe', 'mobile': '+1 234 567 890'},
-    {'house_no': 'A-02', 'owner': 'Jane Smith', 'mobile': '+1 987 654 321'},
-    {'house_no': 'B-10', 'owner': 'Michael Johnson', 'mobile': '+1 555 123 456'},
-    {'house_no': 'B-11', 'owner': 'Emily Davis', 'mobile': '+1 555 987 654'},
-    {'house_no': 'C-05', 'owner': 'Robert Wilson', 'mobile': '+1 444 333 222'},
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final housesAsync = ref.watch(guardHousesProvider);
+
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -46,43 +47,62 @@ class GuardHousesPage extends StatelessWidget {
                   ),
                 ],
               ),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                      child: SingleChildScrollView(
-                        child: DataTable(
-                          headingRowColor: MaterialStateProperty.all(const Color(0xFFF4F7FE)),
-                          columns: const [
-                            DataColumn(label: Text('House No.', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                            DataColumn(label: Text('Owner Name', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                            DataColumn(label: Text('Mobile Number', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                            DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                          ],
-                          rows: _houses.map((house) {
-                            return DataRow(
-                              cells: [
-                                DataCell(Text(house['house_no'], style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF2B3674)))),
-                                DataCell(Text(house['owner'], style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF2B3674)))),
-                                DataCell(Text(house['mobile'], style: const TextStyle(color: Color(0xFF2B3674)))),
-                                DataCell(
-                                  IconButton(
-                                    icon: const Icon(Icons.phone, color: Color(0xFF10B981)),
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Calling ${house['owner']}...')),
-                                      );
-                                    },
-                                  ),
-                                ),
+              child: housesAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(child: Text('Error: $error')),
+                data: (houses) {
+                  if (houses.isEmpty) {
+                    return const Center(
+                      child: Text('No houses found.', style: TextStyle(color: Color(0xFFA3AED0))),
+                    );
+                  }
+
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                          child: SingleChildScrollView(
+                            child: DataTable(
+                              headingRowColor: MaterialStateProperty.all(const Color(0xFFF4F7FE)),
+                              columns: const [
+                                DataColumn(label: Text('House No.', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                DataColumn(label: Text('Owner Name', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                DataColumn(label: Text('Mobile Number', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
+                                DataColumn(label: Text('Contact', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
                               ],
-                            );
-                          }).toList(),
+                              rows: houses.map((house) {
+                                return DataRow(
+                                  cells: [
+                                    DataCell(
+                                      Text(
+                                        house.houseNumber,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
+                                      ),
+                                    ),
+                                    DataCell(Text(house.owner?.fullName ?? '-', style: const TextStyle(color: Color(0xFF2B3674)))),
+                                    DataCell(Text(house.owner?.phone ?? '-', style: const TextStyle(color: Color(0xFF2B3674)))),
+                                    DataCell(
+                                      IconButton(
+                                        icon: const Icon(Icons.phone, color: Color(0xFF4318FF)),
+                                        onPressed: house.owner?.phone != null 
+                                            ? () {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('Calling ${house.owner!.phone}...')),
+                                                );
+                                              }
+                                            : null,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   );
                 },
               ),

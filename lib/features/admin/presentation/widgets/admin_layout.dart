@@ -20,7 +20,7 @@ class AdminLayout extends StatelessWidget {
               elevation: 0,
               iconTheme: const IconThemeData(color: Color(0xFF2B3674)),
               title: const Text(
-                'HCM Admin',
+                'PHH housing',
                 style: TextStyle(
                   color: Color(0xFF2B3674),
                   fontWeight: FontWeight.bold,
@@ -149,7 +149,7 @@ class AdminLayout extends StatelessWidget {
               Icon(Icons.admin_panel_settings_rounded, color: Color(0xFF4318FF), size: 32),
               SizedBox(width: 12),
               Text(
-                'HCM Admin',
+                'PHH housing',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,

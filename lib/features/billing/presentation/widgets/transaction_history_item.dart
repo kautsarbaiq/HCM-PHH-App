@@ -21,7 +21,7 @@ class TransactionHistoryItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final currencyFormatter = NumberFormat.currency(
       locale: 'id_ID',
-      symbol: 'Rp ',
+      symbol: 'RM ',
       decimalDigits: 0,
     );
 

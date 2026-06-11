@@ -10,7 +10,7 @@ class AdminDashboardPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Welcome to HCM Admin Dashboard',
+            'Welcome to PHH housing Dashboard',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,

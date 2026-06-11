@@ -8,6 +8,7 @@ class GlassTextField extends StatefulWidget {
   final TextEditingController? controller;
   final TextInputType keyboardType;
   final int maxLines;
+  final bool isPassword;
 
   const GlassTextField({
     super.key,
@@ -16,6 +17,7 @@ class GlassTextField extends StatefulWidget {
     this.controller,
     this.keyboardType = TextInputType.text,
     this.maxLines = 1,
+    this.isPassword = false,
   });
 
   @override
@@ -77,7 +79,8 @@ class _GlassTextFieldState extends State<GlassTextField> {
             controller: widget.controller,
             focusNode: _focusNode,
             keyboardType: widget.keyboardType,
-            maxLines: widget.maxLines,
+            maxLines: widget.isPassword ? 1 : widget.maxLines,
+            obscureText: widget.isPassword,
             style: const TextStyle(
               fontSize: 15,
               color: AppColors.textPrimary,

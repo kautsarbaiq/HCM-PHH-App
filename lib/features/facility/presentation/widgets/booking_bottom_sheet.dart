@@ -1,19 +1,22 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/widgets/action_button.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../core/repositories/facility_repository.dart';
+import '../../../../core/repositories/profile_repository.dart';
 
-class BookingBottomSheet extends StatefulWidget {
+class BookingBottomSheet extends ConsumerStatefulWidget {
   final String facilityName;
 
   const BookingBottomSheet({super.key, required this.facilityName});
 
   @override
-  State<BookingBottomSheet> createState() => _BookingBottomSheetState();
+  ConsumerState<BookingBottomSheet> createState() => _BookingBottomSheetState();
 }
 
-class _BookingBottomSheetState extends State<BookingBottomSheet> {
+class _BookingBottomSheetState extends ConsumerState<BookingBottomSheet> {
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
 
@@ -137,22 +140,43 @@ class _BookingBottomSheetState extends State<BookingBottomSheet> {
                 const SizedBox(height: 32),
                 ActionButton(
                   label: 'Confirm Booking',
-                  onPressed: () {
-                    if (selectedDate != null && selectedTime != null) {
-                      Navigator.pop(context);
+                  onPressed: () async {
+                    if (selectedDate == null || selectedTime == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Successfully booked ${widget.facilityName}!'),
-                          backgroundColor: AppColors.primaryBlue,
-                        ),
+                        const SnackBar(content: Text('Please select date and time'), backgroundColor: AppColors.error),
                       );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Please select date and time'),
-                          backgroundColor: AppColors.error,
-                        ),
+                      return;
+                    }
+
+                    try {
+                      final profile = await ref.read(currentProfileProvider.future);
+                      if (profile == null) throw Exception('You must be logged in to book a facility.');
+
+                      final dateStr = '${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}';
+                      final timeStr = '${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}';
+
+                      final booking = Booking(
+                        id: '',
+                        facilityName: widget.facilityName,
+                        date: dateStr,
+                        time: timeStr,
+                        status: 'Pending',
+                        bookedBy: profile.id,
+                        createdAt: '',
                       );
+
+                      await ref.read(facilityRepositoryProvider).createBooking(booking);
+
+                      if (mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Successfully booked ${widget.facilityName}!'), backgroundColor: Colors.green),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+                      }
                     }
                   },
                 ),

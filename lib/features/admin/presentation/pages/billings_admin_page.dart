@@ -79,7 +79,7 @@ class _BillingsAdminPageState extends State<BillingsAdminPage> {
             children: [
               _buildDetailItem('Invoice ID', billing.id),
               _buildDetailItem('Resident Name', billing.resident),
-              _buildDetailItem('Billing Amount', 'Rp ${billing.amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}'),
+              _buildDetailItem('Billing Amount', 'RM ${billing.amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}'),
               _buildDetailItem('Due Date', billing.dueDate),
               _buildDetailItem('Payment Status', billing.status, isStatus: true),
             ],
@@ -371,7 +371,7 @@ class _BillingsAdminPageState extends State<BillingsAdminPage> {
                                         itemBuilder: (context, index) {
                                           final b = _billings[index];
                                           final isPaid = b.status == 'Paid';
-                                          final formattedAmount = 'Rp ${b.amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}';
+                                          final formattedAmount = 'RM ${b.amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}';
                                           return Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                                             decoration: const BoxDecoration(

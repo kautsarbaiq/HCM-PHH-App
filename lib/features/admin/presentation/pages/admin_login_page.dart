@@ -1,27 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/services/auth_service.dart';
+import '../../../../core/repositories/profile_repository.dart';
 
-class AdminLoginPage extends StatefulWidget {
+class AdminLoginPage extends ConsumerStatefulWidget {
   const AdminLoginPage({super.key});
 
   @override
-  State<AdminLoginPage> createState() => _AdminLoginPageState();
+  ConsumerState<AdminLoginPage> createState() => _AdminLoginPageState();
 }
 
-class _AdminLoginPageState extends State<AdminLoginPage> {
+class _AdminLoginPageState extends ConsumerState<AdminLoginPage> {
   final _emailController = TextEditingController(text: 'admin@hcm.com');
   final _passwordController = TextEditingController(text: 'password123');
   bool _isLoading = false;
 
   void _handleLogin() async {
     setState(() => _isLoading = true);
-    // Fake network delay
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => _isLoading = false);
-
-    if (!mounted) return;
-    // Go to admin dashboard
-    context.go('/admin/dashboard');
+    
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.signInWithEmailPassword(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+      
+      if (!mounted) return;
+      
+      // We will let the GoRouter redirect handle the routing based on auth state
+      // but we can manually go to dashboard for now if router redirect is not set up
+      context.go('/admin/dashboard');
+      
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unexpected error occurred'), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override

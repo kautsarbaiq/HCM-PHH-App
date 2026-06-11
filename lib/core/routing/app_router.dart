@@ -16,6 +16,7 @@ import '../../features/directory/presentation/pages/committee_page.dart';
 import '../../features/directory/presentation/pages/security_guard_page.dart';
 import '../../features/directory/presentation/pages/econtact_page.dart';
 import '../../features/marketplace/presentation/pages/market_square_page.dart';
+import '../../features/auth/presentation/pages/resident_login_page.dart';
 
 // Admin imports
 import '../../features/admin/presentation/pages/admin_login_page.dart';
@@ -36,16 +37,66 @@ import '../../features/guard/presentation/pages/guard_visitors_page.dart';
 import '../../features/guard/presentation/pages/guard_qr_scanner_page.dart';
 import '../../features/guard/presentation/pages/guard_register_visitor_page.dart';
 
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
 final GlobalKey<NavigatorState> _adminShellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'admin_shell');
 final GlobalKey<NavigatorState> _guardShellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'guard_shell');
 
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+      (dynamic _) => notifyListeners(),
+    );
+  }
+  late final StreamSubscription<dynamic> _subscription;
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
 class AppRouter {
   static final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/home',
+    refreshListenable: GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange),
+    redirect: (context, state) {
+      final session = Supabase.instance.client.auth.currentSession;
+      final isLoggedIn = session != null;
+      final isGoingToLogin = state.matchedLocation == '/login' || 
+                             state.matchedLocation == '/admin' || 
+                             state.matchedLocation == '/guard';
+
+      if (!isLoggedIn && !isGoingToLogin) {
+        if (state.matchedLocation.startsWith('/admin')) {
+          return '/admin';
+        } else if (state.matchedLocation.startsWith('/guard')) {
+          return '/guard';
+        } else {
+          return '/login';
+        }
+      }
+
+      if (isLoggedIn && isGoingToLogin) {
+        // We could decode JWT to get role, but for now we just redirect to home and let the UI handle if they are unauthorized
+        if (state.matchedLocation == '/admin') return '/admin/dashboard';
+        if (state.matchedLocation == '/guard') return '/guard/visitors';
+        return '/home';
+      }
+
+      return null;
+    },
     routes: [
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const ResidentLoginPage(),
+      ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) {

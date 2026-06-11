@@ -3,54 +3,43 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/widgets/action_button.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/notice_card.dart';
 import '../widgets/ticket_card.dart';
 import 'package:hcm_app/features/dashboard/presentation/widgets/notice_slider.dart';
+import '../../../../core/repositories/announcement_repository.dart';
+import '../../../../core/repositories/profile_repository.dart';
+import '../../../../core/repositories/ticket_repository.dart';
+import '../widgets/create_ticket_modal.dart';
 
 // State Management
 final communityTabIndexProvider = StateProvider<int>((ref) => 0);
 
-final noticesProvider = StateProvider<List<Map<String, dynamic>>>((ref) => [
-      {
-        'id': 'n1',
-        'title': 'Scheduled Water Maintenance',
-        'description': 'Water supply will be temporarily shut off tomorrow from 10:00 AM to 2:00 PM for scheduled pump maintenance.',
-        'date': 'Oct 24, 2026',
-        'isUrgent': true,
-      },
-      {
-        'id': 'n2',
-        'title': 'Community Townhall Meeting',
-        'description': 'Join us this Saturday at the Multipurpose Hall to discuss the new parking regulations and security upgrades.',
-        'date': 'Oct 20, 2026',
-        'isUrgent': false,
-      },
-      {
-        'id': 'n3',
-        'title': 'Pest Control Schedule',
-        'description': 'Quarterly fogging will be conducted around the perimeter and basement areas this Friday.',
-        'date': 'Oct 18, 2026',
-        'isUrgent': false,
-      },
-    ]);
+final noticesProvider = FutureProvider<List<Announcement>>((ref) async {
+  final repo = ref.read(announcementRepositoryProvider);
+  return repo.getAllAnnouncements();
+});
 
-final ticketsProvider = StateProvider<List<Map<String, dynamic>>>((ref) => [
-      {
-        'id': 'T-8091',
-        'title': 'Broken lightbulb in Hallway B',
-        'date': 'Oct 22, 2026',
-        'status': 'Pending',
-      },
-      {
-        'id': 'T-8042',
-        'title': 'Air Conditioner leakage in Gym',
-        'date': 'Oct 15, 2026',
-        'status': 'Resolved',
-      },
-    ]);
+final myTicketsProvider = AsyncNotifierProvider<MyTicketsNotifier, List<Ticket>>(() => MyTicketsNotifier());
+
+class MyTicketsNotifier extends AsyncNotifier<List<Ticket>> {
+  @override
+  Future<List<Ticket>> build() async {
+    final profile = await ref.watch(currentProfileProvider.future);
+    if (profile == null) return [];
+    
+    final repo = ref.read(ticketRepositoryProvider);
+    return repo.getMyTickets(profile.id);
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => build());
+  }
+}
 
 class CommunityPage extends ConsumerWidget {
   const CommunityPage({super.key});
@@ -65,7 +54,7 @@ class CommunityPage extends ConsumerWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
-              child: _buildHeader(context),
+              child: _buildHeader(context, ref),
             ),
             // Category Filter Chips
             Padding(
@@ -99,7 +88,8 @@ class CommunityPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(currentProfileProvider);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -128,10 +118,12 @@ class CommunityPage extends ConsumerWidget {
               ],
             ),
             child: ClipOval(
-              child: Image.network(
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80',
-                errorBuilder: (context, error, stackTrace) => const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
-                fit: BoxFit.cover,
+              child: profileAsync.when(
+                data: (profile) => profile?.avatarUrl != null 
+                    ? Image.network(profile!.avatarUrl!, fit: BoxFit.cover)
+                    : const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
+                loading: () => const CircularProgressIndicator(),
+                error: (_, __) => const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
               ),
             ),
           ),
@@ -191,37 +183,51 @@ class CommunityPage extends ConsumerWidget {
   }
 
   Widget _buildNoticeBoard(WidgetRef ref) {
-    final notices = ref.watch(noticesProvider);
+    final noticesAsync = ref.watch(noticesProvider);
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
-      children: [
-        const NoticeSlider().animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0),
-        const SizedBox(height: 24),
-        const Text(
-          'All Announcements',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 16),
-        ...notices.map((notice) => Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: NoticeCard(
-            title: notice['title'],
-            description: notice['description'],
-            date: notice['date'],
-            isUrgent: notice['isUrgent'],
-          ),
-        )),
-      ],
+    return noticesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => Center(child: Text('Error: $err')),
+      data: (notices) {
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+          children: [
+            const NoticeSlider().animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0),
+            const SizedBox(height: 24),
+            const Text(
+              'All Announcements',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (notices.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(top: 24),
+                child: Center(child: Text('No announcements yet.', style: TextStyle(color: AppColors.textSecondary))),
+              ),
+            ...notices.map((notice) {
+              final dateStr = DateFormat('MMM d, yyyy').format(DateTime.parse(notice.publishedAt).toLocal());
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: NoticeCard(
+                  title: notice.title,
+                  description: notice.content,
+                  date: dateStr,
+                  isUrgent: notice.isUrgent,
+                ),
+              );
+            }),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildFeedbackTickets(WidgetRef ref, BuildContext context) {
-    final tickets = ref.watch(ticketsProvider);
+    final ticketsAsync = ref.watch(myTicketsProvider);
 
     return Column(
       children: [
@@ -230,11 +236,11 @@ class CommunityPage extends ConsumerWidget {
           child: ActionButton(
             label: 'Create New Ticket',
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Opening ticket creation form...'),
-                  backgroundColor: AppColors.primaryBlue,
-                ),
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => const CreateTicketModal(),
               );
             },
             backgroundColor: AppColors.primaryBlue,
@@ -243,17 +249,27 @@ class CommunityPage extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
-            itemCount: tickets.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 16),
-            itemBuilder: (context, index) {
-              final ticket = tickets[index];
-              return TicketCard(
-                ticketId: ticket['id'],
-                title: ticket['title'],
-                date: ticket['date'],
-                status: ticket['status'],
+          child: ticketsAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => Center(child: Text('Error: $err')),
+            data: (tickets) {
+              if (tickets.isEmpty) {
+                return const Center(child: Text('No feedback tickets found.', style: TextStyle(color: AppColors.textSecondary)));
+              }
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+                itemCount: tickets.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 16),
+                itemBuilder: (context, index) {
+                  final ticket = tickets[index];
+                  final dateStr = DateFormat('MMM d, yyyy').format(DateTime.parse(ticket.createdAt).toLocal());
+                  return TicketCard(
+                    ticketId: 'T-${ticket.id.substring(0, 4).toUpperCase()}',
+                    title: ticket.title,
+                    date: dateStr,
+                    status: ticket.status,
+                  );
+                },
               );
             },
           ),

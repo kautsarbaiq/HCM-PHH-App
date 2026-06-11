@@ -50,7 +50,7 @@ class _ResidentsAdminPageState extends State<ResidentsAdminPage> {
       name: 'Resident ${index + 1}',
       houseUnit: 'Block A-${100 + index}',
       email: 'resident${index + 1}@example.com',
-      phone: '+62 812-3456-789$index',
+      phone: '+60 812-3456-789$index',
       status: index % 3 == 0 ? 'Inactive' : 'Active',
     );
   });

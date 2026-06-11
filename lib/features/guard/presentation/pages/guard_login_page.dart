@@ -1,27 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/services/auth_service.dart';
 
-class GuardLoginPage extends StatefulWidget {
+class GuardLoginPage extends ConsumerStatefulWidget {
   const GuardLoginPage({super.key});
 
   @override
-  State<GuardLoginPage> createState() => _GuardLoginPageState();
+  ConsumerState<GuardLoginPage> createState() => _GuardLoginPageState();
 }
 
-class _GuardLoginPageState extends State<GuardLoginPage> {
+class _GuardLoginPageState extends ConsumerState<GuardLoginPage> {
   final _emailController = TextEditingController(text: 'guard@hcm.com');
   final _passwordController = TextEditingController(text: 'security123');
   bool _isLoading = false;
 
   void _handleLogin() async {
     setState(() => _isLoading = true);
-    // Fake network delay
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => _isLoading = false);
-
-    if (!mounted) return;
-    // Go to guard dashboard/visitors list
-    context.go('/guard/visitors');
+    
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.signInWithEmailPassword(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+      
+      if (!mounted) return;
+      context.go('/guard/visitors');
+      
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unexpected error occurred'), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override

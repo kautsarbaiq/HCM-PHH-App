@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../theme/app_colors.dart';
 
@@ -23,8 +24,12 @@ class ProfilePage extends StatelessWidget {
             title: const Text('Profile', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
             actions: [
               IconButton(
-                icon: const Icon(PhosphorIconsRegular.gear),
-                onPressed: () {},
+                icon: const Icon(PhosphorIconsRegular.signOut),
+                color: Colors.red,
+                onPressed: () async {
+                  await Supabase.instance.client.auth.signOut();
+                  // Router will automatically redirect to /login due to auth state change
+                },
               ),
               const SizedBox(width: 8),
             ],
