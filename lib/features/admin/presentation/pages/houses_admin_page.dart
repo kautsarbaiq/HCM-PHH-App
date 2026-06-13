@@ -148,27 +148,38 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                     _buildTextField(typeController, 'Unit Type (e.g. Type A)', Icons.layers),
                     const SizedBox(height: 16),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Status: ', style: TextStyle(color: Color(0xFF2B3674), fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 16),
-                        ChoiceChip(
-                          label: const Text('Occupied'),
-                          selected: status == 'occupied',
-                          selectedColor: const Color(0xFF05CD99).withOpacity(0.2),
-                          checkmarkColor: const Color(0xFF05CD99),
-                          onSelected: (val) {
-                            if (val) setDialogState(() => status = 'occupied');
-                          },
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8.0),
+                          child: Text('Status: ', style: TextStyle(color: Color(0xFF2B3674), fontWeight: FontWeight.bold)),
                         ),
-                        const SizedBox(width: 8),
-                        ChoiceChip(
-                          label: const Text('Vacant'),
-                          selected: status == 'vacant',
-                          selectedColor: const Color(0xFFFFB547).withOpacity(0.2),
-                          checkmarkColor: const Color(0xFFFFB547),
-                          onSelected: (val) {
-                            if (val) setDialogState(() => status = 'vacant');
-                          },
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              ChoiceChip(
+                                label: const Text('Occupied'),
+                                selected: status == 'occupied',
+                                selectedColor: const Color(0xFF05CD99).withOpacity(0.2),
+                                checkmarkColor: const Color(0xFF05CD99),
+                                onSelected: (val) {
+                                  if (val) setDialogState(() => status = 'occupied');
+                                },
+                              ),
+                              ChoiceChip(
+                                label: const Text('Vacant'),
+                                selected: status == 'vacant',
+                                selectedColor: const Color(0xFFFFB547).withOpacity(0.2),
+                                checkmarkColor: const Color(0xFFFFB547),
+                                onSelected: (val) {
+                                  if (val) setDialogState(() => status = 'vacant');
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),

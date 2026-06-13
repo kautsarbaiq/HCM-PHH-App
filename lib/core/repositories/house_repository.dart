@@ -76,7 +76,7 @@ class HouseRepository {
     final response = await _supabase
         .from('houses')
         .insert(house.toJson())
-        .select('*, profiles!houses_owner_id_fkey(*)')
+        .select()
         .single();
         
     return House.fromJson(response);
@@ -87,7 +87,7 @@ class HouseRepository {
         .from('houses')
         .update(updates)
         .eq('id', id)
-        .select('*, profiles!houses_owner_id_fkey(*)')
+        .select()
         .single();
         
     return House.fromJson(response);

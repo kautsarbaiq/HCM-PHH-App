@@ -1,12 +1,56 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../core/repositories/profile_repository.dart';
+import '../../../../core/repositories/storage_repository.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends ConsumerState<ProfilePage> {
+  bool _isUploading = false;
+
+  Future<void> _uploadAvatar() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512, maxHeight: 512);
+    
+    if (pickedFile == null) return;
+
+    setState(() => _isUploading = true);
+    
+    try {
+      final file = File(pickedFile.path);
+      final profile = await ref.read(currentProfileProvider.future);
+      if (profile == null) throw Exception('Profile not found');
+
+      await ref.read(storageRepositoryProvider).uploadAvatar(file, profile.id);
+      
+      // Refresh profile data
+      ref.invalidate(currentProfileProvider);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Avatar updated successfully!'), backgroundColor: Colors.green));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +72,6 @@ class ProfilePage extends StatelessWidget {
                 color: Colors.red,
                 onPressed: () async {
                   await Supabase.instance.client.auth.signOut();
-                  // Router will automatically redirect to /login due to auth state change
                 },
               ),
               const SizedBox(width: 8),
@@ -39,9 +82,9 @@ class ProfilePage extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  _buildProfileHeader(),
+                  _buildProfileHeader(ref),
                   const SizedBox(height: 32),
-                  _buildInfoCard(),
+                  _buildInfoCard(ref),
                   const SizedBox(height: 32),
                   _buildSectionHeader('Resident Documents'),
                   const SizedBox(height: 16),
@@ -60,7 +103,9 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader() {
+  Widget _buildProfileHeader(WidgetRef ref) {
+    final profileAsync = ref.watch(currentProfileProvider);
+    
     return Column(
       children: [
         Stack(
@@ -80,35 +125,46 @@ class ProfilePage extends StatelessWidget {
                   )
                 ],
               ),
-              child: const CircleAvatar(
-                radius: 60,
-                backgroundImage: NetworkImage('https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80'),
-              ),
+              child: _isUploading
+                  ? const CircularProgressIndicator()
+                  : CircleAvatar(
+                      radius: 60,
+                      backgroundColor: Colors.grey[300],
+                      backgroundImage: profileAsync.whenOrNull(
+                        data: (profile) => profile?.avatarUrl != null ? NetworkImage(profile!.avatarUrl!) : null,
+                      ),
+                      child: profileAsync.whenOrNull(
+                        data: (profile) => profile?.avatarUrl == null ? const Icon(PhosphorIconsRegular.user, size: 60, color: Colors.grey) : null,
+                      ),
+                    ),
             ),
             Positioned(
               right: 0,
               bottom: 8,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryWhite,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                    )
-                  ],
+              child: GestureDetector(
+                onTap: _uploadAvatar,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryWhite,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                      )
+                    ],
+                  ),
+                  child: const Icon(PhosphorIconsFill.camera, size: 20, color: AppColors.primaryBlue),
                 ),
-                child: const Icon(PhosphorIconsRegular.pencilSimple, size: 20, color: AppColors.deepSlate),
               ),
             ),
           ],
         ),
         const SizedBox(height: 20),
-        const Text(
-          'Alex Morgan',
-          style: TextStyle(
+        Text(
+          profileAsync.value?.fullName ?? 'Resident',
+          style: const TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
@@ -117,8 +173,8 @@ class ProfilePage extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Resident since Oct 2023',
-          style: TextStyle(
+          'Role: ${profileAsync.value?.role.toUpperCase() ?? ''}',
+          style: const TextStyle(
             fontSize: 14,
             color: AppColors.textSecondary,
             fontWeight: FontWeight.w500,
@@ -128,16 +184,20 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoCard() {
+  Widget _buildInfoCard(WidgetRef ref) {
+    final profileAsync = ref.watch(currentProfileProvider);
+    final email = Supabase.instance.client.auth.currentUser?.email ?? 'No email';
+    final houseId = profileAsync.value?.houseId ?? 'Not Assigned';
+    
     return GlassCard(
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          _buildInfoRow(PhosphorIconsRegular.phone, 'Phone', '+60 12-345 6789'),
+          _buildInfoRow(PhosphorIconsRegular.phone, 'Phone', profileAsync.value?.phone ?? '-'),
           const Divider(height: 32, thickness: 0.5),
-          _buildInfoRow(PhosphorIconsRegular.envelopeSimple, 'Email', 'alex.morgan@hcm.com'),
+          _buildInfoRow(PhosphorIconsRegular.envelopeSimple, 'Email', email),
           const Divider(height: 32, thickness: 0.5),
-          _buildInfoRow(PhosphorIconsRegular.mapPin, 'Address', 'A-18-08, Block A, PHH Residency'),
+          _buildInfoRow(PhosphorIconsRegular.mapPin, 'House ID', houseId),
         ],
       ),
     );

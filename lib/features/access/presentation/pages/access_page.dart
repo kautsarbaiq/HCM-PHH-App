@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/widgets/action_button.dart';
 import '../../../../core/widgets/glass_text_field.dart';
@@ -66,7 +67,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
 
     try {
       final profile = await ref.read(currentProfileProvider.future);
-      if (profile == null || profile.houseId == null) {
+      if (profile == null || profile.houseId == null || profile.houseId!.isEmpty) {
         throw Exception('You must be assigned to a house to register visitors. Please contact Admin.');
       }
 

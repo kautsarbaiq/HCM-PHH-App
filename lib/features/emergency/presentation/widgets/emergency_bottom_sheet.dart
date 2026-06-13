@@ -1,13 +1,16 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../core/repositories/emergency_repository.dart';
+import '../../../../core/repositories/profile_repository.dart';
 
-class EmergencyBottomSheet extends StatelessWidget {
+class EmergencyBottomSheet extends ConsumerWidget {
   const EmergencyBottomSheet({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       child: BackdropFilter(
@@ -68,6 +71,8 @@ class EmergencyBottomSheet extends StatelessWidget {
                 const SizedBox(height: 24),
                 _buildEmergencyAction(
                   context,
+                  ref,
+                  type: 'panic',
                   icon: PhosphorIconsFill.siren,
                   title: 'Panic Button',
                   subtitle: 'Instantly alert all security guards',
@@ -76,6 +81,8 @@ class EmergencyBottomSheet extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildEmergencyAction(
                   context,
+                  ref,
+                  type: 'community',
                   icon: PhosphorIconsFill.megaphone,
                   title: 'Community Emergency',
                   subtitle: 'Trigger building evacuation notice',
@@ -84,6 +91,8 @@ class EmergencyBottomSheet extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildEmergencyAction(
                   context,
+                  ref,
+                  type: 'rollcall',
                   icon: PhosphorIconsFill.usersThree,
                   title: 'Emergency Roll Call',
                   subtitle: 'Verify all residents are accounted for',
@@ -92,6 +101,8 @@ class EmergencyBottomSheet extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildEmergencyAction(
                   context,
+                  ref,
+                  type: 'contact',
                   icon: PhosphorIconsFill.phone,
                   title: 'Emergency Contacts',
                   subtitle: 'Call fire, police, or medical services',
@@ -107,21 +118,43 @@ class EmergencyBottomSheet extends StatelessWidget {
   }
 
   Widget _buildEmergencyAction(
-    BuildContext context, {
+    BuildContext context,
+    WidgetRef ref, {
+    required String type,
     required IconData icon,
     required String title,
     required String subtitle,
     required Color color,
   }) {
     return GestureDetector(
-      onTap: () {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$title activated!'),
-            backgroundColor: color,
-          ),
-        );
+      onTap: () async {
+        try {
+          final profile = await ref.read(currentProfileProvider.future);
+          if (profile != null) {
+            final alert = EmergencyAlert(
+              id: '',
+              type: type,
+              title: title,
+              subtitle: subtitle,
+              triggeredBy: profile.id,
+              status: 'Active',
+              createdAt: '',
+            );
+            await ref.read(emergencyRepositoryProvider).triggerAlert(alert);
+          }
+        } catch (e) {
+          print(e);
+        }
+
+        if (context.mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$title activated! Guards alerted.'),
+              backgroundColor: color,
+            ),
+          );
+        }
       },
       child: Container(
         padding: const EdgeInsets.all(16),
