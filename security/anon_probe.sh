@@ -14,7 +14,9 @@ URL="$SUPABASE_URL"; KEY="$SUPABASE_ANON_KEY"
 
 TABLES=(profiles houses visitors announcements banners billings
         feedback_tickets facilities facility_bookings events polls
-        poll_votes emergency_alerts)
+        poll_votes emergency_alerts
+        # ad-hoc duplicate tables discovered in the live DB audit:
+        bookings emergencies tickets)
 
 echo "Anon probe (no user session) -> $URL"
 printf "%-20s | %-4s | %s\n" "TABLE" "HTTP" "RESULT"
