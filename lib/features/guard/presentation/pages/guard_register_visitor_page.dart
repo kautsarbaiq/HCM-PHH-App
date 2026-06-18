@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -35,6 +36,17 @@ class _GuardRegisterVisitorPageState extends ConsumerState<GuardRegisterVisitorP
   }
 
   Future<void> _capture(String type) async {
+    // CAMERA is declared in the manifest (needed by the QR scanner), so
+    // image_picker's camera also requires the permission granted at runtime.
+    final status = await Permission.camera.request();
+    if (!status.isGranted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Camera permission is required to capture photos.'), backgroundColor: Colors.red),
+        );
+      }
+      return;
+    }
     try {
       final picked = await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 70);
       if (picked == null) return;
