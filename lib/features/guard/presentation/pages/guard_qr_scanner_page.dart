@@ -176,12 +176,12 @@ class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage> with Si
             onPressed: () => Navigator.pop(context),
             child: const Text('Close'),
           ),
-          if (visitor.status == 'pending' || visitor.status == 'pre-registered')
+          if (visitor.status == 'expected')
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
               onPressed: () async {
-                // Update status to checked-in
-                await ref.read(guardVisitorsProvider.notifier).updateStatus(visitor.id, 'checked-in');
+                // Update status to checked_in
+                await ref.read(guardVisitorsProvider.notifier).updateStatus(visitor.id, 'checked_in');
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(

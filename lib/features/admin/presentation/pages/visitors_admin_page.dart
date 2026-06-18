@@ -50,6 +50,8 @@ String _formatTime(String? iso) {
   }
 }
 
+String _nameOrDash(String? name) => (name != null && name.isNotEmpty) ? name : '-';
+
 class VisitorsAdminPage extends ConsumerStatefulWidget {
   const VisitorsAdminPage({super.key});
 
@@ -106,7 +108,7 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
                 _buildDetailItem('Vehicle Plate', visitor.vehiclePlate?.isNotEmpty == true ? visitor.vehiclePlate! : '-'),
                 _buildDetailItem('House', visitor.house?.houseNumber ?? '-'),
                 _buildDetailItem('Registration', visitor.registrationType),
-                _buildDetailItem('Logged By', visitor.creator?.fullName ?? '-'),
+                _buildDetailItem('Logged By', _nameOrDash(visitor.creator?.fullName)),
                 _buildDetailItem('Expected At', _formatTime(visitor.expectedAt)),
                 _buildDetailItem('Checked In', _formatTime(visitor.checkedInAt)),
                 _buildDetailItem('Checked Out', _formatTime(visitor.checkedOutAt)),
@@ -305,7 +307,7 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
                                                       color: const Color(0xFFF4F7FE),
                                                       borderRadius: BorderRadius.circular(4),
                                                     ),
-                                                    child: Text(v.creator?.fullName ?? '-', style: const TextStyle(color: Color(0xFF2B3674), fontSize: 12)),
+                                                    child: Text(_nameOrDash(v.creator?.fullName), style: const TextStyle(color: Color(0xFF2B3674), fontSize: 12)),
                                                   ),
                                                 ),
                                               ),

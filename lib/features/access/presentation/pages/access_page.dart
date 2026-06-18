@@ -287,8 +287,8 @@ class _AccessPageState extends ConsumerState<AccessPage> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(child: Text('Error: $error')),
       data: (visitors) {
-        // Show only active passes (pre-registered or checked-in)
-        final activeVisitors = visitors.where((v) => v.status != 'checked-out' && v.qrToken != null).toList();
+        // Show only active passes (not yet checked-out)
+        final activeVisitors = visitors.where((v) => v.status != 'checked_out' && v.qrToken != null).toList();
         
         if (activeVisitors.isEmpty) {
           return const Center(
