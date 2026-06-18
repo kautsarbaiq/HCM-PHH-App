@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/user_role.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/glass_text_field.dart';
 
@@ -42,9 +43,11 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
           _emailController.text.trim(),
           _passwordController.text,
         );
-        
+
+        // Load the role so we can route admin/guard/resident to the right area.
+        await refreshUserRole();
         if (!mounted) return;
-        context.go('/home');
+        context.go(homeRouteForRole(appUserRoleNotifier.value));
       }
     } on AuthException catch (e) {
       if (!mounted) return;
@@ -100,7 +103,7 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _isSignUp ? 'Create your account' : 'Welcome back, resident',
+                    _isSignUp ? 'Create your account' : 'Sign in (resident / guard / admin)',
                     style: const TextStyle(
                       fontSize: 16,
                       color: AppColors.textSecondary,

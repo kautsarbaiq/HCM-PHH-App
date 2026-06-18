@@ -38,8 +38,8 @@ import '../../features/guard/presentation/pages/guard_qr_scanner_page.dart';
 import '../../features/guard/presentation/pages/guard_register_visitor_page.dart';
 
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/user_role.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
@@ -48,10 +48,14 @@ final GlobalKey<NavigatorState> _guardShellNavigatorKey = GlobalKey<NavigatorSta
 
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
-    notifyListeners();
-    _subscription = stream.asBroadcastStream().listen(
-      (dynamic _) => notifyListeners(),
-    );
+    // Load the role for an already-restored session, then notify the router.
+    refreshUserRole().then((_) => notifyListeners());
+    _subscription = stream.asBroadcastStream().listen((dynamic _) async {
+      // Re-fetch the role on every auth change (login/logout) BEFORE routing,
+      // so the redirect can route by role correctly.
+      await refreshUserRole();
+      notifyListeners();
+    });
   }
   late final StreamSubscription<dynamic> _subscription;
   @override
@@ -67,29 +71,36 @@ class AppRouter {
     initialLocation: '/home',
     refreshListenable: GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange),
     redirect: (context, state) {
-      final session = Supabase.instance.client.auth.currentSession;
-      final isLoggedIn = session != null;
-      final isGoingToLogin = state.matchedLocation == '/login' || 
-                             state.matchedLocation == '/admin' || 
-                             state.matchedLocation == '/guard';
+      final isLoggedIn = Supabase.instance.client.auth.currentSession != null;
+      final role = appUserRoleNotifier.value;
+      final loc = state.matchedLocation;
+      const loginPages = {'/login', '/admin', '/guard'};
 
-      if (!isLoggedIn && !isGoingToLogin) {
-        if (state.matchedLocation.startsWith('/admin')) {
-          return '/admin';
-        } else if (state.matchedLocation.startsWith('/guard')) {
-          return '/guard';
-        } else {
-          return '/login';
-        }
+      // Not signed in → send to the matching login page.
+      if (!isLoggedIn) {
+        if (loginPages.contains(loc)) return null;
+        if (loc.startsWith('/admin')) return '/admin';
+        if (loc.startsWith('/guard')) return '/guard';
+        return '/login';
       }
 
-      if (isLoggedIn && isGoingToLogin) {
-        // We could decode JWT to get role, but for now we just redirect to home and let the UI handle if they are unauthorized
-        if (state.matchedLocation == '/admin') return '/admin/dashboard';
-        if (state.matchedLocation == '/guard') return '/guard/visitors';
+      // Signed in but the role hasn't loaded yet → don't bounce; the refresh
+      // listener will re-run this redirect once the role is known.
+      if (role == null) return null;
+
+      // Role-based access control: keep each role inside its own area.
+      // (`/admin` and `/guard` are the LOGIN pages, so a signed-in admin/guard
+      // sitting there must be moved into their dashboard.)
+      if (role == 'admin') {
+        return (loc == '/admin' || !loc.startsWith('/admin')) ? '/admin/dashboard' : null;
+      }
+      if (role == 'guard') {
+        return (loc == '/guard' || !loc.startsWith('/guard')) ? '/guard/visitors' : null;
+      }
+      // resident (default): block admin/guard areas and the login pages.
+      if (loc.startsWith('/admin') || loc.startsWith('/guard') || loginPages.contains(loc)) {
         return '/home';
       }
-
       return null;
     },
     routes: [

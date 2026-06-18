@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/services/auth_service.dart';
-import '../../../../core/repositories/profile_repository.dart';
+import '../../../../core/services/user_role.dart';
 
 class AdminLoginPage extends ConsumerStatefulWidget {
   const AdminLoginPage({super.key});
@@ -27,11 +27,9 @@ class _AdminLoginPageState extends ConsumerState<AdminLoginPage> {
         _passwordController.text,
       );
       
+      await refreshUserRole();
       if (!mounted) return;
-      
-      // We will let the GoRouter redirect handle the routing based on auth state
-      // but we can manually go to dashboard for now if router redirect is not set up
-      context.go('/admin/dashboard');
+      context.go(homeRouteForRole(appUserRoleNotifier.value));
       
     } on AuthException catch (e) {
       if (!mounted) return;

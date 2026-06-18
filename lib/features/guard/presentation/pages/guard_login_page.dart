@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/user_role.dart';
 
 class GuardLoginPage extends ConsumerStatefulWidget {
   const GuardLoginPage({super.key});
@@ -26,8 +27,9 @@ class _GuardLoginPageState extends ConsumerState<GuardLoginPage> {
         _passwordController.text,
       );
       
+      await refreshUserRole();
       if (!mounted) return;
-      context.go('/guard/visitors');
+      context.go(homeRouteForRole(appUserRoleNotifier.value));
       
     } on AuthException catch (e) {
       if (!mounted) return;
