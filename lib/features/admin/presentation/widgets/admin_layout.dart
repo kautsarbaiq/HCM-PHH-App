@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AdminLayout extends StatelessWidget {
   final Widget child;
@@ -26,6 +27,14 @@ class AdminLayout extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.logout, color: Color(0xFFA3AED0)),
+                  onPressed: () async => Supabase.instance.client.auth.signOut(),
+                  tooltip: 'Logout',
+                ),
+                const SizedBox(width: 8),
+              ],
             ),
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,9 +130,7 @@ class AdminLayout extends StatelessWidget {
                 const SizedBox(width: 12),
                 IconButton(
                   icon: const Icon(Icons.logout, color: Color(0xFFA3AED0)),
-                  onPressed: () {
-                    context.go('/admin'); // Redirect to login
-                  },
+                  onPressed: () async => Supabase.instance.client.auth.signOut(),
                   tooltip: 'Logout',
                 ),
               ],
