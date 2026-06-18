@@ -80,10 +80,10 @@ class _AccessPageState extends ConsumerState<AccessPage> {
         vehiclePlate: _plateController.text.isEmpty ? null : _plateController.text,
         houseId: profile.houseId!,
         qrToken: qrToken,
-        status: 'pre-registered',
+        status: 'expected',
         expectedAt: DateTime.now().toIso8601String(), // Ideally from a date picker
         createdBy: profile.id,
-        registrationType: 'pre_registered',
+        registrationType: 'pre-registered',
       );
 
       await ref.read(visitorRepositoryProvider).createVisitor(visitor);

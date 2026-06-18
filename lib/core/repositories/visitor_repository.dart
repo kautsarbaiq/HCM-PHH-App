@@ -92,7 +92,7 @@ class VisitorRepository {
   Future<List<Visitor>> getAllVisitors() async {
     final response = await _supabase
         .from('visitors')
-        .select('*, houses(*), profiles!visitors_created_by_fkey(full_name, phone)')
+        .select('*, houses(*), profiles!visitors_created_by_fkey(*)')
         .order('created_at', ascending: false);
     
     return (response as List).map((json) => Visitor.fromJson(json)).toList();
@@ -101,7 +101,7 @@ class VisitorRepository {
   Future<List<Visitor>> getVisitorsForHouse(String houseId) async {
     final response = await _supabase
         .from('visitors')
-        .select('*, houses(*), profiles!visitors_created_by_fkey(full_name, phone)')
+        .select('*, houses(*), profiles!visitors_created_by_fkey(*)')
         .eq('house_id', houseId)
         .order('created_at', ascending: false);
     
@@ -112,7 +112,7 @@ class VisitorRepository {
     final response = await _supabase
         .from('visitors')
         .insert(visitor.toJson())
-        .select('*, houses(*), profiles!visitors_created_by_fkey(full_name, phone)')
+        .select('*, houses(*), profiles!visitors_created_by_fkey(*)')
         .single();
         
     return Visitor.fromJson(response);
@@ -123,17 +123,21 @@ class VisitorRepository {
         .from('visitors')
         .update({'status': status})
         .eq('id', id)
-        .select('*, houses(*), profiles!visitors_created_by_fkey(full_name, phone)')
+        .select('*, houses(*), profiles!visitors_created_by_fkey(*)')
         .single();
         
     return Visitor.fromJson(response);
+  }
+
+  Future<void> deleteVisitor(String id) async {
+    await _supabase.from('visitors').delete().eq('id', id);
   }
 
   Future<Visitor?> getVisitorByQrToken(String token) async {
     try {
       final response = await _supabase
           .from('visitors')
-          .select('*, houses(*), profiles!visitors_created_by_fkey(full_name, phone)')
+          .select('*, houses(*), profiles!visitors_created_by_fkey(*)')
           .eq('qr_token', token)
           .single();
           

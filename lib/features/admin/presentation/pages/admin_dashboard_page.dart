@@ -1,40 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AdminDashboardPage extends StatelessWidget {
+typedef DashboardStats = ({int residents, int houses, int activeBillings, int todayVisitors});
+
+final adminDashboardStatsProvider = FutureProvider.autoDispose<DashboardStats>((ref) async {
+  final supabase = Supabase.instance.client;
+  final now = DateTime.now();
+  final startOfDay = DateTime(now.year, now.month, now.day).toUtc().toIso8601String();
+
+  final residents = await supabase.from('profiles').count(CountOption.exact).eq('role', 'resident');
+  final houses = await supabase.from('houses').count(CountOption.exact);
+  final activeBillings = await supabase.from('billings').count(CountOption.exact).eq('status', 'unpaid');
+  final todayVisitors = await supabase.from('visitors').count(CountOption.exact).gte('created_at', startOfDay);
+
+  return (residents: residents, houses: houses, activeBillings: activeBillings, todayVisitors: todayVisitors);
+});
+
+class AdminDashboardPage extends ConsumerWidget {
   const AdminDashboardPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(adminDashboardStatsProvider);
+    final stats = statsAsync.valueOrNull;
+    final isLoading = statsAsync.isLoading;
+    final hasError = statsAsync.hasError;
+
+    String fmt(int? n) {
+      if (hasError) return '—';
+      if (n == null) return '…';
+      return NumberFormat.decimalPattern().format(n);
+    }
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Welcome to PHH housing Dashboard',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2B3674),
-            ),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Welcome to PHH housing Dashboard',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
+                ),
+              ),
+              IconButton(
+                onPressed: () => ref.invalidate(adminDashboardStatsProvider),
+                icon: isLoading
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.refresh, color: Color(0xFF4318FF)),
+                tooltip: 'Refresh stats',
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           const Text(
             'Here is an overview of the community.',
-            style: TextStyle(
-              fontSize: 16,
-              color: Color(0xFFA3AED0),
-            ),
+            style: TextStyle(fontSize: 16, color: Color(0xFFA3AED0)),
           ),
+          if (hasError) ...[
+            const SizedBox(height: 12),
+            Text('Could not load stats: ${statsAsync.error}', style: const TextStyle(color: Color(0xFFEE5D50), fontSize: 13)),
+          ],
           const SizedBox(height: 32),
           // Dashboard Cards
           Wrap(
             spacing: 24,
             runSpacing: 24,
             children: [
-              _buildStatCard('Total Residents', '1,245', Icons.people_rounded, const Color(0xFF4318FF)),
-              _buildStatCard('Total Houses', '320', Icons.house_rounded, const Color(0xFF00B5D8)),
-              _buildStatCard('Active Billings', '85', Icons.receipt_long_rounded, const Color(0xFFFFB547)),
-              _buildStatCard('Today Visitors', '42', Icons.badge_rounded, const Color(0xFF05CD99)),
+              _buildStatCard('Total Residents', fmt(stats?.residents), Icons.people_rounded, const Color(0xFF4318FF)),
+              _buildStatCard('Total Houses', fmt(stats?.houses), Icons.house_rounded, const Color(0xFF00B5D8)),
+              _buildStatCard('Active Billings', fmt(stats?.activeBillings), Icons.receipt_long_rounded, const Color(0xFFFFB547)),
+              _buildStatCard('Today Visitors', fmt(stats?.todayVisitors), Icons.badge_rounded, const Color(0xFF05CD99)),
             ],
           ),
           const SizedBox(height: 40),
@@ -51,11 +90,7 @@ class AdminDashboardPage extends StatelessWidget {
               children: [
                 Text(
                   'Recent Activities',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2B3674),
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
                 ),
                 SizedBox(height: 16),
                 Text('No recent activities to show.', style: TextStyle(color: Color(0xFFA3AED0))),
@@ -97,20 +132,12 @@ class AdminDashboardPage extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Color(0xFFA3AED0),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 14, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: const TextStyle(
-                    color: Color(0xFF2B3674),
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(color: Color(0xFF2B3674), fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ],
             ),

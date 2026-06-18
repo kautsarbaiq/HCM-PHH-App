@@ -90,14 +90,13 @@ class GuardVisitorsPage extends ConsumerWidget {
                               rows: visitors.map((visitor) {
                                 Color statusColor;
                                 switch (visitor.status.toLowerCase()) {
-                                  case 'pending':
-                                  case 'pre-registered':
+                                  case 'expected':
                                     statusColor = const Color(0xFFF59E0B);
                                     break;
-                                  case 'checked-in':
+                                  case 'checked_in':
                                     statusColor = const Color(0xFF10B981);
                                     break;
-                                  case 'checked-out':
+                                  case 'checked_out':
                                     statusColor = const Color(0xFF6B7280);
                                     break;
                                   default:
@@ -106,21 +105,32 @@ class GuardVisitorsPage extends ConsumerWidget {
 
                                 final dateStr = visitor.expectedAt != null 
                                     ? DateFormat('MMM d, yyyy HH:mm').format(DateTime.parse(visitor.expectedAt!).toLocal())
-                                    : 'Walk-in';
+                                    : '-';
 
                                 return DataRow(
                                   cells: [
-                                    DataCell(Text(visitor.visitorName, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF2B3674)))),
-                                    DataCell(Text(visitor.purpose, style: const TextStyle(color: Color(0xFF2B3674)))),
+                                    DataCell(
+                                      Row(
+                                        children: [
+                                          CircleAvatar(
+                                            backgroundColor: const Color(0xFF4318FF).withOpacity(0.1),
+                                            child: const Icon(Icons.person, color: Color(0xFF4318FF), size: 20),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Text(visitor.visitorName, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674))),
+                                        ],
+                                      ),
+                                    ),
+                                    DataCell(Text(visitor.purpose, style: const TextStyle(color: Color(0xFFA3AED0)))),
                                     DataCell(Text(visitor.vehiclePlate ?? '-', style: const TextStyle(color: Color(0xFF2B3674)))),
-                                    DataCell(Text(visitor.house?.houseNumber ?? '-', style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF2B3674)))),
-                                    DataCell(Text(dateStr, style: const TextStyle(color: Color(0xFF2B3674)))),
+                                    DataCell(Text(visitor.house?.houseNumber ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)))),
+                                    DataCell(Text(dateStr, style: const TextStyle(color: Color(0xFFA3AED0)))),
                                     DataCell(
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                         decoration: BoxDecoration(
                                           color: statusColor.withOpacity(0.15),
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(20),
                                         ),
                                         child: Text(
                                           visitor.status.toUpperCase(),
@@ -136,34 +146,24 @@ class GuardVisitorsPage extends ConsumerWidget {
                                       Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          if (visitor.status == 'pending')
-                                            ElevatedButton(
+                                          if (visitor.status == 'expected')
+                                            IconButton(
+                                              icon: const Icon(Icons.login, color: Color(0xFF10B981)),
                                               onPressed: () {
-                                                ref.read(guardVisitorsProvider.notifier).updateStatus(visitor.id, 'checked-in');
+                                                ref.read(guardVisitorsProvider.notifier).updateStatus(visitor.id, 'checked_in');
                                               },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(0xFF10B981),
-                                                foregroundColor: Colors.white,
-                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                                minimumSize: Size.zero,
-                                              ),
-                                              child: const Text('Check-in', style: TextStyle(fontSize: 12)),
+                                              tooltip: 'Check In',
                                             ),
-                                          if (visitor.status == 'checked-in')
-                                            ElevatedButton(
+                                          if (visitor.status == 'checked_in')
+                                            IconButton(
+                                              icon: const Icon(Icons.logout, color: Color(0xFFF59E0B)),
                                               onPressed: () {
-                                                ref.read(guardVisitorsProvider.notifier).updateStatus(visitor.id, 'checked-out');
+                                                ref.read(guardVisitorsProvider.notifier).updateStatus(visitor.id, 'checked_out');
                                               },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(0xFF6B7280),
-                                                foregroundColor: Colors.white,
-                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                                minimumSize: Size.zero,
-                                              ),
-                                              child: const Text('Check-out', style: TextStyle(fontSize: 12)),
+                                              tooltip: 'Check Out',
                                             ),
                                         ],
-                                      )
+                                      ),
                                     ),
                                   ],
                                 );

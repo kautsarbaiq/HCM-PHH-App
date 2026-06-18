@@ -1,108 +1,132 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/repositories/banner_repository.dart';
 
-class BannerItem {
-  final String id;
-  final String title;
-  final String imageUrl;
+const _kDefaultBannerImage =
+    'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80';
 
-  BannerItem({
-    required this.id,
-    required this.title,
-    required this.imageUrl,
-  });
+final adminBannersProvider =
+    AsyncNotifierProvider<AdminBannersNotifier, List<BannerItem>>(
+        () => AdminBannersNotifier());
 
-  BannerItem copyWith({
-    String? id,
-    String? title,
-    String? imageUrl,
-  }) {
-    return BannerItem(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      imageUrl: imageUrl ?? this.imageUrl,
-    );
+class AdminBannersNotifier extends AsyncNotifier<List<BannerItem>> {
+  @override
+  Future<List<BannerItem>> build() async {
+    final repo = ref.read(bannerRepositoryProvider);
+    return repo.getAllBanners();
+  }
+
+  Future<void> addBanner(BannerItem banner) async {
+    final repo = ref.read(bannerRepositoryProvider);
+    await repo.createBanner(banner);
+    ref.invalidateSelf();
+  }
+
+  Future<void> updateBanner(String id, Map<String, dynamic> updates) async {
+    final repo = ref.read(bannerRepositoryProvider);
+    await repo.updateBanner(id, updates);
+    ref.invalidateSelf();
+  }
+
+  Future<void> deleteBanner(String id) async {
+    final repo = ref.read(bannerRepositoryProvider);
+    await repo.deleteBanner(id);
+    ref.invalidateSelf();
   }
 }
 
-class BannersAdminPage extends StatefulWidget {
+class BannersAdminPage extends ConsumerStatefulWidget {
   const BannersAdminPage({super.key});
 
   @override
-  State<BannersAdminPage> createState() => _BannersAdminPageState();
+  ConsumerState<BannersAdminPage> createState() => _BannersAdminPageState();
 }
 
-class _BannersAdminPageState extends State<BannersAdminPage> {
-  final List<BannerItem> _banners = List.generate(4, (index) {
-    return BannerItem(
-      id: '${index + 1}',
-      title: 'Community Banner ${index + 1}',
-      imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80',
+class _BannersAdminPageState extends ConsumerState<BannersAdminPage> {
+  void _showError(Object error) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed: $error'), backgroundColor: Colors.red),
     );
-  });
+  }
 
-  void _showForm({BannerItem? banner}) {
+  void _showForm({BannerItem? banner, required int currentCount}) {
     final isEdit = banner != null;
     final titleController = TextEditingController(text: banner?.title ?? '');
     final urlController = TextEditingController(text: banner?.imageUrl ?? '');
+    bool isActive = banner?.isActive ?? true;
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            isEdit ? 'Edit Banner' : 'Add New Banner',
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildTextField(titleController, 'Banner Title', Icons.title),
-                _buildTextField(urlController, 'Image URL (optional)', Icons.link),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (titleController.text.isEmpty) return;
-                setState(() {
-                  final finalUrl = urlController.text.isEmpty
-                      ? 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80'
-                      : urlController.text;
-
-                  if (isEdit) {
-                    final idx = _banners.indexWhere((b) => b.id == banner.id);
-                    if (idx != -1) {
-                      _banners[idx] = banner.copyWith(
-                        title: titleController.text,
-                        imageUrl: finalUrl,
-                      );
-                    }
-                  } else {
-                    _banners.add(BannerItem(
-                      id: '${_banners.length + 1}',
-                      title: titleController.text,
-                      imageUrl: finalUrl,
-                    ));
-                  }
-                });
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4318FF),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Text(
+                isEdit ? 'Edit Banner' : 'Add New Banner',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
               ),
-              child: Text(isEdit ? 'Save Changes' : 'Create'),
-            ),
-          ],
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildTextField(titleController, 'Banner Title', Icons.title),
+                    _buildTextField(urlController, 'Image URL (optional)', Icons.link),
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      activeColor: const Color(0xFF05CD99),
+                      title: const Text('Active', style: TextStyle(color: Color(0xFF2B3674), fontWeight: FontWeight.bold)),
+                      subtitle: const Text('Only active banners are shown to residents', style: TextStyle(color: Color(0xFFA3AED0), fontSize: 12)),
+                      value: isActive,
+                      onChanged: (val) => setDialogState(() => isActive = val),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (titleController.text.isEmpty) return;
+                    final navigator = Navigator.of(context);
+                    final finalUrl = urlController.text.isEmpty ? _kDefaultBannerImage : urlController.text;
+                    try {
+                      if (isEdit) {
+                        await ref.read(adminBannersProvider.notifier).updateBanner(banner.id, {
+                          'title': titleController.text,
+                          'image_url': finalUrl,
+                          'is_active': isActive,
+                        });
+                      } else {
+                        await ref.read(adminBannersProvider.notifier).addBanner(BannerItem(
+                              id: '',
+                              title: titleController.text,
+                              imageUrl: finalUrl,
+                              isActive: isActive,
+                              sortOrder: currentCount,
+                            ));
+                      }
+                      navigator.pop();
+                    } catch (e) {
+                      _showError(e);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4318FF),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(isEdit ? 'Save Changes' : 'Create'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -148,11 +172,14 @@ class _BannersAdminPageState extends State<BannersAdminPage> {
               child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
-              onPressed: () {
-                setState(() {
-                  _banners.removeWhere((b) => b.id == banner.id);
-                });
-                Navigator.pop(context);
+              onPressed: () async {
+                final navigator = Navigator.of(context);
+                try {
+                  await ref.read(adminBannersProvider.notifier).deleteBanner(banner.id);
+                  navigator.pop();
+                } catch (e) {
+                  _showError(e);
+                }
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
             ),
@@ -164,6 +191,8 @@ class _BannersAdminPageState extends State<BannersAdminPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bannersAsync = ref.watch(adminBannersProvider);
+
     return Card(
       color: Colors.white,
       elevation: 0,
@@ -187,7 +216,7 @@ class _BannersAdminPageState extends State<BannersAdminPage> {
                   ),
                 ),
                 ElevatedButton.icon(
-                  onPressed: () => _showForm(),
+                  onPressed: () => _showForm(currentCount: bannersAsync.valueOrNull?.length ?? 0),
                   icon: const Icon(Icons.add),
                   label: const Text('Add Banner'),
                   style: ElevatedButton.styleFrom(
@@ -202,32 +231,39 @@ class _BannersAdminPageState extends State<BannersAdminPage> {
             ),
             const SizedBox(height: 24),
             Expanded(
-              child: _banners.isEmpty
-                  ? const Center(child: Text('No banners active', style: TextStyle(color: Color(0xFFA3AED0))))
-                  : LayoutBuilder(
-                      builder: (context, constraints) {
-                        int crossAxisCount = 1;
-                        if (constraints.maxWidth > 800) {
-                          crossAxisCount = 3;
-                        } else if (constraints.maxWidth > 500) {
-                          crossAxisCount = 2;
-                        }
+              child: bannersAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(child: Text('Error: $error', style: const TextStyle(color: Color(0xFFA3AED0)))),
+                data: (banners) {
+                  if (banners.isEmpty) {
+                    return const Center(child: Text('No banners active', style: TextStyle(color: Color(0xFFA3AED0))));
+                  }
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      int crossAxisCount = 1;
+                      if (constraints.maxWidth > 800) {
+                        crossAxisCount = 3;
+                      } else if (constraints.maxWidth > 500) {
+                        crossAxisCount = 2;
+                      }
 
-                        return GridView.builder(
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossAxisCount,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 16 / 10,
-                          ),
-                          itemCount: _banners.length,
-                          itemBuilder: (context, index) {
-                            final b = _banners[index];
-                            return ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Stack(
-                                children: [
-                                  Positioned.fill(
+                      return GridView.builder(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 16 / 10,
+                        ),
+                        itemCount: banners.length,
+                        itemBuilder: (context, index) {
+                          final b = banners[index];
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: Opacity(
+                                    opacity: b.isActive ? 1.0 : 0.45,
                                     child: Image.network(
                                       b.imageUrl,
                                       fit: BoxFit.cover,
@@ -239,68 +275,85 @@ class _BannersAdminPageState extends State<BannersAdminPage> {
                                       },
                                     ),
                                   ),
-                                  // Bottom Banner Title Overlay
-                                  Positioned(
-                                    bottom: 0,
-                                    left: 0,
-                                    right: 0,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.bottomCenter,
-                                          end: Alignment.topCenter,
-                                          colors: [
-                                            Colors.black.withOpacity(0.8),
-                                            Colors.transparent,
-                                          ],
-                                        ),
-                                      ),
-                                      child: Text(
-                                        b.title,
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ),
-                                  // Top Right Action Buttons
-                                  Positioned(
-                                    top: 10,
-                                    right: 10,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.9),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          IconButton(
-                                            icon: const Icon(Icons.edit, color: Colors.orange, size: 16),
-                                            onPressed: () => _showForm(banner: b),
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                            tooltip: 'Edit Banner',
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(Icons.delete, color: Colors.red, size: 16),
-                                            onPressed: () => _deleteBanner(b),
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                            tooltip: 'Delete Banner',
-                                          ),
+                                ),
+                                // Bottom Banner Title Overlay
+                                Positioned(
+                                  bottom: 0,
+                                  left: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                        colors: [
+                                          Colors.black.withOpacity(0.8),
+                                          Colors.transparent,
                                         ],
                                       ),
                                     ),
+                                    child: Text(
+                                      b.title,
+                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
+                                ),
+                                // Inactive badge
+                                if (!b.isActive)
+                                  Positioned(
+                                    top: 10,
+                                    left: 10,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.6),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: const Text('INACTIVE', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ),
+                                // Top Right Action Buttons
+                                Positioned(
+                                  top: 10,
+                                  right: 10,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.9),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.edit, color: Colors.orange, size: 16),
+                                          onPressed: () => _showForm(banner: b, currentCount: banners.length),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                          tooltip: 'Edit Banner',
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete, color: Colors.red, size: 16),
+                                          onPressed: () => _deleteBanner(b),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                          tooltip: 'Delete Banner',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),

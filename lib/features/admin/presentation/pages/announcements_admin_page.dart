@@ -1,49 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import '../../../../core/repositories/announcement_repository.dart';
 
-class Announcement {
-  final String id;
-  final String title;
-  final String content;
-  final String date;
+final adminAnnouncementsProvider =
+    AsyncNotifierProvider<AdminAnnouncementsNotifier, List<Announcement>>(
+        () => AdminAnnouncementsNotifier());
 
-  Announcement({
-    required this.id,
-    required this.title,
-    required this.content,
-    required this.date,
-  });
+class AdminAnnouncementsNotifier extends AsyncNotifier<List<Announcement>> {
+  @override
+  Future<List<Announcement>> build() async {
+    final repo = ref.read(announcementRepositoryProvider);
+    return repo.getAllAnnouncements();
+  }
 
-  Announcement copyWith({
-    String? id,
-    String? title,
-    String? content,
-    String? date,
-  }) {
-    return Announcement(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      content: content ?? this.content,
-      date: date ?? this.date,
-    );
+  Future<void> addAnnouncement(Announcement announcement) async {
+    final repo = ref.read(announcementRepositoryProvider);
+    await repo.createAnnouncement(announcement);
+    ref.invalidateSelf();
+  }
+
+  Future<void> updateAnnouncement(String id, Map<String, dynamic> updates) async {
+    final repo = ref.read(announcementRepositoryProvider);
+    await repo.updateAnnouncement(id, updates);
+    ref.invalidateSelf();
+  }
+
+  Future<void> deleteAnnouncement(String id) async {
+    final repo = ref.read(announcementRepositoryProvider);
+    await repo.deleteAnnouncement(id);
+    ref.invalidateSelf();
   }
 }
 
-class AnnouncementsAdminPage extends StatefulWidget {
+class AnnouncementsAdminPage extends ConsumerStatefulWidget {
   const AnnouncementsAdminPage({super.key});
 
   @override
-  State<AnnouncementsAdminPage> createState() => _AnnouncementsAdminPageState();
+  ConsumerState<AnnouncementsAdminPage> createState() => _AnnouncementsAdminPageState();
 }
 
-class _AnnouncementsAdminPageState extends State<AnnouncementsAdminPage> {
-  final List<Announcement> _announcements = List.generate(5, (index) {
-    return Announcement(
-      id: '${index + 1}',
-      title: 'Community Meeting ${index + 1}',
-      content: 'This is a mock announcement regarding the upcoming community meeting to discuss the neighborhood watch program, cleanliness, and parking rules.',
-      date: 'June ${10 + index}, 2026',
+class _AnnouncementsAdminPageState extends ConsumerState<AnnouncementsAdminPage> {
+  String _formatDate(String iso) {
+    try {
+      return DateFormat('MMM dd, yyyy').format(DateTime.parse(iso).toLocal());
+    } catch (_) {
+      return iso;
+    }
+  }
+
+  void _showError(Object error) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed: $error'), backgroundColor: Colors.red),
     );
-  });
+  }
 
   void _showDetails(Announcement announcement) {
     showDialog(
@@ -54,7 +65,10 @@ class _AnnouncementsAdminPageState extends State<AnnouncementsAdminPage> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
             children: [
-              const Icon(Icons.campaign, color: Color(0xFF4318FF)),
+              Icon(
+                announcement.isUrgent ? Icons.warning_amber_rounded : Icons.campaign,
+                color: announcement.isUrgent ? const Color(0xFFEE5D50) : const Color(0xFF4318FF),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -68,7 +82,7 @@ class _AnnouncementsAdminPageState extends State<AnnouncementsAdminPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(announcement.date, style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 12, fontWeight: FontWeight.bold)),
+              Text(_formatDate(announcement.publishedAt), style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 12, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               Text(
                 announcement.content,
@@ -91,62 +105,78 @@ class _AnnouncementsAdminPageState extends State<AnnouncementsAdminPage> {
     final isEdit = announcement != null;
     final titleController = TextEditingController(text: announcement?.title ?? '');
     final contentController = TextEditingController(text: announcement?.content ?? '');
+    bool isUrgent = announcement?.isUrgent ?? false;
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            isEdit ? 'Edit Announcement' : 'Create Announcement',
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildTextField(titleController, 'Title', Icons.title),
-                _buildTextField(contentController, 'Content details', Icons.description, maxLines: 5),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (titleController.text.isEmpty || contentController.text.isEmpty) return;
-                setState(() {
-                  if (isEdit) {
-                    final idx = _announcements.indexWhere((a) => a.id == announcement.id);
-                    if (idx != -1) {
-                      _announcements[idx] = announcement.copyWith(
-                        title: titleController.text,
-                        content: contentController.text,
-                      );
-                    }
-                  } else {
-                    _announcements.insert(0, Announcement(
-                      id: '${_announcements.length + 1}',
-                      title: titleController.text,
-                      content: contentController.text,
-                      date: 'June 05, 2026',
-                    ));
-                  }
-                });
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4318FF),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Text(
+                isEdit ? 'Edit Announcement' : 'Create Announcement',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
               ),
-              child: Text(isEdit ? 'Save' : 'Post'),
-            ),
-          ],
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildTextField(titleController, 'Title', Icons.title),
+                    _buildTextField(contentController, 'Content details', Icons.description, maxLines: 5),
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      activeColor: const Color(0xFFEE5D50),
+                      title: const Text('Mark as urgent', style: TextStyle(color: Color(0xFF2B3674), fontWeight: FontWeight.bold)),
+                      subtitle: const Text('Urgent notices are highlighted for residents', style: TextStyle(color: Color(0xFFA3AED0), fontSize: 12)),
+                      value: isUrgent,
+                      onChanged: (val) => setDialogState(() => isUrgent = val),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (titleController.text.isEmpty || contentController.text.isEmpty) return;
+                    final navigator = Navigator.of(context);
+                    try {
+                      if (isEdit) {
+                        await ref.read(adminAnnouncementsProvider.notifier).updateAnnouncement(announcement.id, {
+                          'title': titleController.text,
+                          'content': contentController.text,
+                          'is_urgent': isUrgent,
+                        });
+                      } else {
+                        await ref.read(adminAnnouncementsProvider.notifier).addAnnouncement(Announcement(
+                              id: '',
+                              title: titleController.text,
+                              content: contentController.text,
+                              isUrgent: isUrgent,
+                              publishedAt: '',
+                            ));
+                      }
+                      navigator.pop();
+                    } catch (e) {
+                      _showError(e);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4318FF),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(isEdit ? 'Save' : 'Post'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -194,11 +224,14 @@ class _AnnouncementsAdminPageState extends State<AnnouncementsAdminPage> {
               child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
-              onPressed: () {
-                setState(() {
-                  _announcements.removeWhere((a) => a.id == announcement.id);
-                });
-                Navigator.pop(context);
+              onPressed: () async {
+                final navigator = Navigator.of(context);
+                try {
+                  await ref.read(adminAnnouncementsProvider.notifier).deleteAnnouncement(announcement.id);
+                  navigator.pop();
+                } catch (e) {
+                  _showError(e);
+                }
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
             ),
@@ -210,6 +243,8 @@ class _AnnouncementsAdminPageState extends State<AnnouncementsAdminPage> {
 
   @override
   Widget build(BuildContext context) {
+    final announcementsAsync = ref.watch(adminAnnouncementsProvider);
+
     return Card(
       color: Colors.white,
       elevation: 0,
@@ -248,12 +283,19 @@ class _AnnouncementsAdminPageState extends State<AnnouncementsAdminPage> {
             ),
             const SizedBox(height: 24),
             Expanded(
-              child: _announcements.isEmpty
-                  ? const Center(child: Text('No announcements posted yet', style: TextStyle(color: Color(0xFFA3AED0))))
-                  : ListView.builder(
-                      itemCount: _announcements.length,
+              child: announcementsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(child: Text('Error: $error', style: const TextStyle(color: Color(0xFFA3AED0)))),
+                data: (announcements) {
+                  if (announcements.isEmpty) {
+                    return const Center(child: Text('No announcements posted yet', style: TextStyle(color: Color(0xFFA3AED0))));
+                  }
+                  return RefreshIndicator(
+                    onRefresh: () async => ref.invalidate(adminAnnouncementsProvider),
+                    child: ListView.builder(
+                      itemCount: announcements.length,
                       itemBuilder: (context, index) {
-                        final a = _announcements[index];
+                        final a = announcements[index];
                         return Card(
                           elevation: 0,
                           margin: const EdgeInsets.only(bottom: 16),
@@ -263,13 +305,33 @@ class _AnnouncementsAdminPageState extends State<AnnouncementsAdminPage> {
                           ),
                           child: ListTile(
                             contentPadding: const EdgeInsets.all(16),
-                            leading: const CircleAvatar(
-                              backgroundColor: Color(0xFFF4F7FE),
-                              child: Icon(Icons.campaign_rounded, color: Color(0xFF4318FF)),
+                            leading: CircleAvatar(
+                              backgroundColor: a.isUrgent ? const Color(0xFFFDEAEA) : const Color(0xFFF4F7FE),
+                              child: Icon(
+                                a.isUrgent ? Icons.warning_amber_rounded : Icons.campaign_rounded,
+                                color: a.isUrgent ? const Color(0xFFEE5D50) : const Color(0xFF4318FF),
+                              ),
                             ),
-                            title: Text(
-                              a.title,
-                              style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
+                            title: Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    a.title,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
+                                  ),
+                                ),
+                                if (a.isUrgent) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEE5D50).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: const Text('URGENT', style: TextStyle(color: Color(0xFFEE5D50), fontSize: 10, fontWeight: FontWeight.bold)),
+                                  ),
+                                ],
+                              ],
                             ),
                             subtitle: Padding(
                               padding: const EdgeInsets.only(top: 8.0),
@@ -284,7 +346,7 @@ class _AnnouncementsAdminPageState extends State<AnnouncementsAdminPage> {
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
-                                    a.date,
+                                    _formatDate(a.publishedAt),
                                     style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 11, fontWeight: FontWeight.bold),
                                   ),
                                 ],
@@ -302,6 +364,9 @@ class _AnnouncementsAdminPageState extends State<AnnouncementsAdminPage> {
                         );
                       },
                     ),
+                  );
+                },
+              ),
             ),
           ],
         ),

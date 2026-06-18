@@ -64,6 +64,10 @@ class AnnouncementRepository {
     return Announcement.fromJson(response);
   }
 
+  Future<void> updateAnnouncement(String id, Map<String, dynamic> updates) async {
+    await _supabase.from('announcements').update(updates).eq('id', id);
+  }
+
   Future<void> deleteAnnouncement(String id) async {
     await _supabase.from('announcements').delete().eq('id', id);
   }
