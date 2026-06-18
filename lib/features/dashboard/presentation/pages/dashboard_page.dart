@@ -1,55 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:hcm_app/theme/app_colors.dart';
+import '../../../../core/repositories/billing_repository.dart';
+import '../../../../core/repositories/facility_repository.dart';
+import '../../../../core/repositories/profile_repository.dart';
 import '../../../main/presentation/pages/main_navigation_page.dart';
 import '../../../access/presentation/widgets/smart_access_modal.dart';
 import '../../../emergency/presentation/widgets/emergency_bottom_sheet.dart';
 import '../widgets/quick_action_item.dart';
 
-class DashboardPage extends StatefulWidget {
+final dashboardOutstandingProvider = FutureProvider<List<Billing>>((ref) {
+  return ref.read(billingRepositoryProvider).getMyBillings();
+});
+
+final dashboardBookingsProvider = FutureProvider<List<Booking>>((ref) async {
+  final uid = Supabase.instance.client.auth.currentUser?.id;
+  if (uid == null) return [];
+  return ref.read(facilityRepositoryProvider).getMyBookings(uid);
+});
+
+final _currency = NumberFormat.currency(locale: 'id_ID', symbol: 'RM ', decimalDigits: 0);
+
+String _bookingDateLabel(String iso) {
+  try {
+    return DateFormat('EEE, MMM dd').format(DateTime.parse(iso));
+  } catch (_) {
+    return iso;
+  }
+}
+
+class DashboardPage extends ConsumerStatefulWidget {
   const DashboardPage({super.key});
 
   @override
-  State<DashboardPage> createState() => _DashboardPageState();
+  ConsumerState<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardPageState extends ConsumerState<DashboardPage> {
   int _activePage = 0;
   late final PageController _pageController;
-
-  final List<Map<String, dynamic>> _bookings = [
-    {
-      'type': 'gym booking',
-      'time': '7:00 PM today',
-      'icon': PhosphorIconsFill.sun,
-      'iconColor': Colors.orangeAccent,
-      'emoji': '💪',
-      'phrase': 'Don\'t miss your session',
-      'route': '/facility',
-    },
-    {
-      'type': 'swimming booking',
-      'time': '9:00 AM tomorrow',
-      'icon': PhosphorIconsFill.drop,
-      'iconColor': Colors.blueAccent,
-      'emoji': '🏊',
-      'phrase': 'Ready for a refreshing splash?',
-      'route': '/facility',
-    },
-    {
-      'type': 'tennis booking',
-      'time': '4:30 PM this Friday',
-      'icon': PhosphorIconsFill.calendar,
-      'iconColor': Colors.green,
-      'emoji': '🎾',
-      'phrase': 'Challenge your neighbor!',
-      'route': '/facility',
-    },
-  ];
 
   @override
   void initState() {
@@ -87,6 +82,9 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildOutstandingBanner(BuildContext context) {
+    final bills = ref.watch(dashboardOutstandingProvider).valueOrNull ?? <Billing>[];
+    final unpaid = bills.where((b) => b.status != 'paid').toList();
+    final total = unpaid.fold<double>(0, (sum, b) => sum + b.amount);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -132,50 +130,45 @@ class _DashboardPageState extends State<DashboardPage> {
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Color(0xFF10B981), // Vibrant modern emerald green
-                              Color(0xFF059669), // Premium forest green
-                            ],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF10B981).withOpacity(0.35),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
+                  child: unpaid.isEmpty
+                      ? Row(
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [Color(0xFF10B981), Color(0xFF059669)],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(color: const Color(0xFF10B981).withOpacity(0.35), blurRadius: 8, offset: const Offset(0, 3)),
+                                ],
+                              ),
+                              child: const Center(child: Icon(PhosphorIconsBold.check, color: Colors.white, size: 14)),
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'All Cleared!',
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepSlate, letterSpacing: -0.5),
                             ),
                           ],
+                        )
+                      : Text(
+                          _currency.format(total),
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.deepSlate, letterSpacing: -0.5),
                         ),
-                        child: const Center(
-                          child: Icon(
-                            PhosphorIconsBold.check,
-                            color: Colors.white,
-                            size: 14,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'All Cleared!',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.deepSlate,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
+                if (unpaid.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '${unpaid.length} unpaid bill${unpaid.length > 1 ? 's' : ''}',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.error.withOpacity(0.9)),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -210,6 +203,8 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final profile = ref.watch(currentProfileProvider).valueOrNull;
+    final avatarUrl = profile?.avatarUrl;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
@@ -246,18 +241,20 @@ class _DashboardPageState extends State<DashboardPage> {
                         color: AppColors.primaryWhite,
                       ),
                       child: ClipOval(
-                        child: Image.network(
-                          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80',
-                          errorBuilder: (context, error, stackTrace) => const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
-                          fit: BoxFit.cover,
-                        ),
+                        child: (avatarUrl != null && avatarUrl.isNotEmpty)
+                            ? Image.network(
+                                avatarUrl,
+                                errorBuilder: (context, error, stackTrace) => const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
+                                fit: BoxFit.cover,
+                              )
+                            : const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Alex Morgan',
-                        style: TextStyle(
+                        (profile?.fullName.isNotEmpty ?? false) ? profile!.fullName : 'Resident',
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: AppColors.deepSlate,
@@ -385,6 +382,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildTopHeader(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
+    final bookings = ref.watch(dashboardBookingsProvider).valueOrNull ?? <Booking>[];
 
     return Container(
       decoration: BoxDecoration(
@@ -465,101 +463,92 @@ class _DashboardPageState extends State<DashboardPage> {
                   _buildHeader(context),
                   const SizedBox(height: 24),
                   
-                  // Slider container
+                  // Slider container — upcoming facility bookings
                   SizedBox(
                     height: 140,
-                    child: PageView.builder(
-                      controller: _pageController,
-                      onPageChanged: (index) {
-                        setState(() {
-                          _activePage = index;
-                        });
-                      },
-                      itemCount: _bookings.length,
-                      itemBuilder: (context, index) {
-                        final booking = _bookings[index];
-                        final String currentTime = DateFormat('hh:mm a').format(DateTime.now());
-                        
-                        return GestureDetector(
-                          onTap: () => context.push(booking['route']),
-                          behavior: HitTestBehavior.opaque,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    currentTime,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.deepSlate.withOpacity(0.7),
-                                    ),
-                                  ),
-                                  Icon(
-                                    booking['icon'],
-                                    size: 20,
-                                    color: booking['iconColor'],
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Expanded(
-                                child: RichText(
-                                  text: TextSpan(
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      color: AppColors.deepSlate,
-                                      height: 1.4,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    children: [
-                                      const TextSpan(text: 'Your '),
-                                      TextSpan(
-                                        text: booking['type'],
-                                        style: const TextStyle(
-                                          color: Color(0xFF005682), // Deep blue/teal
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const TextSpan(text: ' is at '),
-                                      TextSpan(
-                                        text: booking['time'],
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.deepSlate,
-                                        ),
-                                      ),
-                                      TextSpan(text: '. ${booking['phrase']} ${booking['emoji']}'),
-                                    ],
+                    child: bookings.isEmpty
+                        ? GestureDetector(
+                            onTap: () => context.push('/facility'),
+                            behavior: HitTestBehavior.opaque,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(DateFormat('EEE, MMM dd').format(DateTime.now()),
+                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.deepSlate.withOpacity(0.7))),
+                                    const Icon(PhosphorIconsFill.calendar, size: 20, color: Color(0xFF005682)),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                const Expanded(
+                                  child: Text(
+                                    'No upcoming bookings. Tap to book a facility 📅',
+                                    style: TextStyle(fontSize: 18, color: AppColors.deepSlate, height: 1.4, fontWeight: FontWeight.w500),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+                          )
+                        : PageView.builder(
+                            controller: _pageController,
+                            onPageChanged: (index) => setState(() => _activePage = index),
+                            itemCount: bookings.length,
+                            itemBuilder: (context, index) {
+                              final b = bookings[index];
+                              return GestureDetector(
+                                onTap: () => context.push('/facility'),
+                                behavior: HitTestBehavior.opaque,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(_bookingDateLabel(b.date),
+                                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.deepSlate.withOpacity(0.7))),
+                                        const Icon(PhosphorIconsFill.calendarCheck, size: 20, color: Color(0xFF005682)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Expanded(
+                                      child: RichText(
+                                        text: TextSpan(
+                                          style: const TextStyle(fontSize: 18, color: AppColors.deepSlate, height: 1.4, fontWeight: FontWeight.w500),
+                                          children: [
+                                            const TextSpan(text: 'Your '),
+                                            TextSpan(text: b.facilityName, style: const TextStyle(color: Color(0xFF005682), fontWeight: FontWeight.bold)),
+                                            const TextSpan(text: ' booking is at '),
+                                            TextSpan(text: b.time, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.deepSlate)),
+                                            const TextSpan(text: '. See you there! 🎉'),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
                   ),
                   const SizedBox(height: 12),
-                  
-                  // Slider indicators at the bottom left with micro-animations
-                  Row(
-                    children: List.generate(_bookings.length, (index) {
-                      final isActive = index == _activePage;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.only(right: 4),
-                        width: isActive ? 24 : 4,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: AppColors.deepSlate.withOpacity(isActive ? 0.3 : 0.15),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      );
-                    }),
-                  ),
+                  if (bookings.length > 1)
+                    Row(
+                      children: List.generate(bookings.length, (index) {
+                        final isActive = index == _activePage;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: const EdgeInsets.only(right: 4),
+                          width: isActive ? 24 : 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: AppColors.deepSlate.withOpacity(isActive ? 0.3 : 0.15),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        );
+                      }),
+                    ),
                 ],
               ),
             ],
