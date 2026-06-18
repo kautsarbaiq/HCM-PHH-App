@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class CommunityEvent {
   final String id;
   final String title;
-  final String date;
+  final String date; // ISO timestamp (events.event_date)
   final String location;
   final int attending;
   final int capacity;
@@ -22,16 +22,20 @@ class CommunityEvent {
     required this.createdAt,
   });
 
+  bool isAttending(String userId) => attendees.contains(userId);
+
   factory CommunityEvent.fromJson(Map<String, dynamic> json) {
+    final attendees = (json['attendees'] as List<dynamic>?) ?? [];
     return CommunityEvent(
       id: json['id'].toString(),
-      title: json['title'] as String,
-      date: json['date'] as String,
-      location: json['location'] as String,
-      attending: json['attending'] as int? ?? 0,
+      title: json['title'] as String? ?? '',
+      // Live column is `event_date`; fall back to `date` for older shapes.
+      date: (json['event_date'] ?? json['date'] ?? '').toString(),
+      location: json['location'] as String? ?? '',
+      attending: attendees.length,
       capacity: json['capacity'] as int? ?? 50,
-      attendees: json['attendees'] as List<dynamic>? ?? [],
-      createdAt: json['created_at'] as String,
+      attendees: attendees,
+      createdAt: (json['created_at'] ?? '').toString(),
     );
   }
 }
@@ -46,23 +50,18 @@ class EventRepository {
   EventRepository(this._supabase);
 
   Future<List<CommunityEvent>> getAllEvents() async {
-    try {
-      final response = await _supabase
-          .from('events')
-          .select()
-          .order('created_at', ascending: false);
-      
-      return (response as List).map((json) => CommunityEvent.fromJson(json)).toList();
-    } catch (e) {
-      print('Error fetching events: $e');
-      return [];
-    }
+    final response = await _supabase
+        .from('events')
+        .select()
+        .order('event_date', ascending: true);
+
+    return (response as List).map((json) => CommunityEvent.fromJson(json)).toList();
   }
 
-  Future<void> toggleRsvp(String eventId, String userId, bool isCurrentlyAttending) async {
-    // In a real scenario we'd use a postgres function or a separate RSVP table. 
-    // Since this is a demo, we will use a postgres RPC function or just ignore actual DB complex array mutations for now
-    // We will just do a dummy update for presentation purposes or skip it.
-    throw UnimplementedError('RSVP toggle requires an RPC function in Supabase');
+  /// Toggle the current user's RSVP for an event. Backed by the
+  /// `toggle_event_rsvp(p_event_id)` RPC which atomically mutates the
+  /// `attendees` JSONB array (see supabase_realize.sql).
+  Future<void> toggleRsvp(String eventId) async {
+    await _supabase.rpc('toggle_event_rsvp', params: {'p_event_id': eventId});
   }
 }

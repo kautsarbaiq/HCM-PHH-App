@@ -3,10 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Poll {
   final String id;
-  final String title;
-  final String endDate;
-  final List<dynamic> options; // [{'label': 'Yes', 'votes': 62, 'percent': 0.70}, ...]
-  final List<dynamic> voters; // ['user_id_1', 'user_id_2']
+  final String title; // live column is `question`
+  final String endDate; // live column is `expires_at`
+  final List<dynamic> options; // [{'label': 'Yes', 'votes': 62}, ...]
+  final List<dynamic> voters; // ['user_id_1', ...]
   final String createdAt;
 
   Poll({
@@ -21,11 +21,11 @@ class Poll {
   factory Poll.fromJson(Map<String, dynamic> json) {
     return Poll(
       id: json['id'].toString(),
-      title: json['title'] as String,
-      endDate: json['end_date'] as String,
+      title: (json['question'] ?? json['title'] ?? '').toString(),
+      endDate: (json['expires_at'] ?? json['end_date'] ?? '').toString(),
       options: json['options'] as List<dynamic>? ?? [],
       voters: json['voters'] as List<dynamic>? ?? [],
-      createdAt: json['created_at'] as String,
+      createdAt: (json['created_at'] ?? '').toString(),
     );
   }
 
@@ -36,6 +36,8 @@ class Poll {
     }
     return total;
   }
+
+  bool hasVoted(String userId) => voters.contains(userId);
 }
 
 final pollRepositoryProvider = Provider<PollRepository>((ref) {
@@ -48,20 +50,21 @@ class PollRepository {
   PollRepository(this._supabase);
 
   Future<List<Poll>> getAllPolls() async {
-    try {
-      final response = await _supabase
-          .from('polls')
-          .select()
-          .order('created_at', ascending: false);
-      
-      return (response as List).map((json) => Poll.fromJson(json)).toList();
-    } catch (e) {
-      print('Error fetching polls: $e');
-      return [];
-    }
+    final response = await _supabase
+        .from('polls')
+        .select()
+        .order('created_at', ascending: false);
+
+    return (response as List).map((json) => Poll.fromJson(json)).toList();
   }
 
-  Future<void> submitVote(String pollId, String optionLabel, String userId) async {
-    throw UnimplementedError('Submitting a vote requires an RPC function to atomically update the JSONB column in Supabase');
+  /// Cast the current user's vote for an option (by index). Backed by the
+  /// `submit_poll_vote(p_poll_id, p_option_index)` RPC which atomically appends
+  /// the voter and increments the option's vote count (see supabase_realize.sql).
+  Future<void> submitVote(String pollId, int optionIndex) async {
+    await _supabase.rpc('submit_poll_vote', params: {
+      'p_poll_id': pollId,
+      'p_option_index': optionIndex,
+    });
   }
 }

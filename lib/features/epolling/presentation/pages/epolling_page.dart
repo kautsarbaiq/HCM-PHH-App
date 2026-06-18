@@ -6,16 +6,32 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../theme/app_colors.dart';
 
+import 'package:intl/intl.dart';
+
 import '../../../../core/repositories/poll_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
 
 final pollsProvider = AsyncNotifierProvider<PollsNotifier, List<Poll>>(() => PollsNotifier());
+
+String _fmtDate(String iso) {
+  if (iso.isEmpty) return '';
+  try {
+    return 'Ends ${DateFormat('MMM dd, yyyy').format(DateTime.parse(iso).toLocal())}';
+  } catch (_) {
+    return iso;
+  }
+}
 
 class PollsNotifier extends AsyncNotifier<List<Poll>> {
   @override
   Future<List<Poll>> build() async {
     final repo = ref.read(pollRepositoryProvider);
     return repo.getAllPolls();
+  }
+
+  Future<void> vote(String pollId, int optionIndex) async {
+    await ref.read(pollRepositoryProvider).submitVote(pollId, optionIndex);
+    ref.invalidateSelf();
   }
 }
 
@@ -78,7 +94,7 @@ class EPollingPage extends ConsumerWidget {
                                       style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: hasVoted ? AppColors.primaryBlue : AppColors.warning),
                                     ),
                                   ),
-                                  Text(poll.endDate, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                                  Text(_fmtDate(poll.endDate), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                                 ],
                               ),
                               const SizedBox(height: 16),
@@ -93,29 +109,51 @@ class EPollingPage extends ConsumerWidget {
                                   
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 10),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(option['label'] as String, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary)),
-                                            Text('${(percent * 100).toInt()}%', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 6),
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(6),
-                                          child: LinearProgressIndicator(
-                                            value: percent,
-                                            minHeight: 8,
-                                            backgroundColor: AppColors.backgroundGrey,
-                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                              i == 0 ? AppColors.primaryBlue : AppColors.deepSlate.withOpacity(0.4),
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(8),
+                                      onTap: hasVoted
+                                          ? null
+                                          : () async {
+                                              final messenger = ScaffoldMessenger.of(context);
+                                              try {
+                                                await ref.read(pollsProvider.notifier).vote(poll.id, i);
+                                                messenger.showSnackBar(const SnackBar(content: Text('Vote recorded!'), backgroundColor: AppColors.primaryBlue));
+                                              } catch (e) {
+                                                messenger.showSnackBar(SnackBar(content: Text('$e'.replaceAll('PostgrestException(message: ', '').split(',')[0]), backgroundColor: AppColors.error));
+                                              }
+                                            },
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  if (!hasVoted) ...[
+                                                    const Icon(PhosphorIconsRegular.circle, size: 16, color: AppColors.primaryBlue),
+                                                    const SizedBox(width: 8),
+                                                  ],
+                                                  Text(option['label'] as String, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary)),
+                                                ],
+                                              ),
+                                              Text('${(percent * 100).toInt()}%', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 6),
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(6),
+                                            child: LinearProgressIndicator(
+                                              value: percent,
+                                              minHeight: 8,
+                                              backgroundColor: AppColors.backgroundGrey,
+                                              valueColor: AlwaysStoppedAnimation<Color>(
+                                                i == 0 ? AppColors.primaryBlue : AppColors.deepSlate.withOpacity(0.4),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   );
                                 },

@@ -1,14 +1,16 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../../../../core/repositories/profile_repository.dart';
 import '../../../../theme/app_colors.dart';
 
-class AppDrawer extends StatelessWidget {
+class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Drawer(
       backgroundColor: Colors.transparent,
       child: ClipRRect(
@@ -25,7 +27,7 @@ class AppDrawer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildProfileHeader(context),
+                  _buildProfileHeader(context, ref),
                   const SizedBox(height: 8),
                   Expanded(
                     child: ListView(
@@ -114,7 +116,13 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context) {
+  Widget _buildProfileHeader(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(currentProfileProvider).valueOrNull;
+    final name = (profile?.fullName.isNotEmpty ?? false) ? profile!.fullName : 'Guest';
+    final role = profile?.role;
+    final subtitle = role == null ? 'Tap to view profile' : '${role[0].toUpperCase()}${role.substring(1)}';
+    final avatarUrl = profile?.avatarUrl;
+
     return InkWell(
       onTap: () {
         Navigator.pop(context);
@@ -129,30 +137,34 @@ class AppDrawer extends StatelessWidget {
               height: 52,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                color: AppColors.primaryBlue.withOpacity(0.1),
                 border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 2),
-                image: const DecorationImage(
-                  image: NetworkImage('https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80'),
-                  fit: BoxFit.cover,
-                ),
+                image: (avatarUrl != null && avatarUrl.isNotEmpty)
+                    ? DecorationImage(image: NetworkImage(avatarUrl), fit: BoxFit.cover)
+                    : null,
               ),
+              child: (avatarUrl == null || avatarUrl.isEmpty)
+                  ? const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue)
+                  : null,
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Alex Morgan',
-                    style: TextStyle(
+                  Text(
+                    name,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Unit A-18-08',
-                    style: TextStyle(
+                    subtitle,
+                    style: const TextStyle(
                       fontSize: 13,
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.w500,

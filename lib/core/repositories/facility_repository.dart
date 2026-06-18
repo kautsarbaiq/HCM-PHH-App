@@ -43,6 +43,32 @@ class Booking {
   }
 }
 
+class Facility {
+  final String id;
+  final String name;
+  final String? description;
+  final String? iconName;
+  final int? maxCapacity;
+
+  Facility({
+    required this.id,
+    required this.name,
+    this.description,
+    this.iconName,
+    this.maxCapacity,
+  });
+
+  factory Facility.fromJson(Map<String, dynamic> json) {
+    return Facility(
+      id: json['id'].toString(),
+      name: json['name'] as String,
+      description: json['description'] as String?,
+      iconName: json['icon_name'] as String?,
+      maxCapacity: json['max_capacity'] as int?,
+    );
+  }
+}
+
 final facilityRepositoryProvider = Provider<FacilityRepository>((ref) {
   return FacilityRepository(Supabase.instance.client);
 });
@@ -51,6 +77,16 @@ class FacilityRepository {
   final SupabaseClient _supabase;
 
   FacilityRepository(this._supabase);
+
+  Future<List<Facility>> getAllFacilities() async {
+    final response = await _supabase
+        .from('facilities')
+        .select()
+        .eq('is_active', true)
+        .order('name', ascending: true);
+
+    return (response as List).map((json) => Facility.fromJson(json)).toList();
+  }
 
   Future<List<Booking>> getMyBookings(String userId) async {
     try {

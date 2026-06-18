@@ -10,6 +10,7 @@ class Billing {
   final String? dueDate; // ISO date (yyyy-MM-dd)
   final String status; // unpaid | paid | overdue
   final String? period;
+  final String? paidAt;
   final String residentId;
   final String houseId;
 
@@ -24,6 +25,7 @@ class Billing {
     this.dueDate,
     required this.status,
     this.period,
+    this.paidAt,
     required this.residentId,
     required this.houseId,
     this.resident,
@@ -39,6 +41,7 @@ class Billing {
       dueDate: json['due_date'] as String?,
       status: json['status'] as String? ?? 'unpaid',
       period: json['period'] as String?,
+      paidAt: json['paid_at'] as String?,
       residentId: json['resident_id'] as String,
       houseId: json['house_id'] as String,
       resident: json['resident'] != null ? Profile.fromJson(json['resident'] as Map<String, dynamic>) : null,
@@ -76,6 +79,17 @@ class BillingRepository {
         .from('billings')
         .select(_selectWithResident)
         .order('created_at', ascending: false);
+
+    return (response as List).map((json) => Billing.fromJson(json)).toList();
+  }
+
+  /// Bills belonging to the current resident (RLS `resident_read_own` filters
+  /// to rows where resident_id = auth.uid()).
+  Future<List<Billing>> getMyBillings() async {
+    final response = await _supabase
+        .from('billings')
+        .select(_selectWithResident)
+        .order('due_date', ascending: false);
 
     return (response as List).map((json) => Billing.fromJson(json)).toList();
   }

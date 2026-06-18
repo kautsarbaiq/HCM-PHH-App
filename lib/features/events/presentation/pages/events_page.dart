@@ -4,19 +4,34 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/widgets/glass_card.dart';
-import '../../../../core/widgets/action_button.dart';
 import '../../../../theme/app_colors.dart';
+
+import 'package:intl/intl.dart';
 
 import '../../../../core/repositories/event_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
 
 final eventsProvider = AsyncNotifierProvider<EventsNotifier, List<CommunityEvent>>(() => EventsNotifier());
 
+String _fmtDate(String iso) {
+  if (iso.isEmpty) return '';
+  try {
+    return DateFormat('MMM dd, yyyy • HH:mm').format(DateTime.parse(iso).toLocal());
+  } catch (_) {
+    return iso;
+  }
+}
+
 class EventsNotifier extends AsyncNotifier<List<CommunityEvent>> {
   @override
   Future<List<CommunityEvent>> build() async {
     final repo = ref.read(eventRepositoryProvider);
     return repo.getAllEvents();
+  }
+
+  Future<void> toggleRsvp(String eventId) async {
+    await ref.read(eventRepositoryProvider).toggleRsvp(eventId);
+    ref.invalidateSelf();
   }
 }
 
@@ -85,7 +100,7 @@ class EventsPage extends ConsumerWidget {
                                 children: [
                                   const Icon(PhosphorIconsRegular.calendarBlank, size: 16, color: AppColors.textSecondary),
                                   const SizedBox(width: 6),
-                                  Text(event.date, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                                  Text(_fmtDate(event.date), style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
                                 ],
                               ),
                               const SizedBox(height: 6),
@@ -105,10 +120,13 @@ class EventsPage extends ConsumerWidget {
                                     width: 120,
                                     height: 40,
                                     child: ElevatedButton(
-                                      onPressed: () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text(isRsvpd ? 'RSVP cancelled' : 'RSVP confirmed!'), backgroundColor: AppColors.primaryBlue),
-                                        );
+                                      onPressed: () async {
+                                        final messenger = ScaffoldMessenger.of(context);
+                                        try {
+                                          await ref.read(eventsProvider.notifier).toggleRsvp(event.id);
+                                        } catch (e) {
+                                          messenger.showSnackBar(SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error));
+                                        }
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: isRsvpd ? AppColors.backgroundGrey : AppColors.primaryBlue,

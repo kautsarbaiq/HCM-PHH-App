@@ -11,6 +11,11 @@ class Profile {
   final String role;
   final String? houseId;
   final String status;
+  // Directory fields (committee position / guard shift & post)
+  final String? position;
+  final String? shift;
+  final String? post;
+  final bool onDuty;
 
   Profile({
     required this.id,
@@ -21,6 +26,10 @@ class Profile {
     required this.role,
     this.houseId,
     required this.status,
+    this.position,
+    this.shift,
+    this.post,
+    this.onDuty = false,
   });
 
   factory Profile.fromJson(Map<String, dynamic> json) {
@@ -33,6 +42,10 @@ class Profile {
       role: json['role'] as String,
       houseId: json['house_id'] as String?,
       status: json['status'] as String,
+      position: json['position'] as String?,
+      shift: json['shift'] as String?,
+      post: json['post'] as String?,
+      onDuty: json['on_duty'] as bool? ?? false,
     );
   }
 }

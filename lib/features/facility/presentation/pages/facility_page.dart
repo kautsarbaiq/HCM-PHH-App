@@ -3,50 +3,40 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../../core/repositories/facility_repository.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/booking_bottom_sheet.dart';
 import '../widgets/facility_card.dart';
 
-// State Management
-final facilitiesProvider = Provider<List<Map<String, dynamic>>>((ref) => [
-      {
-        'id': 'f1',
-        'name': 'Swimming Pool',
-        'icon': PhosphorIconsRegular.swimmingPool,
-      },
-      {
-        'id': 'f2',
-        'name': 'Gym Fitness Center',
-        'icon': PhosphorIconsRegular.barbell,
-      },
-      {
-        'id': 'f3',
-        'name': 'BBQ Pit',
-        'icon': PhosphorIconsRegular.fire,
-      },
-      {
-        'id': 'f4',
-        'name': 'Tennis Court',
-        'icon': PhosphorIconsRegular.tennisBall,
-      },
-      {
-        'id': 'f5',
-        'name': 'Multipurpose Hall',
-        'icon': PhosphorIconsRegular.buildings,
-      },
-      {
-        'id': 'f6',
-        'name': 'Children Playground',
-        'icon': PhosphorIconsRegular.baby,
-      },
-    ]);
+final facilitiesProvider = FutureProvider<List<Facility>>((ref) {
+  return ref.read(facilityRepositoryProvider).getAllFacilities();
+});
+
+IconData _facilityIcon(String? iconName) {
+  switch (iconName) {
+    case 'swimming':
+      return PhosphorIconsRegular.swimmingPool;
+    case 'gym':
+      return PhosphorIconsRegular.barbell;
+    case 'bbq':
+      return PhosphorIconsRegular.fire;
+    case 'tennis':
+      return PhosphorIconsRegular.tennisBall;
+    case 'hall':
+      return PhosphorIconsRegular.buildings;
+    case 'playground':
+      return PhosphorIconsRegular.baby;
+    default:
+      return PhosphorIconsRegular.buildings;
+  }
+}
 
 class FacilityPage extends ConsumerWidget {
   const FacilityPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final facilities = ref.watch(facilitiesProvider);
+    final facilitiesAsync = ref.watch(facilitiesProvider);
 
     return Scaffold(
       body: CustomScrollView(
@@ -60,41 +50,49 @@ class FacilityPage extends ConsumerWidget {
             ),
             title: const Text(
               'Book Facilities',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
             ),
           ),
           SliverPadding(
             padding: const EdgeInsets.all(24),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 0.85,
+            sliver: facilitiesAsync.when(
+              loading: () => const SliverToBoxAdapter(child: Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))),
+              error: (err, _) => SliverToBoxAdapter(
+                child: Center(child: Padding(padding: const EdgeInsets.all(40), child: Text('Could not load facilities: $err', style: const TextStyle(color: AppColors.textSecondary)))),
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final facility = facilities[index];
-                  return FacilityCard(
-                    icon: facility['icon'],
-                    name: facility['name'],
-                    onBook: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => BookingBottomSheet(
-                          facilityName: facility['name'],
-                        ),
+              data: (facilities) {
+                if (facilities.isEmpty) {
+                  return const SliverToBoxAdapter(
+                    child: Center(child: Padding(padding: EdgeInsets.all(40), child: Text('No facilities available.', style: TextStyle(color: AppColors.textSecondary)))),
+                  );
+                }
+                return SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 0.85,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final facility = facilities[index];
+                      return FacilityCard(
+                        icon: _facilityIcon(facility.iconName),
+                        name: facility.name,
+                        onBook: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => BookingBottomSheet(facilityName: facility.name),
+                          );
+                        },
                       );
                     },
-                  );
-                },
-                childCount: facilities.length,
-              ),
+                    childCount: facilities.length,
+                  ),
+                );
+              },
             ),
           ),
         ],

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../../core/repositories/billing_repository.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/bill_card.dart';
 import '../widgets/transaction_history_item.dart';
@@ -11,55 +13,40 @@ import '../widgets/transaction_history_item.dart';
 // State Management
 final billingTabIndexProvider = StateProvider<int>((ref) => 0);
 
-final activeBillsProvider = StateProvider<List<Map<String, dynamic>>>((ref) => [
-      {
-        'id': '1',
-        'title': 'Monthly Maintenance Fee',
-        'period': 'October 2026',
-        'amount': 500000.0,
-        'status': 'Unpaid',
-        'dueDate': 'Oct 31, 2026',
-      },
-      {
-        'id': '2',
-        'title': 'Water Bill',
-        'period': 'September 2026',
-        'amount': 145000.0,
-        'status': 'Unpaid',
-        'dueDate': 'Oct 15, 2026',
-      },
-    ]);
+/// The current resident's bills, fetched live from Supabase (RLS scopes the
+/// rows to the logged-in resident).
+final myBillingsProvider =
+    AsyncNotifierProvider<MyBillingsNotifier, List<Billing>>(() => MyBillingsNotifier());
 
-final transactionHistoryProvider = StateProvider<List<Map<String, dynamic>>>((ref) => [
-      {
-        'id': 't1',
-        'title': 'Monthly Maintenance Fee',
-        'date': 'Sep 25, 2026 - 14:30',
-        'amount': 500000.0,
-        'isSuccess': true,
-      },
-      {
-        'id': 't2',
-        'title': 'Water Bill',
-        'date': 'Aug 16, 2026 - 09:15',
-        'amount': 132000.0,
-        'isSuccess': true,
-      },
-      {
-        'id': 't3',
-        'title': 'Gym Access Fee',
-        'date': 'Aug 05, 2026 - 11:00',
-        'amount': 150000.0,
-        'isSuccess': false,
-      },
-      {
-        'id': 't4',
-        'title': 'Monthly Maintenance Fee',
-        'date': 'Aug 01, 2026 - 10:00',
-        'amount': 500000.0,
-        'isSuccess': true,
-      },
-    ]);
+class MyBillingsNotifier extends AsyncNotifier<List<Billing>> {
+  @override
+  Future<List<Billing>> build() async {
+    return ref.read(billingRepositoryProvider).getMyBillings();
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() => ref.read(billingRepositoryProvider).getMyBillings());
+  }
+}
+
+String _formatDate(String? iso) {
+  if (iso == null || iso.isEmpty) return '-';
+  try {
+    return DateFormat('MMM dd, yyyy').format(DateTime.parse(iso).toLocal());
+  } catch (_) {
+    return iso;
+  }
+}
+
+String _formatDateTime(String? iso) {
+  if (iso == null || iso.isEmpty) return '-';
+  try {
+    return DateFormat('MMM dd, yyyy • HH:mm').format(DateTime.parse(iso).toLocal());
+  } catch (_) {
+    return iso;
+  }
+}
 
 class BillingPage extends ConsumerWidget {
   const BillingPage({super.key});
@@ -85,7 +72,7 @@ class BillingPage extends ConsumerWidget {
               child: IndexedStack(
                 index: tabIndex,
                 children: [
-                  _buildActiveBills(ref).animate(target: tabIndex == 0 ? 1 : 0).fade(duration: 300.ms).slideY(begin: 0.1, end: 0),
+                  _buildActiveBills(context, ref).animate(target: tabIndex == 0 ? 1 : 0).fade(duration: 300.ms).slideY(begin: 0.1, end: 0),
                   _buildTransactionHistory(ref).animate(target: tabIndex == 1 ? 1 : 0).fade(duration: 300.ms).slideY(begin: 0.1, end: 0),
                 ],
               ),
@@ -115,22 +102,10 @@ class BillingPage extends ConsumerWidget {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
+              color: AppColors.primaryWhite,
               border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                )
-              ],
             ),
-            child: ClipOval(
-              child: Image.network(
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80',
-                errorBuilder: (context, error, stackTrace) => const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
-                fit: BoxFit.cover,
-              ),
-            ),
+            child: const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
           ),
         ),
       ],
@@ -147,12 +122,8 @@ class BillingPage extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: _buildSegmentButton(ref, 0, 'Active Bills', currentIndex),
-          ),
-          Expanded(
-            child: _buildSegmentButton(ref, 1, 'History', currentIndex),
-          ),
+          Expanded(child: _buildSegmentButton(ref, 0, 'Active Bills', currentIndex)),
+          Expanded(child: _buildSegmentButton(ref, 1, 'History', currentIndex)),
         ],
       ),
     );
@@ -187,28 +158,70 @@ class BillingPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildActiveBills(WidgetRef ref) {
-    final bills = ref.watch(activeBillsProvider);
+  Widget _buildActiveBills(BuildContext context, WidgetRef ref) {
+    final billingsAsync = ref.watch(myBillingsProvider);
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
-      itemCount: bills.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        final bill = bills[index];
-        return BillCard(
-          title: bill['title'],
-          period: bill['period'],
-          amount: bill['amount'],
-          status: bill['status'],
-          dueDate: bill['dueDate'],
-          onPay: () {
-            // Mock payment action
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Processing payment for ${bill['title']}...'),
-                backgroundColor: AppColors.primaryBlue,
-              ),
+    return billingsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => _buildError(error),
+      data: (all) {
+        final active = all.where((b) => b.status != 'paid').toList();
+        if (active.isEmpty) {
+          return _buildEmpty(PhosphorIconsRegular.checkCircle, 'All cleared!', 'You have no outstanding bills.');
+        }
+        return RefreshIndicator(
+          onRefresh: () => ref.read(myBillingsProvider.notifier).refresh(),
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+            itemCount: active.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 16),
+            itemBuilder: (context, index) {
+              final bill = active[index];
+              return BillCard(
+                title: bill.title,
+                period: bill.period?.isNotEmpty == true ? bill.period! : 'Invoice ${bill.invoiceNumber}',
+                amount: bill.amount,
+                status: bill.status == 'overdue' ? 'Overdue' : 'Unpaid',
+                dueDate: _formatDate(bill.dueDate),
+                onPay: () {
+                  // Real payment requires an external payment gateway (e.g. Stripe/
+                  // local provider) + a server webhook to mark the bill paid.
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Online payment for "${bill.title}" is not yet connected to a payment provider.'),
+                      backgroundColor: AppColors.primaryBlue,
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTransactionHistory(WidgetRef ref) {
+    final billingsAsync = ref.watch(myBillingsProvider);
+
+    return billingsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => _buildError(error),
+      data: (all) {
+        final paid = all.where((b) => b.status == 'paid').toList();
+        if (paid.isEmpty) {
+          return _buildEmpty(PhosphorIconsRegular.receipt, 'No history yet', 'Your paid bills will appear here.');
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+          itemCount: paid.length,
+          itemBuilder: (context, index) {
+            final tx = paid[index];
+            return TransactionHistoryItem(
+              title: tx.title,
+              date: _formatDateTime(tx.paidAt ?? tx.dueDate),
+              amount: tx.amount,
+              isSuccess: true,
             );
           },
         );
@@ -216,21 +229,27 @@ class BillingPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildTransactionHistory(WidgetRef ref) {
-    final transactions = ref.watch(transactionHistoryProvider);
+  Widget _buildError(Object error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Text('Could not load bills: $error', style: const TextStyle(color: AppColors.textSecondary)),
+      ),
+    );
+  }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
-      itemCount: transactions.length,
-      itemBuilder: (context, index) {
-        final tx = transactions[index];
-        return TransactionHistoryItem(
-          title: tx['title'],
-          date: tx['date'],
-          amount: tx['amount'],
-          isSuccess: tx['isSuccess'],
-        );
-      },
+  Widget _buildEmpty(IconData icon, String title, String subtitle) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 56, color: AppColors.success.withOpacity(0.6)),
+          const SizedBox(height: 16),
+          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          const SizedBox(height: 4),
+          Text(subtitle, style: const TextStyle(color: AppColors.textSecondary)),
+        ],
+      ),
     );
   }
 }
