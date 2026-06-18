@@ -71,9 +71,15 @@ CREATE TABLE IF NOT EXISTS marketplace_services (
   rating NUMERIC(2,1) NOT NULL DEFAULT 5.0, is_verified BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE TABLE IF NOT EXISTS resident_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id),
+  title TEXT NOT NULL, reference_code TEXT, document_type TEXT, file_url TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 -- Grants for the API roles (RLS still gates rows).
-GRANT SELECT, INSERT, UPDATE, DELETE ON emergency_contacts, documents, forms, form_submissions, marketplace_services TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON emergency_contacts, documents, forms, form_submissions, marketplace_services, resident_documents TO authenticated;
 
 -- RLS for content tables: everyone logged-in reads; admin manages.
 ALTER TABLE emergency_contacts   ENABLE ROW LEVEL SECURITY;
@@ -92,6 +98,9 @@ DROP POLICY IF EXISTS all_read ON marketplace_services; CREATE POLICY all_read O
 DROP POLICY IF EXISTS admin_all ON marketplace_services;CREATE POLICY admin_all ON marketplace_services FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 DROP POLICY IF EXISTS resident_own ON form_submissions; CREATE POLICY resident_own ON form_submissions FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
 DROP POLICY IF EXISTS admin_all ON form_submissions;    CREATE POLICY admin_all ON form_submissions FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
+ALTER TABLE resident_documents ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS resident_own ON resident_documents; CREATE POLICY resident_own ON resident_documents FOR SELECT USING (user_id = auth.uid());
+DROP POLICY IF EXISTS admin_all ON resident_documents;    CREATE POLICY admin_all ON resident_documents FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 -- ---------- 5. SEED DATA -----------------------------------------------------
 DO $$
@@ -154,6 +163,16 @@ BEGIN
       ('CoolAir AC','Air-Cond','+60 12-300 1004','AC service & repair',4.7),
       ('GreenScape','Landscaping','+60 12-300 1005','Garden & plants',4.5),
       ('MoveEasy','Moving','+60 12-300 1006','Moving & transport',4.4);
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM resident_documents) THEN
+    INSERT INTO resident_documents (user_id, title, reference_code, document_type)
+    SELECT p.id, d.title, d.code, d.dtype
+    FROM profiles p
+    CROSS JOIN (VALUES ('Unit Deed','DOC-882XX482','deed'),
+                       ('Tenancy Agreement','AGR-XX9-1318','tenancy'),
+                       ('Pet License','PET-XXX1929','pet')) AS d(title, code, dtype)
+    WHERE p.email = 'resident@hcm.com';
   END IF;
 
   -- Directory demo: make the guard on-duty and give the resident a committee role.

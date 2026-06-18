@@ -9,6 +9,11 @@ import '../../../../core/widgets/glass_card.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/repositories/profile_repository.dart';
 import '../../../../core/repositories/storage_repository.dart';
+import '../../../../core/repositories/document_repository.dart';
+
+final myResidentDocsProvider = FutureProvider<List<ResidentDocument>>((ref) {
+  return ref.read(documentRepositoryProvider).getMyResidentDocuments();
+});
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -241,17 +246,37 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Widget _buildDocumentGrid() {
+    final docsAsync = ref.watch(myResidentDocsProvider);
     return SizedBox(
       height: 140,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: [
-          _buildDocumentCard('Unit Deed', 'DOC-882XX482', PhosphorIconsRegular.fileText),
-          _buildDocumentCard('Tenancy Agreement', 'AGR-XX9-1318', PhosphorIconsRegular.signature),
-          _buildDocumentCard('Pet License', 'PET-XXX1929', PhosphorIconsRegular.pawPrint),
-        ],
+      child: docsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: AppColors.textSecondary))),
+        data: (docs) {
+          if (docs.isEmpty) {
+            return Container(
+              alignment: Alignment.centerLeft,
+              child: const Text('No documents issued yet.', style: TextStyle(color: AppColors.textSecondary)),
+            );
+          }
+          return ListView(
+            scrollDirection: Axis.horizontal,
+            children: docs.map((d) => _buildDocumentCard(d.title, d.referenceCode ?? '', _docIcon(d.documentType))).toList(),
+          );
+        },
       ),
     );
+  }
+
+  IconData _docIcon(String? type) {
+    switch (type) {
+      case 'tenancy':
+        return PhosphorIconsRegular.signature;
+      case 'pet':
+        return PhosphorIconsRegular.pawPrint;
+      default:
+        return PhosphorIconsRegular.fileText;
+    }
   }
 
   Widget _buildDocumentCard(String title, String subtitle, IconData icon) {
@@ -298,21 +323,25 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Widget _buildFinanceRow(IconData icon, String title) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundGrey.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 22, color: AppColors.deepSlate),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textPrimary)),
-          ),
-          const Icon(PhosphorIconsRegular.caretRight, size: 18, color: AppColors.textSecondary),
-        ],
+    return GestureDetector(
+      onTap: () => context.go('/bills'),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundGrey.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 22, color: AppColors.deepSlate),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textPrimary)),
+            ),
+            const Icon(PhosphorIconsRegular.caretRight, size: 18, color: AppColors.textSecondary),
+          ],
+        ),
       ),
     );
   }
