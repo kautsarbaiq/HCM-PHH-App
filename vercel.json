@@ -1,0 +1,6 @@
+{
+  "framework": null,
+  "installCommand": "echo 'no npm install needed for Flutter'",
+  "buildCommand": "git clone https://github.com/flutter/flutter.git --depth 1 -b stable && flutter/bin/flutter config --enable-web && flutter/bin/flutter build web --release",
+  "outputDirectory": "build/web"
+}
