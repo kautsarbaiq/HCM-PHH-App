@@ -87,6 +87,19 @@ class GuardHousesPage extends ConsumerWidget {
                           )
                         : LayoutBuilder(
                             builder: (context, constraints) {
+                              // Phones (< 600px): vertical cards, only up/down
+                              // scrolling — never sideways.
+                              if (constraints.maxWidth < 600) {
+                                return ListView.separated(
+                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  padding: EdgeInsets.all(12.w),
+                                  itemCount: houses.length,
+                                  separatorBuilder: (_, __) => SizedBox(height: 10.h),
+                                  itemBuilder: (context, index) =>
+                                      _buildHouseCard(context, houses[index]),
+                                );
+                              }
+                              // Tablet/desktop: keep the wide table.
                               return SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
                                 child: ConstrainedBox(
@@ -138,6 +151,92 @@ class GuardHousesPage extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildHouseCard(BuildContext context, House house) {
+    final phone = house.owner?.phone;
+    final hasPhone = phone != null && phone.isNotEmpty;
+    return Container(
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4F7FE),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38.w,
+                height: 38.w,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFECEAFF),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.home_rounded, color: Color(0xFF4318FF), size: 20),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Text(
+                  'House ${house.houseNumber}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.sp,
+                    color: const Color(0xFF2B3674),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          _infoRow('Owner', house.owner?.fullName ?? '-'),
+          SizedBox(height: 6.h),
+          _infoRow('Mobile', phone ?? '-'),
+          SizedBox(height: 12.h),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: hasPhone ? () => _callPhone(context, phone) : null,
+              icon: const Icon(Icons.phone, size: 18),
+              label: Text(hasPhone ? 'Call $phone' : 'No number'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4318FF),
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: const Color(0xFFD0D5E8),
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 70.w,
+          child: Text(
+            label,
+            style: TextStyle(color: const Color(0xFFA3AED0), fontSize: 13.sp),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: const Color(0xFF2B3674),
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

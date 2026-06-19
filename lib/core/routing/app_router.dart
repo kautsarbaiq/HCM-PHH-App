@@ -76,12 +76,11 @@ class AppRouter {
       final loc = state.matchedLocation;
       const loginPages = {'/login', '/admin', '/guard'};
 
-      // Not signed in → send to the matching login page.
+      // Not signed in → always send to the unified login page. The old
+      // role-specific /admin and /guard login screens are deprecated, so
+      // logging out from any area lands on the single initial login.
       if (!isLoggedIn) {
-        if (loginPages.contains(loc)) return null;
-        if (loc.startsWith('/admin')) return '/admin';
-        if (loc.startsWith('/guard')) return '/guard';
-        return '/login';
+        return loc == '/login' ? null : '/login';
       }
 
       // Signed in but the role hasn't loaded yet → don't bounce; the refresh
