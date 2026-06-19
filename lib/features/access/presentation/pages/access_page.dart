@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/widgets/action_button.dart';
 import '../../../../core/widgets/glass_text_field.dart';
@@ -46,7 +45,37 @@ class _AccessPageState extends ConsumerState<AccessPage> {
   final _typeController = TextEditingController();
   final _dateController = TextEditingController();
   final _plateController = TextEditingController();
+  DateTime? _selectedDateTime;
   bool _isSubmitting = false;
+
+  Future<void> _pickDateTime() async {
+    final now = DateTime.now();
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDateTime ?? now,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+    );
+    if (pickedDate == null || !mounted) return;
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_selectedDateTime ?? now),
+    );
+    if (!mounted) return;
+
+    final result = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime?.hour ?? 0,
+      pickedTime?.minute ?? 0,
+    );
+    setState(() {
+      _selectedDateTime = result;
+      _dateController.text = DateFormat('MMM d, yyyy HH:mm').format(result);
+    });
+  }
 
   @override
   void dispose() {
@@ -81,7 +110,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
         houseId: profile.houseId!,
         qrToken: qrToken,
         status: 'expected',
-        expectedAt: DateTime.now().toIso8601String(), // Ideally from a date picker
+        expectedAt: (_selectedDateTime ?? DateTime.now()).toIso8601String(),
         createdBy: profile.id,
         registrationType: 'pre-registered',
       );
@@ -94,6 +123,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
         _typeController.clear();
         _dateController.clear();
         _plateController.clear();
+        _selectedDateTime = null;
         ref.read(accessTabIndexProvider.notifier).state = 1; // Switch to passes tab
       }
     } catch (e) {
@@ -170,10 +200,21 @@ class _AccessPageState extends ConsumerState<AccessPage> {
             ),
             child: ClipOval(
               child: profileAsync.when(
-                data: (profile) => profile?.avatarUrl != null 
-                    ? Image.network(profile!.avatarUrl!, fit: BoxFit.cover)
+                data: (profile) => profile?.avatarUrl != null
+                    ? Image.network(
+                        profile!.avatarUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
+                      )
                     : const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
-                loading: () => const CircularProgressIndicator(),
+                loading: () => const Center(
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
                 error: (_, __) => const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
               ),
             ),
@@ -251,10 +292,16 @@ class _AccessPageState extends ConsumerState<AccessPage> {
             prefixIcon: PhosphorIconsRegular.tag,
           ),
           const SizedBox(height: 16),
-          GlassTextField(
-            controller: _dateController,
-            hintText: 'Date & Time (Optional)',
-            prefixIcon: PhosphorIconsRegular.calendar,
+          GestureDetector(
+            onTap: _pickDateTime,
+            behavior: HitTestBehavior.opaque,
+            child: AbsorbPointer(
+              child: GlassTextField(
+                controller: _dateController,
+                hintText: 'Date & Time (Optional)',
+                prefixIcon: PhosphorIconsRegular.calendar,
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           GlassTextField(
@@ -311,6 +358,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
               type: visitor.purpose,
               time: dateStr,
               qrData: visitor.qrToken!,
+              status: visitor.status,
             );
           },
         );

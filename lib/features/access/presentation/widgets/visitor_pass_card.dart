@@ -8,6 +8,7 @@ class VisitorPassCard extends StatelessWidget {
   final String type;
   final String time;
   final String qrData;
+  final String status;
 
   const VisitorPassCard({
     super.key,
@@ -15,10 +16,25 @@ class VisitorPassCard extends StatelessWidget {
     required this.type,
     required this.time,
     required this.qrData,
+    this.status = 'expected',
   });
+
+  ({String label, Color color}) get _statusBadge {
+    switch (status) {
+      case 'checked_in':
+        return (label: 'Checked-in', color: AppColors.success);
+      case 'checked_out':
+        return (label: 'Checked-out', color: AppColors.textSecondary);
+      case 'expected':
+        return (label: 'Expected', color: AppColors.primaryBlue);
+      default:
+        return (label: 'Active', color: AppColors.primaryBlue);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final badge = _statusBadge;
     return GlassCard(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -26,39 +42,47 @@ class VisitorPassCard extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    type,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                    const SizedBox(height: 4),
+                    Text(
+                      type,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withOpacity(0.15),
+                  color: badge.color.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  'Active',
+                child: Text(
+                  badge.label,
                   style: TextStyle(
-                    color: AppColors.primaryBlue,
+                    color: badge.color,
                     fontWeight: FontWeight.w600,
                     fontSize: 12,
                   ),
@@ -67,33 +91,40 @@ class VisitorPassCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.primaryWhite,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.shadowColor,
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Available width minus the container's inner 16px padding on
+              // each side; cap at 200 so it never grows oversized on tablets.
+              final qrSize = (constraints.maxWidth - 32).clamp(120.0, 200.0);
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryWhite,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.shadowColor,
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: QrImageView(
-              data: qrData,
-              version: QrVersions.auto,
-              size: 200.0,
-              foregroundColor: AppColors.deepSlate,
-              eyeStyle: const QrEyeStyle(
-                eyeShape: QrEyeShape.square,
-                color: AppColors.deepSlate,
-              ),
-              dataModuleStyle: const QrDataModuleStyle(
-                dataModuleShape: QrDataModuleShape.square,
-                color: AppColors.deepSlate,
-              ),
-            ),
+                child: QrImageView(
+                  data: qrData,
+                  version: QrVersions.auto,
+                  size: qrSize,
+                  foregroundColor: AppColors.deepSlate,
+                  eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: AppColors.deepSlate,
+                  ),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: AppColors.deepSlate,
+                  ),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 32),
           Text(

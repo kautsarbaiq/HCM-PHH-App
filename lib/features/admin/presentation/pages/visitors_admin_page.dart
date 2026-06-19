@@ -157,6 +157,91 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
     );
   }
 
+  // Compact card used for the narrow-phone visitors layout.
+  Widget _buildVisitorCard(Visitor v) {
+    final status = _statusStyle(v.status);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE0E5F2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  v.visitorName,
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674), fontSize: 15),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: status.color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(status.label, style: TextStyle(color: status.color, fontWeight: FontWeight.bold, fontSize: 11)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text('House: ${v.house?.houseNumber ?? '-'}', style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13)),
+          Text('Logged by: ${_nameOrDash(v.creator?.fullName)}', style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13)),
+          Text('Time: ${_formatTime(v.checkedInAt ?? v.expectedAt)}', style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13)),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.fact_check_outlined, color: Color(0xFF05CD99), size: 20),
+                tooltip: 'Update Status',
+                onSelected: (value) => _updateStatus(v, value),
+                itemBuilder: (_) => _statusMenuItems(v),
+              ),
+              IconButton(
+                icon: const Icon(Icons.visibility, color: Color(0xFF4318FF), size: 20),
+                onPressed: () => _showDetails(v),
+                tooltip: 'View Details',
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                onPressed: () => _deleteVisitor(v),
+                tooltip: 'Delete Visitor',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _updateStatus(Visitor visitor, String status) async {
+    try {
+      await ref.read(adminVisitorsProvider.notifier).updateStatus(visitor.id, status);
+    } catch (e) {
+      _showError(e);
+    }
+  }
+
+  // Builds the status-change actions available for a visitor's current state.
+  List<PopupMenuEntry<String>> _statusMenuItems(Visitor visitor) {
+    final items = <PopupMenuEntry<String>>[];
+    if (visitor.status == 'expected') {
+      items.add(const PopupMenuItem(value: 'checked_in', child: Text('Check In')));
+      items.add(const PopupMenuItem(value: 'cancelled', child: Text('Cancel')));
+    } else if (visitor.status == 'checked_in') {
+      items.add(const PopupMenuItem(value: 'checked_out', child: Text('Check Out')));
+    } else {
+      // checked_out / cancelled: allow re-opening as expected.
+      items.add(const PopupMenuItem(value: 'expected', child: Text('Mark as Expected')));
+    }
+    return items;
+  }
+
   void _deleteVisitor(Visitor visitor) {
     showDialog(
       context: context,
@@ -252,20 +337,27 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
                   if (visitors.isEmpty) {
                     return const Center(child: Text('No visitors logged', style: TextStyle(color: Color(0xFFA3AED0))));
                   }
-                  return Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFF4F7FE), width: 2),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final tableWidth = constraints.maxWidth > 1000 ? constraints.maxWidth : 1000.0;
-                          return SingleChildScrollView(
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      // On narrow phones, render a vertical card list instead of a wide table.
+                      if (constraints.maxWidth < 600) {
+                        return ListView.separated(
+                          itemCount: visitors.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) => _buildVisitorCard(visitors[index]),
+                        );
+                      }
+                      return Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFFF4F7FE), width: 2),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: SizedBox(
-                              width: tableWidth,
+                              width: constraints.maxWidth > 760 ? constraints.maxWidth : 760.0,
                               child: Column(
                                 children: [
                                   Container(
@@ -278,7 +370,7 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
                                         Expanded(flex: 3, child: Text('Logged By', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
                                         Expanded(flex: 2, child: Text('Time', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
                                         Expanded(flex: 2, child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                                        Expanded(flex: 2, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)), textAlign: TextAlign.right)),
+                                        Expanded(flex: 3, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)), textAlign: TextAlign.right)),
                                       ],
                                     ),
                                   ),
@@ -330,10 +422,16 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
                                                 ),
                                               ),
                                               Expanded(
-                                                flex: 2,
+                                                flex: 3,
                                                 child: Row(
                                                   mainAxisAlignment: MainAxisAlignment.end,
                                                   children: [
+                                                    PopupMenuButton<String>(
+                                                      icon: const Icon(Icons.fact_check_outlined, color: Color(0xFF05CD99), size: 18),
+                                                      tooltip: 'Update Status',
+                                                      onSelected: (value) => _updateStatus(v, value),
+                                                      itemBuilder: (_) => _statusMenuItems(v),
+                                                    ),
                                                     IconButton(
                                                       icon: const Icon(Icons.visibility, color: Color(0xFF4318FF), size: 18),
                                                       onPressed: () => _showDetails(v),
@@ -356,10 +454,10 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
                                 ],
                               ),
                             ),
-                          );
-                        },
-                      ),
-                    ),
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),

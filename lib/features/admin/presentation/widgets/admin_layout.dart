@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -143,9 +145,13 @@ class AdminLayout extends StatelessWidget {
 
   Widget _buildSidebar(BuildContext context, {required bool isDesktop}) {
     final String location = GoRouterState.of(context).uri.path;
+    // On desktop keep the full sidebar; as a drawer, cap to 80% of the screen
+    // so it never swallows the whole viewport on small phones.
+    final double sidebarWidth =
+        isDesktop ? 280 : math.min(280, MediaQuery.of(context).size.width * 0.8);
 
     return Container(
-      width: 280,
+      width: sidebarWidth,
       color: Colors.white,
       child: Column(
         children: [

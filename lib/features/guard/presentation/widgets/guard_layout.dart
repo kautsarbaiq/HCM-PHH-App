@@ -8,11 +8,49 @@ class GuardLayout extends StatelessWidget {
 
   const GuardLayout({super.key, required this.child});
 
+  Future<void> _handleLogout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text('You will need to sign in again to access the security portal.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Sign out'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await Supabase.instance.client.auth.signOut();
+      // The router's auth-state redirect moves to /guard once signed out.
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not sign out: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Wide (tablet/desktop) → fixed sidebar. Narrow (phone) → hamburger drawer,
-    // so the content isn't crushed by a 250px sidebar.
-    final isWide = MediaQuery.of(context).size.width >= 600;
+    // so the content isn't crushed by a fixed sidebar. Raised the breakpoint to
+    // 700 so small tablets / landscape phones don't get a cramped split.
+    final width = MediaQuery.of(context).size.width;
+    final isWide = width >= 700;
+    // Proportional sidebar (clamped) instead of a hard 250px so it doesn't
+    // starve the content tables on smaller wide layouts.
+    final sidebarWidth = (width * 0.26).clamp(220.0, 300.0);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FE),
@@ -28,7 +66,7 @@ class GuardLayout extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(PhosphorIconsRegular.signOut, color: Colors.redAccent),
-            onPressed: () async => Supabase.instance.client.auth.signOut(),
+            onPressed: () => _handleLogout(context),
             tooltip: 'Logout',
           ),
           const SizedBox(width: 8),
@@ -36,7 +74,7 @@ class GuardLayout extends StatelessWidget {
       ),
       body: Row(
         children: [
-          if (isWide) SizedBox(width: 250, child: _sidebar(context, isWide: true)),
+          if (isWide) SizedBox(width: sidebarWidth, child: _sidebar(context, isWide: true)),
           Expanded(child: child),
         ],
       ),

@@ -120,7 +120,9 @@ class AppDrawer extends ConsumerWidget {
     final profile = ref.watch(currentProfileProvider).valueOrNull;
     final name = (profile?.fullName.isNotEmpty ?? false) ? profile!.fullName : 'Guest';
     final role = profile?.role;
-    final subtitle = role == null ? 'Tap to view profile' : '${role[0].toUpperCase()}${role.substring(1)}';
+    final subtitle = (role == null || role.isEmpty)
+        ? 'Tap to view profile'
+        : '${role[0].toUpperCase()}${role.substring(1)}';
     final avatarUrl = profile?.avatarUrl;
 
     return InkWell(
@@ -139,13 +141,19 @@ class AppDrawer extends ConsumerWidget {
                 shape: BoxShape.circle,
                 color: AppColors.primaryBlue.withOpacity(0.1),
                 border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 2),
-                image: (avatarUrl != null && avatarUrl.isNotEmpty)
-                    ? DecorationImage(image: NetworkImage(avatarUrl), fit: BoxFit.cover)
-                    : null,
               ),
-              child: (avatarUrl == null || avatarUrl.isEmpty)
-                  ? const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue)
-                  : null,
+              child: ClipOval(
+                child: (avatarUrl != null && avatarUrl.isNotEmpty)
+                    ? Image.network(
+                        avatarUrl,
+                        fit: BoxFit.cover,
+                        width: 52,
+                        height: 52,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
+                      )
+                    : const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(

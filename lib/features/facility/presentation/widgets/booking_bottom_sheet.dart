@@ -6,6 +6,7 @@ import '../../../../core/widgets/action_button.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/repositories/facility_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
+import '../pages/facility_page.dart';
 
 class BookingBottomSheet extends ConsumerStatefulWidget {
   final String facilityName;
@@ -19,6 +20,7 @@ class BookingBottomSheet extends ConsumerStatefulWidget {
 class _BookingBottomSheetState extends ConsumerState<BookingBottomSheet> {
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
+  bool _isBooking = false;
 
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
@@ -82,7 +84,9 @@ class _BookingBottomSheetState extends ConsumerState<BookingBottomSheet> {
             ),
           ),
           child: SafeArea(
-            child: Column(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -138,54 +142,82 @@ class _BookingBottomSheetState extends ConsumerState<BookingBottomSheet> {
                   ],
                 ),
                 const SizedBox(height: 32),
-                ActionButton(
-                  label: 'Confirm Booking',
-                  onPressed: () async {
-                    if (selectedDate == null || selectedTime == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please select date and time'), backgroundColor: AppColors.error),
-                      );
-                      return;
-                    }
-
-                    try {
-                      final profile = await ref.read(currentProfileProvider.future);
-                      if (profile == null) throw Exception('You must be logged in to book a facility.');
-
-                      final dateStr = '${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}';
-                      final timeStr = '${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}';
-
-                      final booking = Booking(
-                        id: '',
-                        facilityName: widget.facilityName,
-                        date: dateStr,
-                        time: timeStr,
-                        status: 'Pending',
-                        bookedBy: profile.id,
-                        createdAt: '',
-                      );
-
-                      await ref.read(facilityRepositoryProvider).createBooking(booking);
-
-                      if (mounted) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Successfully booked ${widget.facilityName}!'), backgroundColor: Colors.green),
-                        );
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
-                      }
-                    }
-                  },
-                ),
+                _isBooking
+                    ? Container(
+                        height: 56,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: AppColors.deepSlate,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        alignment: Alignment.center,
+                        child: const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.primaryWhite),
+                        ),
+                      )
+                    : ActionButton(
+                        label: 'Confirm Booking',
+                        onPressed: _confirmBooking,
+                      ),
               ],
+            ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _confirmBooking() async {
+    if (_isBooking) return;
+
+    if (selectedDate == null || selectedTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select date and time'), backgroundColor: AppColors.error),
+      );
+      return;
+    }
+
+    setState(() => _isBooking = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    try {
+      final profile = await ref.read(currentProfileProvider.future);
+      if (profile == null) throw Exception('You must be logged in to book a facility.');
+
+      final dateStr = '${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}';
+      final timeStr = '${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}';
+
+      final booking = Booking(
+        id: '',
+        facilityName: widget.facilityName,
+        date: dateStr,
+        time: timeStr,
+        status: 'Pending',
+        bookedBy: profile.id,
+        createdAt: '',
+      );
+
+      await ref.read(facilityRepositoryProvider).createBooking(booking);
+
+      // Refresh the user's bookings so any list reflects the new booking.
+      ref.invalidate(myBookingsProvider);
+
+      if (mounted) {
+        navigator.pop();
+        messenger.showSnackBar(
+          SnackBar(content: Text('Successfully booked ${widget.facilityName}!'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isBooking = false);
+        messenger.showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+      }
+    }
   }
 
   Widget _buildSelector({

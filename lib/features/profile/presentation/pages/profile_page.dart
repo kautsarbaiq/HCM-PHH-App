@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/repositories/profile_repository.dart';
@@ -24,6 +25,46 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _isUploading = false;
+  bool _isSigningOut = false;
+  bool _avatarFailed = false;
+
+  Future<void> _confirmSignOut() async {
+    if (_isSigningOut) return;
+
+    final shouldSignOut = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldSignOut != true || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _isSigningOut = true);
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSigningOut = false);
+        messenger.showSnackBar(
+          SnackBar(content: Text('Could not sign out. Please try again. ($e)'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
 
   Future<void> _uploadAvatar() async {
     final picker = ImagePicker();
@@ -39,8 +80,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       if (profile == null) throw Exception('Profile not found');
 
       await ref.read(storageRepositoryProvider).uploadAvatar(file, profile.id);
-      
-      // Refresh profile data
+
+      // Refresh profile data and re-attempt loading the (new) avatar image.
+      _avatarFailed = false;
       ref.invalidate(currentProfileProvider);
       
       if (mounted) {
@@ -73,11 +115,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             title: const Text('Profile', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
             actions: [
               IconButton(
-                icon: const Icon(PhosphorIconsRegular.signOut),
+                icon: _isSigningOut
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
+                      )
+                    : const Icon(PhosphorIconsRegular.signOut),
                 color: Colors.red,
-                onPressed: () async {
-                  await Supabase.instance.client.auth.signOut();
-                },
+                onPressed: _isSigningOut ? null : _confirmSignOut,
               ),
               const SizedBox(width: 8),
             ],
@@ -95,7 +141,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   const SizedBox(height: 16),
                   _buildDocumentGrid(),
                   const SizedBox(height: 32),
-                  _buildSectionHeader('Financial Records'),
+                  _buildSectionHeader('Financial Records', onTap: () => context.go('/bills')),
                   const SizedBox(height: 16),
                   _buildFinanceList(),
                   const SizedBox(height: 100),
@@ -132,15 +178,25 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
               child: _isUploading
                   ? const CircularProgressIndicator()
-                  : CircleAvatar(
-                      radius: 60,
-                      backgroundColor: Colors.grey[300],
-                      backgroundImage: profileAsync.whenOrNull(
-                        data: (profile) => profile?.avatarUrl != null ? NetworkImage(profile!.avatarUrl!) : null,
-                      ),
-                      child: profileAsync.whenOrNull(
-                        data: (profile) => profile?.avatarUrl == null ? const Icon(PhosphorIconsRegular.user, size: 60, color: Colors.grey) : null,
-                      ),
+                  : Builder(
+                      builder: (context) {
+                        final avatarUrl = profileAsync.whenOrNull(data: (profile) => profile?.avatarUrl);
+                        final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty && !_avatarFailed;
+                        return CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Colors.grey[300],
+                          backgroundImage: hasAvatar ? NetworkImage(avatarUrl) : null,
+                          onBackgroundImageError: hasAvatar
+                              ? (_, __) {
+                                  // Fall back to the default icon on a broken/expired URL.
+                                  if (mounted && !_avatarFailed) {
+                                    setState(() => _avatarFailed = true);
+                                  }
+                                }
+                              : null,
+                          child: hasAvatar ? null : const Icon(PhosphorIconsRegular.user, size: 60, color: Colors.grey),
+                        );
+                      },
                     ),
             ),
             Positioned(
@@ -235,14 +291,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Row(
+  Widget _buildSectionHeader(String title, {VoidCallback? onTap}) {
+    final row = Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-        const Icon(PhosphorIconsRegular.caretRight, size: 18, color: AppColors.textSecondary),
+        Expanded(
+          child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        ),
+        // Only show the "see more" caret when the header is actually actionable.
+        if (onTap != null) const Icon(PhosphorIconsRegular.caretRight, size: 18, color: AppColors.textSecondary),
       ],
     );
+    if (onTap == null) return row;
+    return GestureDetector(onTap: onTap, behavior: HitTestBehavior.opaque, child: row);
   }
 
   Widget _buildDocumentGrid() {
@@ -261,7 +322,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           }
           return ListView(
             scrollDirection: Axis.horizontal,
-            children: docs.map((d) => _buildDocumentCard(d.title, d.referenceCode ?? '', _docIcon(d.documentType))).toList(),
+            children: docs.map((d) => _buildDocumentCard(d)).toList(),
           );
         },
       ),
@@ -279,12 +340,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     }
   }
 
-  Widget _buildDocumentCard(String title, String subtitle, IconData icon) {
+  Widget _buildDocumentCard(ResidentDocument doc) {
+    final title = doc.title;
+    final subtitle = doc.referenceCode ?? '';
+    final icon = _docIcon(doc.documentType);
     return Container(
       width: 140,
       margin: const EdgeInsets.only(right: 16),
       child: GlassCard(
         padding: const EdgeInsets.all(16),
+        onTap: () => _openResidentDocument(doc),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -300,11 +365,64 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             const SizedBox(height: 16),
             Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 4),
-            Text(subtitle, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+            Text(subtitle, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary), maxLines: 1, overflow: TextOverflow.ellipsis),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _openResidentDocument(ResidentDocument doc) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final hasFile = doc.fileUrl != null && doc.fileUrl!.isNotEmpty;
+
+    if (hasFile) {
+      final uri = Uri.tryParse(doc.fileUrl!);
+      if (uri != null) {
+        try {
+          final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+          if (launched) return;
+        } catch (_) {
+          // Fall through to the detail dialog below.
+        }
+      }
+    }
+
+    if (!mounted) return;
+    // No file (or it failed to open): show the document details instead of doing nothing.
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(doc.title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (doc.documentType != null && doc.documentType!.isNotEmpty)
+              Text('Type: ${doc.documentType}', style: const TextStyle(color: AppColors.textSecondary)),
+            if (doc.referenceCode != null && doc.referenceCode!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text('Reference: ${doc.referenceCode}', style: const TextStyle(color: AppColors.textSecondary)),
+              ),
+            if (!hasFile)
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Text('No file attached to this document yet.', style: TextStyle(color: AppColors.textSecondary)),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close')),
+        ],
+      ),
+    );
+
+    if (hasFile) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Could not open the document file.'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   Widget _buildFinanceList() {

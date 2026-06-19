@@ -212,18 +212,21 @@ class BillingPage extends ConsumerWidget {
         if (paid.isEmpty) {
           return _buildEmpty(PhosphorIconsRegular.receipt, 'No history yet', 'Your paid bills will appear here.');
         }
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
-          itemCount: paid.length,
-          itemBuilder: (context, index) {
-            final tx = paid[index];
-            return TransactionHistoryItem(
-              title: tx.title,
-              date: _formatDateTime(tx.paidAt ?? tx.dueDate),
-              amount: tx.amount,
-              isSuccess: true,
-            );
-          },
+        return RefreshIndicator(
+          onRefresh: () => ref.read(myBillingsProvider.notifier).refresh(),
+          child: ListView.builder(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+            itemCount: paid.length,
+            itemBuilder: (context, index) {
+              final tx = paid[index];
+              return TransactionHistoryItem(
+                title: tx.title,
+                date: _formatDateTime(tx.paidAt ?? tx.dueDate),
+                amount: tx.amount,
+                isSuccess: tx.status == 'paid',
+              );
+            },
+          ),
         );
       },
     );

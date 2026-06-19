@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/repositories/directory_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
 import '../../../../core/widgets/glass_card.dart';
@@ -10,6 +11,26 @@ import '../../../../theme/app_colors.dart';
 final committeeProvider = FutureProvider<List<Profile>>((ref) {
   return ref.read(directoryRepositoryProvider).getCommittee();
 });
+
+Future<void> _dialPhone(BuildContext context, String name, String phone) async {
+  final sanitized = phone.replaceAll(RegExp(r'[^\d+]'), '');
+  final uri = Uri(scheme: 'tel', path: sanitized);
+  final messenger = ScaffoldMessenger.of(context);
+  try {
+    final launched = await launchUrl(uri);
+    if (!launched && context.mounted) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not open dialer for $name.'), backgroundColor: AppColors.error),
+      );
+    }
+  } catch (_) {
+    if (context.mounted) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not open dialer for $name.'), backgroundColor: AppColors.error),
+      );
+    }
+  }
+}
 
 String initialsOf(String name) {
   final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
@@ -57,14 +78,19 @@ class CommitteePage extends ConsumerWidget {
                           ),
                           const SizedBox(width: 16),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(m.fullName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                            Text(m.fullName, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                             const SizedBox(height: 2),
-                            Text(m.position ?? 'Committee', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primaryBlue)),
-                            if (m.email != null && m.email!.isNotEmpty) Text(m.email!, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                            Text(m.position ?? 'Committee', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primaryBlue)),
+                            if (m.email != null && m.email!.isNotEmpty) Text(m.email!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                           ])),
-                          if (m.phone != null && m.phone!.isNotEmpty)
-                            Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), shape: BoxShape.circle),
-                                child: const Icon(PhosphorIconsRegular.phone, color: AppColors.primaryBlue, size: 20)),
+                          if (m.phone != null && m.phone!.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () => _dialPhone(context, m.fullName, m.phone!),
+                              child: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), shape: BoxShape.circle),
+                                  child: const Icon(PhosphorIconsRegular.phone, color: AppColors.primaryBlue, size: 20)),
+                            ),
+                          ],
                         ]),
                       ),
                     );

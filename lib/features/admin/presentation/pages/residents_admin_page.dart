@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/repositories/admin_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
-import '../../../../core/repositories/house_repository.dart';
 import 'houses_admin_page.dart'; // to get adminHousesProvider
 
 class ResidentsAdminPage extends ConsumerStatefulWidget {
@@ -24,6 +23,19 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
     }).toList();
   }
 
+  // Resolves a resident's houseId to a human-readable house number.
+  String _houseLabel(String? houseId) {
+    if (houseId == null || houseId.isEmpty) return 'Not Assigned';
+    final houses = ref.read(adminHousesProvider).valueOrNull;
+    if (houses == null) return 'Assigned';
+    for (final house in houses) {
+      if (house.id == houseId) {
+        return '${house.houseNumber} (${house.houseType})';
+      }
+    }
+    return 'Assigned';
+  }
+
   void _showDetails(Profile resident) {
     showDialog(
       context: context,
@@ -35,22 +47,25 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
             children: [
               const Icon(Icons.person, color: Color(0xFF4318FF)),
               const SizedBox(width: 8),
-              Text(
-                resident.fullName,
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
+              Expanded(
+                child: Text(
+                  resident.fullName,
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
+                ),
               ),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildDetailItem('ID', resident.id),
-              _buildDetailItem('House/Unit ID', resident.houseId ?? 'Not Assigned'),
-              _buildDetailItem('Email Address', resident.email ?? '-'),
-              _buildDetailItem('Phone Number', resident.phone ?? '-'),
-              _buildDetailItem('Account Status', resident.status, isStatus: true),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDetailItem('House / Unit', _houseLabel(resident.houseId)),
+                _buildDetailItem('Email Address', resident.email ?? '-'),
+                _buildDetailItem('Phone Number', resident.phone ?? '-'),
+                _buildDetailItem('Account Status', resident.status, isStatus: true),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -109,110 +124,108 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
   @override
   Widget build(BuildContext context) {
     final residentsAsync = ref.watch(adminResidentsProvider);
+    // Warm the houses list so house labels resolve to readable numbers.
+    ref.watch(adminHousesProvider);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Residents Management',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2B3674),
-                  ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        const Text(
+          'Residents Management',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF2B3674),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Info banner: residents self-register, so there is no manual "add".
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF4318FF).withOpacity(0.06),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.info_outline, color: Color(0xFF4318FF), size: 20),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Residents register through the app directly. Use the edit action to assign a house or change status.',
+                  style: TextStyle(color: Color(0xFF2B3674), fontSize: 13),
                 ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Residents should register through the app directly.'))
-                    );
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Resident'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4318FF),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Search Bar
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+            ],
+          ),
+          child: TextField(
+            onChanged: (val) {
+              setState(() {
+                _searchQuery = val;
+              });
+            },
+            decoration: const InputDecoration(
+              hintText: 'Search residents by name or email...',
+              border: InputBorder.none,
+              icon: Icon(Icons.search, color: Color(0xFFA3AED0)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Residents Table
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
               ],
             ),
-            const SizedBox(height: 24),
+            child: residentsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Center(child: Text('Error: $err')),
+              data: (residentsList) {
+                final filtered = _filterResidents(residentsList);
+                if (filtered.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No residents found.',
+                      style: TextStyle(color: Color(0xFFA3AED0), fontSize: 16),
+                    ),
+                  );
+                }
 
-            // Search Bar
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
-                ],
-              ),
-              child: TextField(
-                onChanged: (val) {
-                  setState(() {
-                    _searchQuery = val;
-                  });
-                },
-                decoration: const InputDecoration(
-                  hintText: 'Search residents by name or email...',
-                  border: InputBorder.none,
-                  icon: Icon(Icons.search, color: Color(0xFFA3AED0)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Residents Table
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
-                  ],
-                ),
-                child: residentsAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (err, stack) => Center(child: Text('Error: $err')),
-                  data: (residentsList) {
-                    final filtered = _filterResidents(residentsList);
-                    if (filtered.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          'No residents found.',
-                          style: TextStyle(color: Color(0xFFA3AED0), fontSize: 16),
-                        ),
-                      );
-                    }
-
-                    return ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: filtered.length,
-                      separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFF4F7FE)),
-                      itemBuilder: (context, index) {
-                        final resident = filtered[index];
-                        return _buildResidentCard(resident);
-                      },
-                    );
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filtered.length,
+                  separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFF4F7FE)),
+                  itemBuilder: (context, index) {
+                    final resident = filtered[index];
+                    return _buildResidentCard(resident);
                   },
-                ),
-              ),
+                );
+              },
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -244,32 +257,37 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
                 ],
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  resident.houseId != null ? 'Assigned' : 'Not Assigned',
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: (resident.status == 'active' ? const Color(0xFF05CD99) : Colors.orange).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _houseLabel(resident.houseId),
+                    textAlign: TextAlign.right,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674), fontSize: 13),
                   ),
-                  child: Text(
-                    resident.status.toUpperCase(),
-                    style: TextStyle(
-                      color: resident.status == 'active' ? const Color(0xFF05CD99) : Colors.orange,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: (resident.status == 'active' ? const Color(0xFF05CD99) : Colors.orange).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      resident.status.toUpperCase(),
+                      style: TextStyle(
+                        color: resident.status == 'active' ? const Color(0xFF05CD99) : Colors.orange,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.edit, color: Color(0xFFA3AED0)),
               onPressed: () => _showForm(resident),
@@ -388,6 +406,8 @@ class _ResidentEditDialogState extends ConsumerState<_ResidentEditDialog> {
           onPressed: _isLoading
               ? null
               : () async {
+                  final navigator = Navigator.of(context);
+                  final messenger = ScaffoldMessenger.of(context);
                   setState(() => _isLoading = true);
                   try {
                     final repo = ref.read(adminRepositoryProvider);
@@ -398,9 +418,11 @@ class _ResidentEditDialogState extends ConsumerState<_ResidentEditDialog> {
                       await repo.updateResidentStatus(widget.resident.id, _status);
                     }
                     ref.invalidate(adminResidentsProvider);
-                    if (mounted) Navigator.pop(context);
+                    navigator.pop();
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                    if (mounted) {
+                      messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
+                    }
                   } finally {
                     if (mounted) setState(() => _isLoading = false);
                   }

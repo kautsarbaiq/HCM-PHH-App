@@ -65,16 +65,31 @@ class AdminDashboardPage extends ConsumerWidget {
             Text('Could not load stats: ${statsAsync.error}', style: const TextStyle(color: Color(0xFFEE5D50), fontSize: 13)),
           ],
           const SizedBox(height: 32),
-          // Dashboard Cards
-          Wrap(
-            spacing: 24,
-            runSpacing: 24,
-            children: [
-              _buildStatCard('Total Residents', fmt(stats?.residents), Icons.people_rounded, const Color(0xFF4318FF)),
-              _buildStatCard('Total Houses', fmt(stats?.houses), Icons.house_rounded, const Color(0xFF00B5D8)),
-              _buildStatCard('Active Billings', fmt(stats?.activeBillings), Icons.receipt_long_rounded, const Color(0xFFFFB547)),
-              _buildStatCard('Today Visitors', fmt(stats?.todayVisitors), Icons.badge_rounded, const Color(0xFF05CD99)),
-            ],
+          // Dashboard Cards — size to the available width so they fit phones.
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const spacing = 24.0;
+              final maxW = constraints.maxWidth;
+              // One per row on narrow phones, two-up on mid widths, else flow.
+              double cardWidth;
+              if (maxW < 360) {
+                cardWidth = maxW;
+              } else if (maxW < 720) {
+                cardWidth = (maxW - spacing) / 2;
+              } else {
+                cardWidth = 260;
+              }
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: [
+                  _buildStatCard(cardWidth, 'Total Residents', fmt(stats?.residents), Icons.people_rounded, const Color(0xFF4318FF)),
+                  _buildStatCard(cardWidth, 'Total Houses', fmt(stats?.houses), Icons.house_rounded, const Color(0xFF00B5D8)),
+                  _buildStatCard(cardWidth, 'Active Billings', fmt(stats?.activeBillings), Icons.receipt_long_rounded, const Color(0xFFFFB547)),
+                  _buildStatCard(cardWidth, 'Today Visitors', fmt(stats?.todayVisitors), Icons.badge_rounded, const Color(0xFF05CD99)),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 40),
           // Placeholder for charts or recent activities
@@ -102,10 +117,10 @@ class AdminDashboardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color iconColor) {
+  Widget _buildStatCard(double width, String title, String value, IconData icon, Color iconColor) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 200, maxWidth: 300),
-      padding: const EdgeInsets.all(24),
+      width: width,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),

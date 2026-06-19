@@ -106,6 +106,7 @@ class _AnnouncementsAdminPageState extends ConsumerState<AnnouncementsAdminPage>
     final titleController = TextEditingController(text: announcement?.title ?? '');
     final contentController = TextEditingController(text: announcement?.content ?? '');
     bool isUrgent = announcement?.isUrgent ?? false;
+    bool isSaving = false;
 
     showDialog(
       context: context,
@@ -139,40 +140,52 @@ class _AnnouncementsAdminPageState extends ConsumerState<AnnouncementsAdminPage>
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: isSaving ? null : () => Navigator.pop(context),
                   child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
                 ),
                 ElevatedButton(
-                  onPressed: () async {
-                    if (titleController.text.isEmpty || contentController.text.isEmpty) return;
-                    final navigator = Navigator.of(context);
-                    try {
-                      if (isEdit) {
-                        await ref.read(adminAnnouncementsProvider.notifier).updateAnnouncement(announcement.id, {
-                          'title': titleController.text,
-                          'content': contentController.text,
-                          'is_urgent': isUrgent,
-                        });
-                      } else {
-                        await ref.read(adminAnnouncementsProvider.notifier).addAnnouncement(Announcement(
-                              id: '',
-                              title: titleController.text,
-                              content: contentController.text,
-                              isUrgent: isUrgent,
-                              publishedAt: '',
-                            ));
-                      }
-                      navigator.pop();
-                    } catch (e) {
-                      _showError(e);
-                    }
-                  },
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final navigator = Navigator.of(context);
+                          if (titleController.text.isEmpty || contentController.text.isEmpty) {
+                            messenger.showSnackBar(
+                              const SnackBar(content: Text('Please enter both a title and content.')),
+                            );
+                            return;
+                          }
+                          setDialogState(() => isSaving = true);
+                          try {
+                            if (isEdit) {
+                              await ref.read(adminAnnouncementsProvider.notifier).updateAnnouncement(announcement.id, {
+                                'title': titleController.text,
+                                'content': contentController.text,
+                                'is_urgent': isUrgent,
+                              });
+                            } else {
+                              await ref.read(adminAnnouncementsProvider.notifier).addAnnouncement(Announcement(
+                                    id: '',
+                                    title: titleController.text,
+                                    content: contentController.text,
+                                    isUrgent: isUrgent,
+                                    publishedAt: '',
+                                  ));
+                            }
+                            navigator.pop();
+                          } catch (e) {
+                            setDialogState(() => isSaving = false);
+                            _showError(e);
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4318FF),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: Text(isEdit ? 'Save' : 'Post'),
+                  child: isSaving
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text(isEdit ? 'Save' : 'Post'),
                 ),
               ],
             );

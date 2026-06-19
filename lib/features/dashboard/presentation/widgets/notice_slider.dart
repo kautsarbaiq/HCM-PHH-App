@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../../../core/mock_data/mock_data.dart';
+import '../../../../core/repositories/announcement_repository.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../community/presentation/pages/community_page.dart';
 
-class NoticeSlider extends StatelessWidget {
+class NoticeSlider extends ConsumerWidget {
   const NoticeSlider({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final noticesAsync = ref.watch(noticesProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -24,12 +30,16 @@ class NoticeSlider extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-            Text(
-              'See All',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primaryBlue,
+            GestureDetector(
+              onTap: () => context.go('/community'),
+              behavior: HitTestBehavior.opaque,
+              child: const Text(
+                'See All',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primaryBlue,
+                ),
               ),
             ),
           ],
@@ -37,13 +47,29 @@ class NoticeSlider extends StatelessWidget {
         const SizedBox(height: 16),
         SizedBox(
           height: 160,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: MockData.notices.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 16),
-            itemBuilder: (context, index) {
-              final notice = MockData.notices[index];
-              return _buildNoticeCard(notice);
+          child: noticesAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, _) => const Center(
+              child: Text(
+                'Could not load notices.',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            ),
+            data: (notices) {
+              if (notices.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'No notices yet.',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                );
+              }
+              return ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: notices.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 16),
+                itemBuilder: (context, index) => _buildNoticeCard(notices[index]),
+              );
             },
           ),
         ),
@@ -51,9 +77,17 @@ class NoticeSlider extends StatelessWidget {
     );
   }
 
-  Widget _buildNoticeCard(Map<String, dynamic> notice) {
-    final bool isUrgent = notice['isUrgent'];
-    
+  String _formatDate(String iso) {
+    try {
+      return DateFormat('MMM d, yyyy').format(DateTime.parse(iso).toLocal());
+    } catch (_) {
+      return iso;
+    }
+  }
+
+  Widget _buildNoticeCard(Announcement notice) {
+    final bool isUrgent = notice.isUrgent;
+
     return SizedBox(
       width: 280,
       child: GlassCard(
@@ -71,7 +105,7 @@ class NoticeSlider extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    notice['title'],
+                    notice.title,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -86,7 +120,7 @@ class NoticeSlider extends StatelessWidget {
             const SizedBox(height: 12),
             Expanded(
               child: Text(
-                notice['description'],
+                notice.content,
                 style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.textSecondary,
@@ -98,7 +132,7 @@ class NoticeSlider extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              notice['date'],
+              _formatDate(notice.publishedAt),
               style: const TextStyle(
                 fontSize: 12,
                 color: AppColors.textSecondary,

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,8 +14,9 @@ class AdminLoginPage extends ConsumerStatefulWidget {
 }
 
 class _AdminLoginPageState extends ConsumerState<AdminLoginPage> {
-  final _emailController = TextEditingController(text: 'admin@hcm.com');
-  final _passwordController = TextEditingController(text: 'password123');
+  // Prefill demo credentials only in debug builds; ship empty fields in release.
+  final _emailController = TextEditingController(text: kDebugMode ? 'admin@hcm.com' : '');
+  final _passwordController = TextEditingController(text: kDebugMode ? 'password123' : '');
   bool _isLoading = false;
 
   void _handleLogin() async {

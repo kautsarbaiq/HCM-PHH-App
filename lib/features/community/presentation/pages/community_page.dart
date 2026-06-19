@@ -15,6 +15,23 @@ import '../../../../core/repositories/profile_repository.dart';
 import '../../../../core/repositories/ticket_repository.dart';
 import '../widgets/create_ticket_modal.dart';
 
+/// Safely format an ISO date string; falls back to the raw value if the
+/// string is empty or unparseable instead of throwing.
+String _formatNoticeDate(String? iso) {
+  if (iso == null || iso.isEmpty) return '-';
+  try {
+    return DateFormat('MMM d, yyyy').format(DateTime.parse(iso).toLocal());
+  } catch (_) {
+    return iso;
+  }
+}
+
+/// Short ticket reference, guarded against ids shorter than 4 chars.
+String _ticketRef(String id) {
+  final slice = id.length >= 4 ? id.substring(0, 4) : id;
+  return 'T-${slice.toUpperCase()}';
+}
+
 // State Management
 final communityTabIndexProvider = StateProvider<int>((ref) => 0);
 
@@ -57,7 +74,8 @@ class CommunityPage extends ConsumerWidget {
               child: _buildHeader(context, ref),
             ),
             // Category Filter Chips
-            Padding(
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
                 children: [
@@ -119,10 +137,21 @@ class CommunityPage extends ConsumerWidget {
             ),
             child: ClipOval(
               child: profileAsync.when(
-                data: (profile) => profile?.avatarUrl != null 
-                    ? Image.network(profile!.avatarUrl!, fit: BoxFit.cover)
+                data: (profile) => profile?.avatarUrl != null
+                    ? Image.network(
+                        profile!.avatarUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
+                      )
                     : const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
-                loading: () => const CircularProgressIndicator(),
+                loading: () => const Center(
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
                 error: (_, __) => const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
               ),
             ),
@@ -209,7 +238,7 @@ class CommunityPage extends ConsumerWidget {
                 child: Center(child: Text('No announcements yet.', style: TextStyle(color: AppColors.textSecondary))),
               ),
             ...notices.map((notice) {
-              final dateStr = DateFormat('MMM d, yyyy').format(DateTime.parse(notice.publishedAt).toLocal());
+              final dateStr = _formatNoticeDate(notice.publishedAt);
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: NoticeCard(
@@ -262,9 +291,9 @@ class CommunityPage extends ConsumerWidget {
                 separatorBuilder: (context, index) => const SizedBox(height: 16),
                 itemBuilder: (context, index) {
                   final ticket = tickets[index];
-                  final dateStr = DateFormat('MMM d, yyyy').format(DateTime.parse(ticket.createdAt).toLocal());
+                  final dateStr = _formatNoticeDate(ticket.createdAt);
                   return TicketCard(
-                    ticketId: 'T-${ticket.id.substring(0, 4).toUpperCase()}',
+                    ticketId: _ticketRef(ticket.id),
                     title: ticket.title,
                     date: dateStr,
                     status: ticket.status,

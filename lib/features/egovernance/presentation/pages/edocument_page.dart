@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/repositories/document_repository.dart';
 import '../../../../core/widgets/glass_card.dart';
@@ -10,6 +11,40 @@ import '../../../../theme/app_colors.dart';
 final eDocumentsProvider = FutureProvider<List<AppDocument>>((ref) {
   return ref.read(documentRepositoryProvider).getDocuments();
 });
+
+Future<void> _openDocument(BuildContext context, AppDocument doc) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final hasFile = doc.fileUrl != null && doc.fileUrl!.isNotEmpty;
+  if (!hasFile) {
+    messenger.showSnackBar(
+      SnackBar(content: Text('No file uploaded for "${doc.title}" yet.'), backgroundColor: AppColors.primaryBlue),
+    );
+    return;
+  }
+
+  final uri = Uri.tryParse(doc.fileUrl!);
+  if (uri == null) {
+    messenger.showSnackBar(
+      SnackBar(content: Text('Invalid file link for "${doc.title}".'), backgroundColor: AppColors.error),
+    );
+    return;
+  }
+
+  try {
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && context.mounted) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not open "${doc.title}".'), backgroundColor: AppColors.error),
+      );
+    }
+  } catch (_) {
+    if (context.mounted) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not open "${doc.title}".'), backgroundColor: AppColors.error),
+      );
+    }
+  }
+}
 
 class EDocumentPage extends ConsumerWidget {
   const EDocumentPage({super.key});
@@ -51,7 +86,7 @@ class EDocumentPage extends ConsumerWidget {
                           ),
                           const SizedBox(width: 16),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(doc.title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                            Text(doc.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                             const SizedBox(height: 4),
                             Row(children: [
                               if (doc.category != null)
@@ -66,16 +101,9 @@ class EDocumentPage extends ConsumerWidget {
                               ],
                             ]),
                           ])),
+                          const SizedBox(width: 8),
                           GestureDetector(
-                            onTap: () {
-                              final hasFile = doc.fileUrl != null && doc.fileUrl!.isNotEmpty;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(hasFile ? 'Opening ${doc.title}…' : 'No file uploaded for "${doc.title}" yet.'),
-                                  backgroundColor: AppColors.primaryBlue,
-                                ),
-                              );
-                            },
+                            onTap: () => _openDocument(context, doc),
                             child: Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(color: AppColors.deepSlate.withOpacity(0.08), borderRadius: BorderRadius.circular(12)),

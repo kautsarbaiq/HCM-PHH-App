@@ -62,6 +62,8 @@ class NoticeCard extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 8),
           Text(
@@ -71,6 +73,8 @@ class NoticeCard extends StatelessWidget {
               color: AppColors.textSecondary,
               height: 1.4,
             ),
+            maxLines: 5,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

@@ -35,11 +35,33 @@ class EventsNotifier extends AsyncNotifier<List<CommunityEvent>> {
   }
 }
 
-class EventsPage extends ConsumerWidget {
+class EventsPage extends ConsumerStatefulWidget {
   const EventsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<EventsPage> createState() => _EventsPageState();
+}
+
+class _EventsPageState extends ConsumerState<EventsPage> {
+  final Set<String> _pendingRsvp = {};
+
+  Future<void> _toggleRsvp(String eventId) async {
+    if (_pendingRsvp.contains(eventId)) return;
+    setState(() => _pendingRsvp.add(eventId));
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(eventsProvider.notifier).toggleRsvp(eventId);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error));
+    } finally {
+      if (mounted) {
+        setState(() => _pendingRsvp.remove(eventId));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final eventsAsync = ref.watch(eventsProvider);
     final profileAsync = ref.watch(currentProfileProvider);
 
@@ -71,6 +93,7 @@ class EventsPage extends ConsumerWidget {
                     (context, index) {
                       final event = events[index];
                       final bool isRsvpd = event.attendees.contains(userId);
+                      final bool isPending = _pendingRsvp.contains(event.id);
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: GlassCard(
@@ -108,33 +131,41 @@ class EventsPage extends ConsumerWidget {
                                 children: [
                                   const Icon(PhosphorIconsRegular.mapPin, size: 16, color: AppColors.textSecondary),
                                   const SizedBox(width: 6),
-                                  Text(event.location, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                                  Expanded(
+                                    child: Text(event.location, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 16),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('${event.attending}/${event.capacity} attending', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textSecondary)),
+                                  Flexible(
+                                    child: Text('${event.attending}/${event.capacity} attending', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textSecondary)),
+                                  ),
+                                  const SizedBox(width: 12),
                                   SizedBox(
                                     width: 120,
                                     height: 40,
                                     child: ElevatedButton(
-                                      onPressed: () async {
-                                        final messenger = ScaffoldMessenger.of(context);
-                                        try {
-                                          await ref.read(eventsProvider.notifier).toggleRsvp(event.id);
-                                        } catch (e) {
-                                          messenger.showSnackBar(SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error));
-                                        }
-                                      },
+                                      onPressed: isPending ? null : () => _toggleRsvp(event.id),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: isRsvpd ? AppColors.backgroundGrey : AppColors.primaryBlue,
                                         foregroundColor: isRsvpd ? AppColors.textSecondary : Colors.white,
+                                        disabledBackgroundColor: isRsvpd ? AppColors.backgroundGrey : AppColors.primaryBlue.withOpacity(0.6),
                                         elevation: 0,
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                       ),
-                                      child: Text(isRsvpd ? 'Cancel' : 'RSVP', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                                      child: isPending
+                                          ? SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: isRsvpd ? AppColors.textSecondary : Colors.white,
+                                              ),
+                                            )
+                                          : Text(isRsvpd ? 'Cancel' : 'RSVP', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                                     ),
                                   ),
                                 ],

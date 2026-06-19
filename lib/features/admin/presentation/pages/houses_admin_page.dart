@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/repositories/admin_repository.dart';
 import '../../../../core/repositories/house_repository.dart';
 
 final adminHousesProvider = AsyncNotifierProvider<AdminHousesNotifier, List<House>>(() => AdminHousesNotifier());
@@ -40,11 +41,32 @@ class HousesAdminPage extends ConsumerStatefulWidget {
 class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
   String _searchQuery = '';
 
+  void _showError(Object error) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed: $error'), backgroundColor: Colors.red),
+    );
+  }
+
+  // Derives the occupant name for a house from the residents list, since
+  // residents are linked via profiles.house_id rather than houses.owner_id.
+  String _occupantName(House house) {
+    final residents = ref.read(adminResidentsProvider).valueOrNull;
+    if (residents != null) {
+      for (final r in residents) {
+        if (r.houseId == house.id) return r.fullName;
+      }
+    }
+    // Fall back to the owner_id join if it happens to be populated.
+    return house.owner?.fullName ?? '-';
+  }
+
   List<House> _filterHouses(List<House> houses) {
     if (_searchQuery.isEmpty) return houses;
+    final q = _searchQuery.toLowerCase();
     return houses.where((house) {
-      final matchesNo = house.houseNumber.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesOwner = house.owner?.fullName.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false;
+      final matchesNo = house.houseNumber.toLowerCase().contains(q);
+      final matchesOwner = _occupantName(house).toLowerCase().contains(q);
       return matchesNo || matchesOwner;
     }).toList();
   }
@@ -72,7 +94,7 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
             children: [
               _buildDetailItem('ID', house.id),
               _buildDetailItem('House No / Address', house.houseNumber),
-              _buildDetailItem('Owner / Occupant', house.owner?.fullName ?? '-'),
+              _buildDetailItem('Owner / Occupant', _occupantName(house)),
               _buildDetailItem('Unit Type', house.houseType),
               _buildDetailItem('Occupancy Status', house.status == 'occupied' ? 'Occupied' : 'Vacant', isStatus: true),
             ],
@@ -127,6 +149,7 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
     final houseNoController = TextEditingController(text: house?.houseNumber ?? '');
     final typeController = TextEditingController(text: house?.houseType ?? 'Type A');
     String status = house?.status ?? 'vacant';
+    bool isSaving = false;
 
     showDialog(
       context: context,
@@ -188,35 +211,51 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: isSaving ? null : () => Navigator.pop(context),
                   child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
                 ),
                 ElevatedButton(
-                  onPressed: () async {
-                    if (houseNoController.text.isEmpty) return;
-                    
-                    if (isEdit) {
-                      await ref.read(adminHousesProvider.notifier).updateHouse(house.id, {
-                        'house_number': houseNoController.text,
-                        'house_type': typeController.text,
-                        'status': status,
-                      });
-                    } else {
-                      await ref.read(adminHousesProvider.notifier).addHouse(House(
-                        id: '',
-                        houseNumber: houseNoController.text,
-                        houseType: typeController.text,
-                        status: status,
-                      ));
-                    }
-                    if (mounted) Navigator.pop(context);
-                  },
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          if (houseNoController.text.isEmpty) {
+                            messenger.showSnackBar(
+                              const SnackBar(content: Text('Please enter a house number.')),
+                            );
+                            return;
+                          }
+                          final navigator = Navigator.of(context);
+                          setDialogState(() => isSaving = true);
+                          try {
+                            if (isEdit) {
+                              await ref.read(adminHousesProvider.notifier).updateHouse(house.id, {
+                                'house_number': houseNoController.text,
+                                'house_type': typeController.text,
+                                'status': status,
+                              });
+                            } else {
+                              await ref.read(adminHousesProvider.notifier).addHouse(House(
+                                id: '',
+                                houseNumber: houseNoController.text,
+                                houseType: typeController.text,
+                                status: status,
+                              ));
+                            }
+                            navigator.pop();
+                          } catch (e) {
+                            setDialogState(() => isSaving = false);
+                            _showError(e);
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4318FF),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: Text(isEdit ? 'Save Changes' : 'Create'),
+                  child: isSaving
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text(isEdit ? 'Save Changes' : 'Create'),
                 ),
               ],
             );
@@ -267,8 +306,13 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
             ),
             TextButton(
               onPressed: () async {
-                await ref.read(adminHousesProvider.notifier).deleteHouse(house.id);
-                if (mounted) Navigator.pop(context);
+                final navigator = Navigator.of(context);
+                try {
+                  await ref.read(adminHousesProvider.notifier).deleteHouse(house.id);
+                  navigator.pop();
+                } catch (e) {
+                  _showError(e);
+                }
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
             ),
@@ -281,6 +325,8 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
   @override
   Widget build(BuildContext context) {
     final housesAsync = ref.watch(adminHousesProvider);
+    // Warm the residents list so occupant names resolve in the Owner column.
+    ref.watch(adminResidentsProvider);
 
     return Card(
       color: Colors.white,
@@ -373,7 +419,7 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                                   ),
                                 ),
                                 DataCell(Text(house.houseType, style: const TextStyle(color: Color(0xFF2B3674)))),
-                                DataCell(Text(house.owner?.fullName ?? '-', style: const TextStyle(color: Color(0xFF2B3674)))),
+                                DataCell(Text(_occupantName(house), style: const TextStyle(color: Color(0xFF2B3674)))),
                                 DataCell(
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

@@ -319,11 +319,18 @@ class _SmartAccessModalState extends State<SmartAccessModal> with TickerProvider
           ],
         ),
         const SizedBox(height: 20),
-        
+
+        // Scrollable middle so short/narrow phones never overflow.
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
         // High-Fidelity Simulated Lobby Entrance Camera Feed
-        Container(
+        AspectRatio(
+          aspectRatio: 16 / 11,
+          child: Container(
           width: double.infinity,
-          height: 220,
           decoration: BoxDecoration(
             color: Colors.black,
             borderRadius: BorderRadius.circular(24),
@@ -435,9 +442,10 @@ class _SmartAccessModalState extends State<SmartAccessModal> with TickerProvider
             ),
           ),
         ),
-        
+        ),
+
         const SizedBox(height: 20),
-        
+
         // Active Ringing Call Info
         Container(
           padding: const EdgeInsets.all(16),
@@ -591,9 +599,13 @@ class _SmartAccessModalState extends State<SmartAccessModal> with TickerProvider
             ],
           ),
         ),
-        
-        const Spacer(),
-        
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
         // Active Calling Buttons (End Call & Controls)
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -640,8 +652,12 @@ class _SmartAccessModalState extends State<SmartAccessModal> with TickerProvider
   Widget _buildQuickReplyButton(String text) {
     return GestureDetector(
       onTap: () {
+        // Capture the messenger from the root context before popping the modal,
+        // otherwise this context is defunct after Navigator.pop and the
+        // snackbar silently fails.
+        final messenger = ScaffoldMessenger.of(context);
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text('Quick reply sent: "$text"'),
             backgroundColor: const Color(0xFF3B82F6),
@@ -742,7 +758,13 @@ class _SmartAccessModalState extends State<SmartAccessModal> with TickerProvider
               ],
             ),
             const SizedBox(height: 20),
-            
+
+            // Scrollable body so the fixed lock UI never overflows on short phones.
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
             // Gate Sliding Selection Tab
             _buildGateTabs(setInnerState),
             const SizedBox(height: 24),
@@ -786,7 +808,9 @@ class _SmartAccessModalState extends State<SmartAccessModal> with TickerProvider
                           width: 140,
                           height: 140,
                           child: CircularProgressIndicator(
-                            value: 0.7, // Simulated countdown progress
+                            // Drive the ring from the live auto-lock countdown so
+                            // it stays in sync with the seconds text below.
+                            value: _autoLockSeconds / 10,
                             strokeWidth: 3.5,
                             valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
                             backgroundColor: const Color(0xFF10B981).withOpacity(0.12),
@@ -901,26 +925,51 @@ class _SmartAccessModalState extends State<SmartAccessModal> with TickerProvider
                 ],
               ),
             ),
-            
-            const Spacer(),
-            
+
+            // Demo disclaimer — this flow is a simulation, not a real
+            // IoT/gate-unlock call yet.
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(PhosphorIconsRegular.info, size: 13, color: AppColors.textSecondary.withOpacity(0.7)),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    'Demo mode — not connected to a physical gate',
+                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary.withOpacity(0.8), fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
             // Submit Button
             SizedBox(
               width: double.infinity,
               height: 54,
               child: ElevatedButton.icon(
                 onPressed: () {
+                  // Capture the messenger before popping; the modal context is
+                  // defunct after Navigator.pop.
+                  final messenger = ScaffoldMessenger.of(context);
+                  final unlocked = _isGateUnlocked;
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(
-                      content: Text(_isGateUnlocked ? 'Gate unlocked!' : 'Gate control updated!'),
-                      backgroundColor: _isGateUnlocked ? const Color(0xFF10B981) : const Color(0xFF8B5CF6),
+                      content: Text(unlocked ? 'Gate unlocked (demo)' : 'Gate control updated (demo)'),
+                      backgroundColor: unlocked ? const Color(0xFF10B981) : const Color(0xFF8B5CF6),
                     ),
                   );
                 },
                 icon: Icon(_isGateUnlocked ? PhosphorIconsFill.shieldSlash : PhosphorIconsFill.shieldCheck, size: 20),
                 label: Text(
-                  _isGateUnlocked ? 'Close & Done' : 'Unlock Manually', 
+                  _isGateUnlocked ? 'Close & Done' : 'Unlock Manually',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(

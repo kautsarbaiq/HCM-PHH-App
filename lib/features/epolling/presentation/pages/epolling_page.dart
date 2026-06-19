@@ -65,7 +65,11 @@ class EPollingPage extends ConsumerWidget {
                   return const SliverToBoxAdapter(child: Center(child: Text('No active polls.', style: TextStyle(color: AppColors.textSecondary))));
                 }
                 final userId = profileAsync.value?.id ?? '';
-                
+                // Only allow voting once we actually know who the user is.
+                // While the profile is loading, userId is empty and the vote
+                // UI must stay disabled to avoid duplicate/erroneous votes.
+                final bool userReady = userId.isNotEmpty;
+
                 return SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -111,7 +115,7 @@ class EPollingPage extends ConsumerWidget {
                                     padding: const EdgeInsets.only(bottom: 10),
                                     child: InkWell(
                                       borderRadius: BorderRadius.circular(8),
-                                      onTap: hasVoted
+                                      onTap: (hasVoted || !userReady)
                                           ? null
                                           : () async {
                                               final messenger = ScaffoldMessenger.of(context);
@@ -130,7 +134,7 @@ class EPollingPage extends ConsumerWidget {
                                             children: [
                                               Row(
                                                 children: [
-                                                  if (!hasVoted) ...[
+                                                  if (!hasVoted && userReady) ...[
                                                     const Icon(PhosphorIconsRegular.circle, size: 16, color: AppColors.primaryBlue),
                                                     const SizedBox(width: 8),
                                                   ],

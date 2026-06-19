@@ -74,7 +74,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: _buildQuickActions(context),
             ),
-            const SizedBox(height: 100),
+            const SizedBox(height: 124),
           ],
         ),
       ),
@@ -82,9 +82,97 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   Widget _buildOutstandingBanner(BuildContext context) {
-    final bills = ref.watch(dashboardOutstandingProvider).valueOrNull ?? <Billing>[];
-    final unpaid = bills.where((b) => b.status != 'paid').toList();
-    final total = unpaid.fold<double>(0, (sum, b) => sum + b.amount);
+    final billsAsync = ref.watch(dashboardOutstandingProvider);
+
+    return billsAsync.when(
+      loading: () => _buildOutstandingShell(
+        context,
+        amountChild: Row(
+          children: [
+            const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.deepSlate),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Loading…',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.deepSlate.withOpacity(0.6)),
+            ),
+          ],
+        ),
+        secondaryChild: null,
+      ),
+      error: (_, __) => _buildOutstandingShell(
+        context,
+        amountChild: const Text(
+          'Unavailable',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepSlate),
+        ),
+        secondaryChild: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            'Could not load your bills. Pull to refresh.',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.error.withOpacity(0.9)),
+          ),
+        ),
+      ),
+      data: (bills) {
+        final unpaid = bills.where((b) => b.status != 'paid').toList();
+        final total = unpaid.fold<double>(0, (sum, b) => sum + b.amount);
+        return _buildOutstandingShell(
+          context,
+          amountChild: unpaid.isEmpty
+              ? Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF10B981), Color(0xFF059669)],
+                        ),
+                        boxShadow: [
+                          BoxShadow(color: const Color(0xFF10B981).withOpacity(0.35), blurRadius: 8, offset: const Offset(0, 3)),
+                        ],
+                      ),
+                      child: const Center(child: Icon(PhosphorIconsBold.check, color: Colors.white, size: 14)),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'All Cleared!',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepSlate, letterSpacing: -0.5),
+                    ),
+                  ],
+                )
+              : Text(
+                  _currency.format(total),
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.deepSlate, letterSpacing: -0.5),
+                ),
+          secondaryChild: unpaid.isEmpty
+              ? null
+              : Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    '${unpaid.length} unpaid bill${unpaid.length > 1 ? 's' : ''}',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.error.withOpacity(0.9)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOutstandingShell(
+    BuildContext context, {
+    required Widget amountChild,
+    Widget? secondaryChild,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -130,45 +218,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: unpaid.isEmpty
-                      ? Row(
-                          children: [
-                            Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: const LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [Color(0xFF10B981), Color(0xFF059669)],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(color: const Color(0xFF10B981).withOpacity(0.35), blurRadius: 8, offset: const Offset(0, 3)),
-                                ],
-                              ),
-                              child: const Center(child: Icon(PhosphorIconsBold.check, color: Colors.white, size: 14)),
-                            ),
-                            const SizedBox(width: 10),
-                            const Text(
-                              'All Cleared!',
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepSlate, letterSpacing: -0.5),
-                            ),
-                          ],
-                        )
-                      : Text(
-                          _currency.format(total),
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.deepSlate, letterSpacing: -0.5),
-                        ),
+                  child: amountChild,
                 ),
-                if (unpaid.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      '${unpaid.length} unpaid bill${unpaid.length > 1 ? 's' : ''}',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.error.withOpacity(0.9)),
-                    ),
-                  ),
+                if (secondaryChild != null) secondaryChild,
               ],
             ),
           ),
@@ -382,7 +434,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   Widget _buildTopHeader(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
-    final bookings = ref.watch(dashboardBookingsProvider).valueOrNull ?? <Booking>[];
+    final bookingsAsync = ref.watch(dashboardBookingsProvider);
+    final bookings = bookingsAsync.valueOrNull ?? <Booking>[];
+    final isLoadingBookings = bookingsAsync.isLoading && !bookingsAsync.hasValue;
 
     return Container(
       decoration: BoxDecoration(
@@ -466,7 +520,30 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   // Slider container — upcoming facility bookings
                   SizedBox(
                     height: 140,
-                    child: bookings.isEmpty
+                    child: isLoadingBookings
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(DateFormat('EEE, MMM dd').format(DateTime.now()),
+                                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.deepSlate.withOpacity(0.7))),
+                                  const Icon(PhosphorIconsFill.calendar, size: 20, color: Color(0xFF005682)),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+                              SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: AppColors.deepSlate.withOpacity(0.5),
+                                ),
+                              ),
+                            ],
+                          )
+                        : bookings.isEmpty
                         ? GestureDetector(
                             onTap: () => context.push('/facility'),
                             behavior: HitTestBehavior.opaque,

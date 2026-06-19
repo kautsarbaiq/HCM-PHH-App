@@ -144,7 +144,17 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
 
   void _showForm({Billing? billing}) {
     final isEdit = billing != null;
-    final residents = (ref.read(adminResidentsProvider).valueOrNull ?? [])
+    final residentsAsync = ref.read(adminResidentsProvider);
+
+    // If the residents list is still loading, don't misreport "none assigned".
+    if (residentsAsync.isLoading) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Loading residents… please try again in a moment.')),
+      );
+      return;
+    }
+
+    final residents = (residentsAsync.valueOrNull ?? [])
         .where((r) => r.houseId != null && r.houseId!.isNotEmpty)
         .toList();
 
@@ -165,6 +175,7 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
         ? billing.residentId
         : null;
     String status = billing?.status ?? 'unpaid';
+    bool isSaving = false;
     DateTime dueDate = () {
       if (billing?.dueDate != null) {
         try {
@@ -245,57 +256,64 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: isSaving ? null : () => Navigator.pop(context),
                   child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
                 ),
                 ElevatedButton(
-                  onPressed: () async {
-                    final amountVal = double.tryParse(amountController.text);
-                    if (invoiceController.text.isEmpty || titleController.text.isEmpty || selectedResidentId == null || amountVal == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please fill invoice, title, resident, and a valid amount.')),
-                      );
-                      return;
-                    }
-                    final resident = residents.firstWhere((r) => r.id == selectedResidentId);
-                    final navigator = Navigator.of(context);
-                    final dueIso = DateFormat('yyyy-MM-dd').format(dueDate);
-                    try {
-                      if (isEdit) {
-                        await ref.read(adminBillingsProvider.notifier).updateBilling(billing.id, {
-                          'invoice_number': invoiceController.text,
-                          'title': titleController.text,
-                          'resident_id': resident.id,
-                          'house_id': resident.houseId,
-                          'amount': amountVal,
-                          'due_date': dueIso,
-                          'period': periodController.text.isEmpty ? null : periodController.text,
-                          'status': status,
-                        });
-                      } else {
-                        await ref.read(adminBillingsProvider.notifier).addBilling(Billing(
-                              id: '',
-                              invoiceNumber: invoiceController.text,
-                              title: titleController.text,
-                              amount: amountVal,
-                              dueDate: dueIso,
-                              status: status,
-                              period: periodController.text.isEmpty ? null : periodController.text,
-                              residentId: resident.id,
-                              houseId: resident.houseId!,
-                            ));
-                      }
-                      navigator.pop();
-                    } catch (e) {
-                      _showError(e);
-                    }
-                  },
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final navigator = Navigator.of(context);
+                          final amountVal = double.tryParse(amountController.text);
+                          if (invoiceController.text.isEmpty || titleController.text.isEmpty || selectedResidentId == null || amountVal == null) {
+                            messenger.showSnackBar(
+                              const SnackBar(content: Text('Please fill invoice, title, resident, and a valid amount.')),
+                            );
+                            return;
+                          }
+                          final resident = residents.firstWhere((r) => r.id == selectedResidentId);
+                          final dueIso = DateFormat('yyyy-MM-dd').format(dueDate);
+                          setDialogState(() => isSaving = true);
+                          try {
+                            if (isEdit) {
+                              await ref.read(adminBillingsProvider.notifier).updateBilling(billing.id, {
+                                'invoice_number': invoiceController.text,
+                                'title': titleController.text,
+                                'resident_id': resident.id,
+                                'house_id': resident.houseId,
+                                'amount': amountVal,
+                                'due_date': dueIso,
+                                'period': periodController.text.isEmpty ? null : periodController.text,
+                                'status': status,
+                              });
+                            } else {
+                              await ref.read(adminBillingsProvider.notifier).addBilling(Billing(
+                                    id: '',
+                                    invoiceNumber: invoiceController.text,
+                                    title: titleController.text,
+                                    amount: amountVal,
+                                    dueDate: dueIso,
+                                    status: status,
+                                    period: periodController.text.isEmpty ? null : periodController.text,
+                                    residentId: resident.id,
+                                    houseId: resident.houseId!,
+                                  ));
+                            }
+                            navigator.pop();
+                          } catch (e) {
+                            setDialogState(() => isSaving = false);
+                            _showError(e);
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4318FF),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: Text(isEdit ? 'Save Changes' : 'Create'),
+                  child: isSaving
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text(isEdit ? 'Save Changes' : 'Create'),
                 ),
               ],
             );
@@ -415,17 +433,25 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                   if (billings.isEmpty) {
                     return const Center(child: Text('No invoices found', style: TextStyle(color: Color(0xFFA3AED0))));
                   }
-                  return Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFF4F7FE), width: 2),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final tableWidth = constraints.maxWidth > 1000 ? constraints.maxWidth : 1000.0;
-                          return SingleChildScrollView(
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      // On narrow phones, render a vertical card list instead of a wide table.
+                      if (constraints.maxWidth < 600) {
+                        return ListView.separated(
+                          itemCount: billings.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) => _buildBillingCard(billings[index]),
+                        );
+                      }
+                      final tableWidth = constraints.maxWidth > 760 ? constraints.maxWidth : 760.0;
+                      return Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFFF4F7FE), width: 2),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: SizedBox(
                               width: tableWidth,
@@ -508,16 +534,77 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                                 ],
                               ),
                             ),
-                          );
-                        },
-                      ),
-                    ),
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Compact card used for the narrow-phone billings layout.
+  Widget _buildBillingCard(Billing b) {
+    final status = _statusStyle(b.status);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE0E5F2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  b.invoiceNumber,
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674), fontSize: 15),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: status.color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(status.label, style: TextStyle(color: status.color, fontWeight: FontWeight.bold, fontSize: 11)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text('Resident: ${b.resident?.fullName ?? '-'}', style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13)),
+          Text('Amount: ${_formatAmount(b.amount)}', style: const TextStyle(color: Color(0xFF2B3674), fontSize: 13, fontWeight: FontWeight.w600)),
+          Text('Due: ${_formatDate(b.dueDate)}', style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13)),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.visibility, color: Color(0xFF4318FF), size: 20),
+                onPressed: () => _showDetails(b),
+                tooltip: 'View Invoice Details',
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.orange, size: 20),
+                onPressed: () => _showForm(billing: b),
+                tooltip: 'Edit Invoice',
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                onPressed: () => _deleteBilling(b),
+                tooltip: 'Delete Invoice',
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

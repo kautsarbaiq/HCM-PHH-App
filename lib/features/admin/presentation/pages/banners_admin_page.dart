@@ -55,6 +55,7 @@ class _BannersAdminPageState extends ConsumerState<BannersAdminPage> {
     final titleController = TextEditingController(text: banner?.title ?? '');
     final urlController = TextEditingController(text: banner?.imageUrl ?? '');
     bool isActive = banner?.isActive ?? true;
+    bool isSaving = false;
 
     showDialog(
       context: context,
@@ -88,41 +89,53 @@ class _BannersAdminPageState extends ConsumerState<BannersAdminPage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: isSaving ? null : () => Navigator.pop(context),
                   child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
                 ),
                 ElevatedButton(
-                  onPressed: () async {
-                    if (titleController.text.isEmpty) return;
-                    final navigator = Navigator.of(context);
-                    final finalUrl = urlController.text.isEmpty ? _kDefaultBannerImage : urlController.text;
-                    try {
-                      if (isEdit) {
-                        await ref.read(adminBannersProvider.notifier).updateBanner(banner.id, {
-                          'title': titleController.text,
-                          'image_url': finalUrl,
-                          'is_active': isActive,
-                        });
-                      } else {
-                        await ref.read(adminBannersProvider.notifier).addBanner(BannerItem(
-                              id: '',
-                              title: titleController.text,
-                              imageUrl: finalUrl,
-                              isActive: isActive,
-                              sortOrder: currentCount,
-                            ));
-                      }
-                      navigator.pop();
-                    } catch (e) {
-                      _showError(e);
-                    }
-                  },
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final navigator = Navigator.of(context);
+                          if (titleController.text.isEmpty) {
+                            messenger.showSnackBar(
+                              const SnackBar(content: Text('Please enter a banner title.')),
+                            );
+                            return;
+                          }
+                          final finalUrl = urlController.text.isEmpty ? _kDefaultBannerImage : urlController.text;
+                          setDialogState(() => isSaving = true);
+                          try {
+                            if (isEdit) {
+                              await ref.read(adminBannersProvider.notifier).updateBanner(banner.id, {
+                                'title': titleController.text,
+                                'image_url': finalUrl,
+                                'is_active': isActive,
+                              });
+                            } else {
+                              await ref.read(adminBannersProvider.notifier).addBanner(BannerItem(
+                                    id: '',
+                                    title: titleController.text,
+                                    imageUrl: finalUrl,
+                                    isActive: isActive,
+                                    sortOrder: currentCount,
+                                  ));
+                            }
+                            navigator.pop();
+                          } catch (e) {
+                            setDialogState(() => isSaving = false);
+                            _showError(e);
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4318FF),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: Text(isEdit ? 'Save Changes' : 'Create'),
+                  child: isSaving
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text(isEdit ? 'Save Changes' : 'Create'),
                 ),
               ],
             );
