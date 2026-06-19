@@ -212,13 +212,26 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
                   );
                 }
 
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filtered.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFF4F7FE)),
-                  itemBuilder: (context, index) {
-                    final resident = filtered[index];
-                    return _buildResidentCard(resident);
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    // On narrow phones, render stacked vertical cards (no wide row).
+                    if (constraints.maxWidth < 600) {
+                      return ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) => _buildResidentMobileCard(filtered[index]),
+                      );
+                    }
+                    return ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: filtered.length,
+                      separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFF4F7FE)),
+                      itemBuilder: (context, index) {
+                        final resident = filtered[index];
+                        return _buildResidentCard(resident);
+                      },
+                    );
                   },
                 );
               },
@@ -294,6 +307,68 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Compact, stacked card used for the narrow-phone residents layout.
+  Widget _buildResidentMobileCard(Profile resident) {
+    final isActive = resident.status == 'active';
+    final statusColor = isActive ? const Color(0xFF05CD99) : Colors.orange;
+    final contact = (resident.email != null && resident.email!.isNotEmpty)
+        ? resident.email!
+        : (resident.phone != null && resident.phone!.isNotEmpty ? resident.phone! : 'No contact');
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE0E5F2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  resident.fullName,
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674), fontSize: 15),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  resident.status.toUpperCase(),
+                  style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 11),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(contact, style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13)),
+          Text('House: ${_houseLabel(resident.houseId)}', style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13)),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.visibility, color: Color(0xFF4318FF), size: 20),
+                onPressed: () => _showDetails(resident),
+                tooltip: 'View Details',
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit, color: Color(0xFFA3AED0), size: 20),
+                onPressed: () => _showForm(resident),
+                tooltip: 'Edit',
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

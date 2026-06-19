@@ -391,7 +391,17 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                     );
                   }
 
-                  return Container(
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      // On narrow phones, render a vertical card list instead of a wide table.
+                      if (constraints.maxWidth < 600) {
+                        return ListView.separated(
+                          itemCount: filteredHouses.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) => _buildHouseCard(filteredHouses[index]),
+                        );
+                      }
+                      return Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
                       border: Border.all(color: const Color(0xFFE0E5F2)),
@@ -465,12 +475,78 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                         ),
                       ),
                     ),
+                      );
+                    },
                   );
                 },
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Compact card used for the narrow-phone houses layout.
+  Widget _buildHouseCard(House house) {
+    final isOccupied = house.status == 'occupied';
+    final statusColor = isOccupied ? const Color(0xFF05CD99) : const Color(0xFFFFB547);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE0E5F2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  house.houseNumber,
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674), fontSize: 15),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  isOccupied ? 'Occupied' : 'Vacant',
+                  style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 11),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text('Type: ${house.houseType}', style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13)),
+          Text('Owner: ${_occupantName(house)}', style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13)),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.visibility, color: Color(0xFFA3AED0), size: 20),
+                onPressed: () => _showDetails(house),
+                tooltip: 'View Details',
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit, color: Color(0xFF4318FF), size: 20),
+                onPressed: () => _showForm(house: house),
+                tooltip: 'Edit',
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                onPressed: () => _deleteHouse(house),
+                tooltip: 'Delete',
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
