@@ -17,7 +17,11 @@ class Visitor {
   final String createdBy;
   final String? checkedInBy;
   final String registrationType;
-  
+  // Evidence photos captured by the guard at walk-in registration.
+  final String? visitorPhotoUrl;
+  final String? vehiclePhotoUrl;
+  final String? licensePhotoUrl;
+
   // Joined fields
   final House? house;
   final Profile? creator;
@@ -36,6 +40,9 @@ class Visitor {
     required this.createdBy,
     this.checkedInBy,
     required this.registrationType,
+    this.visitorPhotoUrl,
+    this.vehiclePhotoUrl,
+    this.licensePhotoUrl,
     this.house,
     this.creator,
   });
@@ -55,6 +62,9 @@ class Visitor {
       createdBy: json['created_by'] as String,
       checkedInBy: json['checked_in_by'] as String?,
       registrationType: json['registration_type'] as String,
+      visitorPhotoUrl: json['visitor_photo_url'] as String?,
+      vehiclePhotoUrl: json['vehicle_photo_url'] as String?,
+      licensePhotoUrl: json['license_photo_url'] as String?,
       house: json['houses'] != null ? House.fromJson(json['houses'] as Map<String, dynamic>) : null,
       creator: json['profiles'] != null ? Profile.fromJson(json['profiles'] as Map<String, dynamic>) : null,
     );
@@ -119,13 +129,24 @@ class VisitorRepository {
   }
 
   Future<Visitor> updateVisitorStatus(String id, String status) async {
+    // Stamp the moment of the transition so the logs can show real
+    // check-in / check-out times (not just the status label).
+    final now = DateTime.now().toUtc().toIso8601String();
+    final update = <String, dynamic>{'status': status};
+    if (status == 'checked_in') {
+      update['checked_in_at'] = now;
+      update['checked_in_by'] = _supabase.auth.currentUser?.id;
+    } else if (status == 'checked_out') {
+      update['checked_out_at'] = now;
+    }
+
     final response = await _supabase
         .from('visitors')
-        .update({'status': status})
+        .update(update)
         .eq('id', id)
         .select('*, houses(*), profiles!visitors_created_by_fkey(*)')
         .single();
-        
+
     return Visitor.fromJson(response);
   }
 

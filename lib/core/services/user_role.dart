@@ -6,6 +6,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// login pages refresh it right after sign-in so routing is immediate.
 final ValueNotifier<String?> appUserRoleNotifier = ValueNotifier<String?>(null);
 
+/// Becomes `true` once the very first auth + role resolution after app start
+/// finishes. The router holds on a neutral splash screen until then, so a cold
+/// start never flashes the resident home or bounces through a login screen
+/// before landing on the correct destination.
+final ValueNotifier<bool> appAuthReadyNotifier = ValueNotifier<bool>(false);
+
 /// Re-fetch the signed-in user's role from `profiles` and cache it.
 Future<void> refreshUserRole() async {
   final user = Supabase.instance.client.auth.currentUser;

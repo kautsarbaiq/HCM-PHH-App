@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/repositories/visitor_repository.dart';
 
-final guardVisitorsProvider = AsyncNotifierProvider<GuardVisitorsNotifier, List<Visitor>>(() => GuardVisitorsNotifier());
+final guardVisitorsProvider =
+    AsyncNotifierProvider<GuardVisitorsNotifier, List<Visitor>>(
+      () => GuardVisitorsNotifier(),
+    );
 
 class GuardVisitorsNotifier extends AsyncNotifier<List<Visitor>> {
   @override
@@ -33,12 +37,26 @@ Color _statusColor(String status) {
   }
 }
 
-String _visitorDate(Visitor visitor) {
-  // Prefer when the visitor actually arrived (walk-ins set checked_in_at and
-  // have no expected_at); fall back to the scheduled time.
-  final raw = visitor.checkedInAt ?? visitor.expectedAt;
+String _fmtDateTime(String? raw) {
   if (raw == null) return '-';
   return DateFormat('MMM d, yyyy HH:mm').format(DateTime.parse(raw).toLocal());
+}
+
+String _checkInDisplay(Visitor v) {
+  if (v.checkedInAt != null) return _fmtDateTime(v.checkedInAt);
+  if (v.expectedAt != null) return 'Expected ${_fmtDateTime(v.expectedAt)}';
+  return '-';
+}
+
+String _regTypeLabel(String t) {
+  switch (t) {
+    case 'walk-in':
+      return 'Manual (Walk-in)';
+    case 'pre-registered':
+      return 'QR / Pre-registered';
+    default:
+      return t;
+  }
 }
 
 class GuardVisitorsPage extends ConsumerWidget {
@@ -55,7 +73,10 @@ class GuardVisitorsPage extends ConsumerWidget {
       await ref.read(guardVisitorsProvider.notifier).updateStatus(id, status);
     } catch (e) {
       messenger.showSnackBar(
-        SnackBar(content: Text('Could not update visitor: $e'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Could not update visitor: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -63,7 +84,6 @@ class GuardVisitorsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final visitorsAsync = ref.watch(guardVisitorsProvider);
-    final isNarrow = MediaQuery.of(context).size.width < 600;
 
     return Padding(
       padding: EdgeInsets.all(16.w),
@@ -83,6 +103,43 @@ class GuardVisitorsPage extends ConsumerWidget {
             "Today's active and completed visitor registrations",
             style: TextStyle(color: const Color(0xFFA3AED0), fontSize: 14.sp),
           ),
+          SizedBox(height: 14.h),
+          // Quick actions in the header: QR check-in scan + manual walk-in.
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => context.go('/guard/scan'),
+                  icon: const Icon(Icons.qr_code_scanner, size: 18),
+                  label: const Text('Scan QR'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF4318FF),
+                    side: const BorderSide(color: Color(0xFF4318FF)),
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => context.go('/guard/register'),
+                  icon: const Icon(Icons.person_add_alt_1, size: 18),
+                  label: const Text('Register'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
           SizedBox(height: 16.h),
           Expanded(
             child: Container(
@@ -101,26 +158,35 @@ class GuardVisitorsPage extends ConsumerWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
                 child: visitorsAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (error, stack) => _ErrorState(
                     message: 'Error: $error',
                     onRetry: () => ref.invalidate(guardVisitorsProvider),
                   ),
                   data: (visitors) {
                     return RefreshIndicator(
-                      onRefresh: () async => ref.invalidate(guardVisitorsProvider),
+                      onRefresh: () async =>
+                          ref.invalidate(guardVisitorsProvider),
                       child: visitors.isEmpty
                           ? ListView(
                               children: [
                                 SizedBox(height: 200.h),
                                 const Center(
-                                  child: Text('No visitors found.', style: TextStyle(color: Color(0xFFA3AED0))),
+                                  child: Text(
+                                    'No visitors found.',
+                                    style: TextStyle(color: Color(0xFFA3AED0)),
+                                  ),
                                 ),
                               ],
                             )
-                          : isNarrow
-                              ? _VisitorCardList(visitors: visitors, onUpdate: _updateStatus)
-                              : _VisitorTable(visitors: visitors, onUpdate: _updateStatus),
+                          // Always a vertical card list (never a horizontal-scrolling
+                          // table) so every detail — including the evidence photos —
+                          // is visible at any width.
+                          : _VisitorCardList(
+                              visitors: visitors,
+                              onUpdate: _updateStatus,
+                            ),
                     );
                   },
                 ),
@@ -133,99 +199,13 @@ class GuardVisitorsPage extends ConsumerWidget {
   }
 }
 
-typedef _StatusUpdater = Future<void> Function(
-  BuildContext context,
-  WidgetRef ref,
-  String id,
-  String status,
-);
-
-class _VisitorTable extends ConsumerWidget {
-  final List<Visitor> visitors;
-  final _StatusUpdater onUpdate;
-
-  const _VisitorTable({required this.visitors, required this.onUpdate});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 0),
-              child: Row(
-                children: [
-                  Icon(Icons.swipe, size: 14.sp, color: const Color(0xFFA3AED0)),
-                  SizedBox(width: 6.w),
-                  Text(
-                    'Swipe horizontally to see all columns',
-                    style: TextStyle(color: const Color(0xFFA3AED0), fontSize: 12.sp),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: DataTable(
-                      columnSpacing: 24,
-                      headingRowColor: MaterialStateProperty.all(const Color(0xFFF4F7FE)),
-                      columns: const [
-                        DataColumn(label: Text('Visitor Name', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                        DataColumn(label: Text('Purpose', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                        DataColumn(label: Text('Vehicle Plate', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                        DataColumn(label: Text('House No.', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                        DataColumn(label: Text('Date', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                        DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                        DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA3AED0)))),
-                      ],
-                      rows: visitors.map((visitor) {
-                        final statusColor = _statusColor(visitor.status);
-                        return DataRow(
-                          cells: [
-                            DataCell(
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: const Color(0xFF4318FF).withOpacity(0.1),
-                                    child: const Icon(Icons.person, color: Color(0xFF4318FF), size: 20),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(visitor.visitorName, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674))),
-                                ],
-                              ),
-                            ),
-                            DataCell(Text(visitor.purpose, style: const TextStyle(color: Color(0xFFA3AED0)))),
-                            DataCell(Text(visitor.vehiclePlate ?? '-', style: const TextStyle(color: Color(0xFF2B3674)))),
-                            DataCell(Text(visitor.house?.houseNumber ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)))),
-                            DataCell(Text(_visitorDate(visitor), style: const TextStyle(color: Color(0xFFA3AED0)))),
-                            DataCell(_StatusBadge(status: visitor.status, color: statusColor)),
-                            DataCell(
-                              _VisitorActions(
-                                visitor: visitor,
-                                onUpdate: onUpdate,
-                              ),
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+typedef _StatusUpdater =
+    Future<void> Function(
+      BuildContext context,
+      WidgetRef ref,
+      String id,
+      String status,
     );
-  }
-}
 
 class _VisitorCardList extends StatelessWidget {
   final List<Visitor> visitors;
@@ -235,55 +215,95 @@ class _VisitorCardList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 24.h),
-      itemCount: visitors.length,
-      separatorBuilder: (_, __) => SizedBox(height: 10.h),
-      itemBuilder: (context, index) {
-        final visitor = visitors[index];
-        final statusColor = _statusColor(visitor.status);
-        return Container(
-          padding: EdgeInsets.all(14.w),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF4F7FE),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+    // Centered + width-capped so the single-column card list stays readable on
+    // wide tablet/desktop screens instead of stretching edge to edge.
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 24.h),
+          itemCount: visitors.length,
+          separatorBuilder: (_, __) => SizedBox(height: 10.h),
+          itemBuilder: (context, index) {
+            final visitor = visitors[index];
+            final statusColor = _statusColor(visitor.status);
+            return Container(
+              padding: EdgeInsets.all(14.w),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF4F7FE),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    backgroundColor: const Color(0xFF4318FF).withOpacity(0.1),
-                    child: const Icon(Icons.person, color: Color(0xFF4318FF), size: 20),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: const Color(
+                          0xFF4318FF,
+                        ).withOpacity(0.1),
+                        child: const Icon(
+                          Icons.person,
+                          color: Color(0xFF4318FF),
+                          size: 20,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Text(
+                          visitor.visitorName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF2B3674),
+                            fontSize: 15.sp,
+                          ),
+                        ),
+                      ),
+                      _StatusBadge(status: visitor.status, color: statusColor),
+                    ],
                   ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Text(
-                      visitor.visitorName,
-                      style: TextStyle(fontWeight: FontWeight.bold, color: const Color(0xFF2B3674), fontSize: 15.sp),
+                  SizedBox(height: 10.h),
+                  _CardInfoRow(label: 'Purpose', value: visitor.purpose),
+                  _CardInfoRow(
+                    label: 'Type',
+                    value: _regTypeLabel(visitor.registrationType),
+                  ),
+                  _CardInfoRow(
+                    label: 'House No.',
+                    value: visitor.house?.houseNumber ?? '-',
+                  ),
+                  _CardInfoRow(
+                    label: 'Plate',
+                    value: visitor.vehiclePlate ?? '-',
+                  ),
+                  _CardInfoRow(
+                    label: 'Check-in',
+                    value: _checkInDisplay(visitor),
+                  ),
+                  _CardInfoRow(
+                    label: 'Check-out',
+                    value: _fmtDateTime(visitor.checkedOutAt),
+                  ),
+                  _PhotoThumbs(visitor: visitor),
+                  if (visitor.status == 'expected' ||
+                      visitor.status == 'checked_in') ...[
+                    SizedBox(height: 8.h),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: _VisitorActions(
+                        visitor: visitor,
+                        onUpdate: onUpdate,
+                        showLabels: true,
+                      ),
                     ),
-                  ),
-                  _StatusBadge(status: visitor.status, color: statusColor),
+                  ],
                 ],
               ),
-              SizedBox(height: 10.h),
-              _CardInfoRow(label: 'Purpose', value: visitor.purpose),
-              _CardInfoRow(label: 'House No.', value: visitor.house?.houseNumber ?? '-'),
-              _CardInfoRow(label: 'Plate', value: visitor.vehiclePlate ?? '-'),
-              _CardInfoRow(label: 'Date', value: _visitorDate(visitor)),
-              if (visitor.status == 'expected' || visitor.status == 'checked_in') ...[
-                SizedBox(height: 8.h),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: _VisitorActions(visitor: visitor, onUpdate: onUpdate, showLabels: true),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -303,12 +323,19 @@ class _CardInfoRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 72.w,
-            child: Text(label, style: TextStyle(color: const Color(0xFFA3AED0), fontSize: 12.sp)),
+            child: Text(
+              label,
+              style: TextStyle(color: const Color(0xFFA3AED0), fontSize: 12.sp),
+            ),
           ),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(color: const Color(0xFF2B3674), fontWeight: FontWeight.w600, fontSize: 13.sp),
+              style: TextStyle(
+                color: const Color(0xFF2B3674),
+                fontWeight: FontWeight.w600,
+                fontSize: 13.sp,
+              ),
             ),
           ),
         ],
@@ -377,7 +404,11 @@ class _VisitorActionsState extends ConsumerState<_VisitorActions> {
         width: 36,
         height: 36,
         child: Center(
-          child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
         ),
       );
     }
@@ -389,7 +420,10 @@ class _VisitorActionsState extends ConsumerState<_VisitorActions> {
               onPressed: () => _run('checked_in'),
               icon: const Icon(Icons.login, size: 18),
               label: const Text('Check In'),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF10B981),
+                foregroundColor: Colors.white,
+              ),
             )
           : IconButton(
               icon: const Icon(Icons.login, color: Color(0xFF10B981)),
@@ -403,7 +437,10 @@ class _VisitorActionsState extends ConsumerState<_VisitorActions> {
               onPressed: () => _run('checked_out'),
               icon: const Icon(Icons.logout, size: 18),
               label: const Text('Check Out'),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF59E0B), foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF59E0B),
+                foregroundColor: Colors.white,
+              ),
             )
           : IconButton(
               icon: const Icon(Icons.logout, color: Color(0xFFF59E0B)),
@@ -413,6 +450,179 @@ class _VisitorActionsState extends ConsumerState<_VisitorActions> {
     }
     return const SizedBox.shrink();
   }
+}
+
+class _LabeledPhoto {
+  final String label;
+  final String url;
+  const _LabeledPhoto(this.label, this.url);
+}
+
+// Thumbnails of the evidence photos a guard captured at registration.
+// Tapping any thumbnail opens a full-screen, pinch-to-zoom viewer.
+class _PhotoThumbs extends StatelessWidget {
+  final Visitor visitor;
+
+  const _PhotoThumbs({required this.visitor});
+
+  @override
+  Widget build(BuildContext context) {
+    final photos = <_LabeledPhoto>[
+      if ((visitor.visitorPhotoUrl ?? '').isNotEmpty)
+        _LabeledPhoto('Face', visitor.visitorPhotoUrl!),
+      if ((visitor.vehiclePhotoUrl ?? '').isNotEmpty)
+        _LabeledPhoto('Vehicle', visitor.vehiclePhotoUrl!),
+      if ((visitor.licensePhotoUrl ?? '').isNotEmpty)
+        _LabeledPhoto('ID', visitor.licensePhotoUrl!),
+    ];
+    if (photos.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.only(top: 8.h),
+        child: Row(
+          children: [
+            Icon(
+              Icons.no_photography_outlined,
+              size: 14.sp,
+              color: const Color(0xFFA3AED0),
+            ),
+            SizedBox(width: 6.w),
+            Text(
+              'No photos captured',
+              style: TextStyle(color: const Color(0xFFA3AED0), fontSize: 12.sp),
+            ),
+          ],
+        ),
+      );
+    }
+    return Padding(
+      padding: EdgeInsets.only(top: 10.h),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: photos
+            .map(
+              (p) => Padding(
+                padding: EdgeInsets.only(right: 8.w),
+                child: _Thumb(photo: p, size: 64.w),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _Thumb extends StatelessWidget {
+  final _LabeledPhoto photo;
+  final double size;
+
+  const _Thumb({required this.photo, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    Widget placeholder(Widget child) => Container(
+      width: size,
+      height: size,
+      color: const Color(0xFFE0E5F2),
+      child: Center(child: child),
+    );
+    return GestureDetector(
+      onTap: () => _showPhotoViewer(context, photo),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.network(
+              photo.url,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => placeholder(
+                const Icon(
+                  Icons.broken_image,
+                  color: Color(0xFFA3AED0),
+                  size: 18,
+                ),
+              ),
+              loadingBuilder: (c, child, prog) => prog == null
+                  ? child
+                  : placeholder(
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            photo.label,
+            style: TextStyle(fontSize: 10.sp, color: const Color(0xFFA3AED0)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+void _showPhotoViewer(BuildContext context, _LabeledPhoto photo) {
+  showDialog(
+    context: context,
+    barrierColor: Colors.black87,
+    builder: (ctx) => Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(12),
+      child: Stack(
+        children: [
+          InteractiveViewer(
+            minScale: 0.5,
+            maxScale: 4,
+            child: Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  photo.url,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Padding(
+                    padding: EdgeInsets.all(40),
+                    child: Icon(
+                      Icons.broken_image,
+                      color: Colors.white54,
+                      size: 48,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 30),
+              onPressed: () => Navigator.pop(ctx),
+            ),
+          ),
+          Positioned(
+            bottom: 8,
+            left: 0,
+            right: 0,
+            child: Text(
+              photo.label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _ErrorState extends StatelessWidget {
