@@ -38,7 +38,7 @@ class AdminRepository {
     try {
       await _supabase.from('houses').insert({
         'house_number': houseNumber,
-        'unit_type': unitType,
+        'house_type': unitType,
         'status': status,
       });
     } catch (e) {
@@ -57,7 +57,7 @@ class AdminRepository {
           .from('houses')
           .update({
             'house_number': houseNumber,
-            'unit_type': unitType,
+            'house_type': unitType,
             'status': status,
           })
           .eq('id', houseId);

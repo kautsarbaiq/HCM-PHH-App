@@ -207,7 +207,14 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
       text: billing?.title ?? 'Monthly Maintenance',
     );
     final amountController = TextEditingController(
-      text: billing != null ? billing.amount.toStringAsFixed(0) : '',
+      // Preserve the real amount when editing — show cents if present, drop a
+      // trailing ".0" for whole numbers. (toStringAsFixed(0) would round and
+      // silently discard the cents on save.)
+      text: billing != null
+          ? (billing.amount == billing.amount.truncateToDouble()
+                ? billing.amount.toStringAsFixed(0)
+                : billing.amount.toString())
+          : '',
     );
     final periodController = TextEditingController(text: billing?.period ?? '');
 

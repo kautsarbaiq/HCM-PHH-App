@@ -10,7 +10,7 @@ import 'package:hcm_app/theme/app_colors.dart';
 import '../../../../core/repositories/billing_repository.dart';
 import '../../../../core/repositories/facility_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
-import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../main/presentation/pages/main_navigation_page.dart';
 import '../../../access/presentation/widgets/smart_access_modal.dart';
@@ -41,349 +41,502 @@ String _bookingDateLabel(String iso) {
   }
 }
 
-class DashboardPage extends ConsumerStatefulWidget {
+class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
 
   @override
-  ConsumerState<DashboardPage> createState() => _DashboardPageState();
-}
-
-class _DashboardPageState extends ConsumerState<DashboardPage> {
-  int _activePage = 0;
-  late final PageController _pageController;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTopHeader(context),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
-              child: _buildOutstandingBanner(context),
+      body: GradientBackground(
+        child: SafeArea(
+          bottom: false,
+          child: RefreshIndicator(
+            color: AppColors.brand,
+            onRefresh: () async {
+              ref.invalidate(dashboardOutstandingProvider);
+              ref.invalidate(dashboardBookingsProvider);
+              ref.invalidate(currentProfileProvider);
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 130),
+              children: [
+                _greeting(context, ref)
+                    .animate()
+                    .fadeIn(duration: 350.ms)
+                    .slideY(begin: -0.12, end: 0),
+                const SizedBox(height: 22),
+                _hero(context, ref)
+                    .animate()
+                    .fadeIn(duration: 400.ms)
+                    .slideY(begin: 0.10, end: 0),
+                const SizedBox(height: 16),
+                _upcoming(
+                  context,
+                  ref,
+                ).animate().fadeIn(duration: 400.ms, delay: 80.ms),
+                const SizedBox(height: 28),
+                _quickActions(
+                  context,
+                ).animate().fadeIn(duration: 400.ms, delay: 140.ms),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: _buildQuickActions(context),
-            ),
-            const SizedBox(height: 124),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildOutstandingBanner(BuildContext context) {
-    final billsAsync = ref.watch(dashboardOutstandingProvider);
+  // ---- Greeting row -------------------------------------------------------
+  Widget _greeting(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(currentProfileProvider).valueOrNull;
+    final avatarUrl = profile?.avatarUrl;
+    final name = (profile?.fullName.isNotEmpty ?? false)
+        ? profile!.fullName
+        : 'Resident';
 
-    return billsAsync.when(
-      loading: () => _buildOutstandingShell(
-        context,
-        amountChild: Row(
-          children: [
-            const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.deepSlate,
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () => context.push('/profile'),
+          child: Container(
+            padding: const EdgeInsets.all(2.5),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: AppColors.brandGradient,
+            ),
+            child: Container(
+              width: 46,
+              height: 46,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+              child: ClipOval(
+                child: (avatarUrl != null && avatarUrl.isNotEmpty)
+                    ? Image.network(
+                        avatarUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          PhosphorIconsFill.user,
+                          color: AppColors.brand,
+                          size: 22,
+                        ),
+                      )
+                    : const Icon(
+                        PhosphorIconsFill.user,
+                        color: AppColors.brand,
+                        size: 22,
+                      ),
               ),
             ),
-            const SizedBox(width: 12),
-            Text(
-              'Loading…',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.deepSlate.withOpacity(0.6),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Welcome back 👋',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
+              const SizedBox(height: 2),
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        _circleButton(
+          icon: PhosphorIconsRegular.list,
+          onTap: () => mainScaffoldKey.currentState?.openDrawer(),
+        ),
+      ],
+    );
+  }
+
+  Widget _circleButton({required IconData icon, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6A7BA8).withOpacity(0.12),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
-        secondaryChild: null,
+        child: Icon(icon, color: AppColors.textPrimary, size: 22),
       ),
-      error: (_, __) => _buildOutstandingShell(
-        context,
-        amountChild: const Text(
-          'Unavailable',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppColors.deepSlate,
+    );
+  }
+
+  // ---- Hero "outstanding" card -------------------------------------------
+  Widget _hero(BuildContext context, WidgetRef ref) {
+    final billsAsync = ref.watch(dashboardOutstandingProvider);
+
+    Widget shell({required Widget amount, Widget? sub, bool cleared = false}) {
+      return Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: AppColors.brandGradient,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.brand.withOpacity(0.38),
+              blurRadius: 26,
+              offset: const Offset(0, 14),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: Stack(
+            children: [
+              Positioned(
+                top: -34,
+                right: -24,
+                child: _circle(120, Colors.white.withOpacity(0.12)),
+              ),
+              Positioned(
+                bottom: -50,
+                right: 40,
+                child: _circle(110, Colors.white.withOpacity(0.08)),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(22),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(9),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.18),
+                            borderRadius: BorderRadius.circular(13),
+                          ),
+                          child: const Icon(
+                            PhosphorIconsFill.wallet,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          cleared ? 'Account status' : 'Your outstanding',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.92),
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: amount,
+                    ),
+                    if (sub != null) ...[const SizedBox(height: 6), sub],
+                    const SizedBox(height: 20),
+                    GestureDetector(
+                      onTap: () => context.go('/bills'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              cleared ? 'View invoices' : 'Pay now',
+                              style: const TextStyle(
+                                color: AppColors.brand,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Icon(
+                              PhosphorIconsBold.arrowRight,
+                              color: AppColors.brand,
+                              size: 15,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-        secondaryChild: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            'Could not load your bills. Pull to refresh.',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: AppColors.error.withOpacity(0.9),
-            ),
+      );
+    }
+
+    return billsAsync.when(
+      loading: () => shell(
+        amount: const Text(
+          'Loading…',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
+        ),
+      ),
+      error: (_, __) => shell(
+        amount: const Text(
+          'Unavailable',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
+        ),
+        sub: Text(
+          'Pull down to refresh.',
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.9),
+            fontSize: 12.5,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),
       data: (bills) {
         final unpaid = bills.where((b) => b.status != 'paid').toList();
-        final total = unpaid.fold<double>(0, (sum, b) => sum + b.amount);
-        return _buildOutstandingShell(
-          context,
-          amountChild: unpaid.isEmpty
-              ? Row(
-                  children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF10B981), Color(0xFF059669)],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF10B981).withOpacity(0.35),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          PhosphorIconsBold.check,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'All Cleared!',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.deepSlate,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ],
-                )
-              : Text(
-                  _currency.format(total),
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.deepSlate,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-          secondaryChild: unpaid.isEmpty
-              ? null
-              : Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    '${unpaid.length} unpaid bill${unpaid.length > 1 ? 's' : ''}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.error.withOpacity(0.9),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+        final total = unpaid.fold<double>(0, (s, b) => s + b.amount);
+        if (unpaid.isEmpty) {
+          return shell(
+            cleared: true,
+            amount: const Text(
+              'All cleared',
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                letterSpacing: -0.8,
+              ),
+            ),
+            sub: Text(
+              "You're all paid up 🎉",
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.92),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          );
+        }
+        return shell(
+          amount: Text(
+            _currency.format(total),
+            style: const TextStyle(
+              fontSize: 34,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: -1,
+            ),
+          ),
+          sub: Text(
+            '${unpaid.length} unpaid bill${unpaid.length > 1 ? 's' : ''}',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.92),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         );
       },
     );
   }
 
-  Widget _buildOutstandingShell(
-    BuildContext context, {
-    required Widget amountChild,
-    Widget? secondaryChild,
-  }) {
-    return PremiumCard(
-      padding: const EdgeInsets.all(20),
-      radius: 24,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _circle(double size, Color color) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+    );
+  }
+
+  // ---- Upcoming booking ---------------------------------------------------
+  Widget _upcoming(BuildContext context, WidgetRef ref) {
+    final bookingsAsync = ref.watch(dashboardBookingsProvider);
+    final bookings = bookingsAsync.valueOrNull ?? <Booking>[];
+    final loading = bookingsAsync.isLoading && !bookingsAsync.hasValue;
+
+    Widget card(Widget child) => GestureDetector(
+      onTap: () => context.push('/facility'),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6A7BA8).withOpacity(0.10),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: child,
+      ),
+    );
+
+    Widget badge() => Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        gradient: AppColors.sunsetGradient,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accentAmber.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: const Icon(
+        PhosphorIconsFill.calendarCheck,
+        color: Colors.white,
+        size: 22,
+      ),
+    );
+
+    if (loading) {
+      return card(
+        Row(
+          children: [
+            badge(),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Text(
+                'Loading bookings…',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    if (bookings.isEmpty) {
+      return card(
+        Row(
+          children: [
+            badge(),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'No upcoming bookings',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      fontSize: 14.5,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Tap to book a facility',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              PhosphorIconsBold.arrowRight,
+              color: AppColors.textSecondary,
+              size: 16,
+            ),
+          ],
+        ),
+      );
+    }
+    final b = bookings.first;
+    return card(
+      Row(
         children: [
+          badge(),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Your Outstanding',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary.withOpacity(0.9),
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: amountChild,
-                ),
-                if (secondaryChild != null) secondaryChild,
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: () => context.go('/bills'),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: AppColors.brandGradient,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.brand.withOpacity(0.30),
-                    blurRadius: 12,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: const Text(
-                'View Invoice',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    ).animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0);
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    final profile = ref.watch(currentProfileProvider).valueOrNull;
-    final avatarUrl = profile?.avatarUrl;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.primaryWhite,
-        borderRadius: BorderRadius.circular(50),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Inner Pill for Profile & Name
-          Expanded(
-            child: GestureDetector(
-              onTap: () => context.push('/profile'),
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundGrey.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(40),
-                  border: Border.all(color: Colors.black.withOpacity(0.03)),
-                ),
-                child: Row(
+                Row(
                   children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.primaryWhite,
-                      ),
-                      child: ClipOval(
-                        child: (avatarUrl != null && avatarUrl.isNotEmpty)
-                            ? Image.network(
-                                avatarUrl,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(
-                                      PhosphorIconsRegular.user,
-                                      color: AppColors.primaryBlue,
-                                    ),
-                                fit: BoxFit.cover,
-                              )
-                            : const Icon(
-                                PhosphorIconsRegular.user,
-                                color: AppColors.primaryBlue,
-                              ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        (profile?.fullName.isNotEmpty ?? false)
-                            ? profile!.fullName
-                            : 'Resident',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.deepSlate,
-                        ),
+                        b.facilityName,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          fontSize: 14.5,
+                        ),
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Colors.transparent,
-                        shape: BoxShape.circle,
+                    if (bookings.length > 1)
+                      Text(
+                        '+${bookings.length - 1} more',
+                        style: const TextStyle(
+                          color: AppColors.brand,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                      child: const Icon(
-                        PhosphorIconsRegular.houseLine,
-                        size: 20,
-                        color: AppColors.deepSlate,
-                      ),
-                    ),
                   ],
                 ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          // Menu Button (replacing the QR in the image)
-          GestureDetector(
-            onTap: () => mainScaffoldKey.currentState?.openDrawer(),
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.surfaceTint,
-                border: Border.all(
-                  color: AppColors.brand.withOpacity(0.10),
-                  width: 1,
+                const SizedBox(height: 3),
+                Text(
+                  '${_bookingDateLabel(b.date)} · ${b.time}',
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12.5,
+                  ),
                 ),
-              ),
-              child: const Icon(
-                PhosphorIconsRegular.list,
-                color: AppColors.brand,
-                size: 24,
-              ),
+              ],
             ),
           ),
         ],
@@ -391,32 +544,32 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
+  // ---- Quick actions ------------------------------------------------------
+  Widget _quickActions(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionHeader(
           title: 'Quick Actions',
-        ).animate().fade(duration: 400.ms),
+          subtitle: 'Everything one tap away',
+        ),
         const SizedBox(height: 16),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: QuickActionItem(
                 icon: PhosphorIconsFill.bellSimpleRinging,
                 label: 'Emergency',
                 color: AppColors.accentCoral,
-                onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => const EmergencyBottomSheet(),
-                  );
-                },
+                onTap: () => showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => const EmergencyBottomSheet(),
+                ),
               ),
             ),
+            const SizedBox(width: 12),
             Expanded(
               child: QuickActionItem(
                 icon: PhosphorIconsFill.identificationCard,
@@ -425,6 +578,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 onTap: () => context.go('/access'),
               ),
             ),
+            const SizedBox(width: 12),
             Expanded(
               child: QuickActionItem(
                 icon: PhosphorIconsFill.wallet,
@@ -434,353 +588,49 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               ),
             ),
           ],
-        ).animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0),
-        const SizedBox(height: 16),
+        ),
+        const SizedBox(height: 12),
         Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: QuickActionItem(
-                    icon: PhosphorIconsFill.phoneCall,
-                    label: 'Intercom',
-                    color: AppColors.accentSky,
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) =>
-                            const SmartAccessModal(initialView: 1),
-                      );
-                    },
-                  ),
+          children: [
+            Expanded(
+              child: QuickActionItem(
+                icon: PhosphorIconsFill.phoneCall,
+                label: 'Intercom',
+                color: AppColors.accentCyan,
+                onTap: () => showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => const SmartAccessModal(initialView: 1),
                 ),
-                Expanded(
-                  child: QuickActionItem(
-                    icon: PhosphorIconsFill.shieldCheck,
-                    label: 'Smart Lock',
-                    color: AppColors.brandViolet,
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) =>
-                            const SmartAccessModal(initialView: 2),
-                      );
-                    },
-                  ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: QuickActionItem(
+                icon: PhosphorIconsFill.shieldCheck,
+                label: 'Smart Lock',
+                color: AppColors.brandViolet,
+                onTap: () => showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => const SmartAccessModal(initialView: 2),
                 ),
-                Expanded(
-                  child: QuickActionItem(
-                    icon: PhosphorIconsFill.calendarCheck,
-                    label: 'Bookings',
-                    color: AppColors.accentAmber,
-                    onTap: () => context.push('/facility'),
-                  ),
-                ),
-              ],
-            )
-            .animate()
-            .fade(duration: 400.ms, delay: 100.ms)
-            .slideY(begin: 0.1, end: 0),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: QuickActionItem(
+                icon: PhosphorIconsFill.calendarCheck,
+                label: 'Bookings',
+                color: AppColors.accentAmber,
+                onTap: () => context.push('/facility'),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
-
-  Widget _buildTopHeader(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top;
-    final bookingsAsync = ref.watch(dashboardBookingsProvider);
-    final bookings = bookingsAsync.valueOrNull ?? <Booking>[];
-    final isLoadingBookings =
-        bookingsAsync.isLoading && !bookingsAsync.hasValue;
-
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ClipPath(
-        clipper: TopHeaderWaveClipper(),
-        child: Container(
-          padding: EdgeInsets.fromLTRB(24, topPadding + 12, 24, 24),
-          decoration: const BoxDecoration(gradient: AppColors.brandGradient),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // Beautiful Cityscape Skyline Silhouette
-              // 🌳 Tree 1 (Large) positioned perfectly on the left part of the wave
-              Positioned(
-                bottom: -8,
-                right: 160,
-                child: Opacity(
-                  opacity: 0.16,
-                  child: const Icon(
-                    PhosphorIconsFill.tree,
-                    size: 48,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-
-              // 🌳 Tree 2 (Medium) positioned in the middle-left, sitting perfectly on the wave curve
-              Positioned(
-                bottom: 4,
-                right: 110,
-                child: Opacity(
-                  opacity: 0.16,
-                  child: const Icon(
-                    PhosphorIconsFill.tree,
-                    size: 38,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-
-              // 🏢 Buildings (Apartment) positioned further down on the far right dipping part of the wave
-              Positioned(
-                bottom: -20,
-                right: -4,
-                child: Opacity(
-                  opacity: 0.16,
-                  child: const Icon(
-                    PhosphorIconsFill.building,
-                    size: 92,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-
-              // Main content
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(context),
-                  const SizedBox(height: 24),
-
-                  // Slider container — upcoming facility bookings
-                  SizedBox(
-                    height: 140,
-                    child: isLoadingBookings
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    DateFormat(
-                                      'EEE, MMM dd',
-                                    ).format(DateTime.now()),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white.withOpacity(0.85),
-                                    ),
-                                  ),
-                                  Icon(
-                                    PhosphorIconsFill.calendar,
-                                    size: 20,
-                                    color: Colors.white.withOpacity(0.9),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 24),
-                              SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Colors.white.withOpacity(0.8),
-                                ),
-                              ),
-                            ],
-                          )
-                        : bookings.isEmpty
-                        ? GestureDetector(
-                            onTap: () => context.push('/facility'),
-                            behavior: HitTestBehavior.opaque,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      DateFormat(
-                                        'EEE, MMM dd',
-                                      ).format(DateTime.now()),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white.withOpacity(0.85),
-                                      ),
-                                    ),
-                                    Icon(
-                                      PhosphorIconsFill.calendar,
-                                      size: 20,
-                                      color: Colors.white.withOpacity(0.9),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                const Expanded(
-                                  child: Text(
-                                    'No upcoming bookings. Tap to book a facility 📅',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.white,
-                                      height: 1.4,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : PageView.builder(
-                            controller: _pageController,
-                            onPageChanged: (index) =>
-                                setState(() => _activePage = index),
-                            itemCount: bookings.length,
-                            itemBuilder: (context, index) {
-                              final b = bookings[index];
-                              return GestureDetector(
-                                onTap: () => context.push('/facility'),
-                                behavior: HitTestBehavior.opaque,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          _bookingDateLabel(b.date),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white.withOpacity(
-                                              0.85,
-                                            ),
-                                          ),
-                                        ),
-                                        Icon(
-                                          PhosphorIconsFill.calendarCheck,
-                                          size: 20,
-                                          color: Colors.white.withOpacity(0.9),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Expanded(
-                                      child: RichText(
-                                        text: TextSpan(
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            color: Colors.white,
-                                            height: 1.4,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          children: [
-                                            const TextSpan(text: 'Your '),
-                                            TextSpan(
-                                              text: b.facilityName,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            const TextSpan(
-                                              text: ' booking is at ',
-                                            ),
-                                            TextSpan(
-                                              text: b.time,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                            const TextSpan(
-                                              text: '. See you there! 🎉',
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                  const SizedBox(height: 12),
-                  if (bookings.length > 1)
-                    Row(
-                      children: List.generate(bookings.length, (index) {
-                        final isActive = index == _activePage;
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: const EdgeInsets.only(right: 4),
-                          width: isActive ? 24 : 4,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(
-                              isActive ? 0.9 : 0.4,
-                            ),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        );
-                      }),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    ).animate().fade(duration: 400.ms).slideY(begin: -0.1, end: 0);
-  }
-}
-
-class TopHeaderWaveClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.lineTo(0, size.height - 32);
-
-    // Wave dipping down on the left
-    final firstControlPoint = Offset(size.width * 0.25, size.height - 8);
-    final firstEndPoint = Offset(size.width * 0.48, size.height - 32);
-    path.quadraticBezierTo(
-      firstControlPoint.dx,
-      firstControlPoint.dy,
-      firstEndPoint.dx,
-      firstEndPoint.dy,
-    );
-
-    // Wave rising up towards the right and dipping down at the right edge
-    final secondControlPoint = Offset(size.width * 0.73, size.height - 72);
-    final secondEndPoint = Offset(size.width, size.height - 16);
-    path.quadraticBezierTo(
-      secondControlPoint.dx,
-      secondControlPoint.dy,
-      secondEndPoint.dx,
-      secondEndPoint.dy,
-    );
-
-    path.lineTo(size.width, 0);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

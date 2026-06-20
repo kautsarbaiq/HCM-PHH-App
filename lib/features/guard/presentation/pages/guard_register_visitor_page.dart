@@ -47,14 +47,26 @@ class _GuardRegisterVisitorPageState
     // image_picker's camera also requires the permission granted at runtime.
     final status = await Permission.camera.request();
     if (!status.isGranted) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Camera permission is required to capture photos.'),
-            backgroundColor: Colors.red,
+      if (!mounted) return;
+      // When the permission is permanently denied the OS prompt no longer
+      // appears, so point the guard at app settings instead of leaving them
+      // stuck on a message they can't act on.
+      final permanentlyDenied = status.isPermanentlyDenied;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Camera permission is required to capture photos.',
           ),
-        );
-      }
+          backgroundColor: Colors.red,
+          action: permanentlyDenied
+              ? SnackBarAction(
+                  label: 'Settings',
+                  textColor: Colors.white,
+                  onPressed: openAppSettings,
+                )
+              : null,
+        ),
+      );
       return;
     }
     try {
