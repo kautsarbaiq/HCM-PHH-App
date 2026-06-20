@@ -50,8 +50,10 @@ class AnnouncementRepository {
         .from('announcements')
         .select()
         .order('published_at', ascending: false);
-    
-    return (response as List).map((json) => Announcement.fromJson(json)).toList();
+
+    return (response as List)
+        .map((json) => Announcement.fromJson(json))
+        .toList();
   }
 
   Future<Announcement> createAnnouncement(Announcement announcement) async {
@@ -60,11 +62,14 @@ class AnnouncementRepository {
         .insert(announcement.toJson())
         .select()
         .single();
-        
+
     return Announcement.fromJson(response);
   }
 
-  Future<void> updateAnnouncement(String id, Map<String, dynamic> updates) async {
+  Future<void> updateAnnouncement(
+    String id,
+    Map<String, dynamic> updates,
+  ) async {
     await _supabase.from('announcements').update(updates).eq('id', id);
   }
 

@@ -1,9 +1,15 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/repositories/visitor_repository.dart';
+import '../../../../core/widgets/app_states.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/status_pill.dart';
+import '../../../../theme/app_colors.dart';
 
 final guardVisitorsProvider =
     AsyncNotifierProvider<GuardVisitorsNotifier, List<Visitor>>(
@@ -27,13 +33,13 @@ class GuardVisitorsNotifier extends AsyncNotifier<List<Visitor>> {
 Color _statusColor(String status) {
   switch (status.toLowerCase()) {
     case 'expected':
-      return const Color(0xFFF59E0B);
+      return AppColors.warning;
     case 'checked_in':
-      return const Color(0xFF10B981);
+      return AppColors.success;
     case 'checked_out':
-      return const Color(0xFF6B7280);
+      return AppColors.textSecondary;
     default:
-      return const Color(0xFF3B82F6);
+      return AppColors.info;
   }
 }
 
@@ -85,55 +91,101 @@ class GuardVisitorsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final visitorsAsync = ref.watch(guardVisitorsProvider);
 
-    return Padding(
+    return Container(
+      decoration: const BoxDecoration(gradient: AppColors.canvasGradient),
       padding: EdgeInsets.all(16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Visitor Logs',
-            style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF2B3674),
-            ),
+          Row(
+            children: [
+              const GradientIconBadge(
+                icon: PhosphorIconsFill.users,
+                gradient: AppColors.brandGradient,
+                size: 50,
+                iconSize: 25,
+                radius: 16,
+              ),
+              SizedBox(width: 14.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Visitor Logs',
+                      style: TextStyle(
+                        fontSize: 23.sp,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      "Today's active and completed registrations",
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13.sp,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 8.h),
-          Text(
-            "Today's active and completed visitor registrations",
-            style: TextStyle(color: const Color(0xFFA3AED0), fontSize: 14.sp),
-          ),
-          SizedBox(height: 14.h),
+          SizedBox(height: 16.h),
           // Quick actions in the header: QR check-in scan + manual walk-in.
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => context.go('/guard/scan'),
-                  icon: const Icon(Icons.qr_code_scanner, size: 18),
-                  label: const Text('Scan QR'),
+                  icon: const Icon(PhosphorIconsRegular.qrCode, size: 18),
+                  label: const Text(
+                    'Scan QR',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF4318FF),
-                    side: const BorderSide(color: Color(0xFF4318FF)),
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    foregroundColor: AppColors.brand,
+                    backgroundColor: AppColors.primaryWhite,
+                    side: const BorderSide(color: AppColors.brand, width: 1.4),
+                    padding: EdgeInsets.symmetric(vertical: 13.h),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                 ),
               ),
               SizedBox(width: 10.w),
               Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => context.go('/guard/register'),
-                  icon: const Icon(Icons.person_add_alt_1, size: 18),
-                  label: const Text('Register'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981),
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: AppColors.mintGradient,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accentMint.withOpacity(0.35),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton.icon(
+                    onPressed: () => context.go('/guard/register'),
+                    icon: const Icon(PhosphorIconsFill.userPlus, size: 18),
+                    label: const Text(
+                      'Register',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 13.h),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                   ),
                 ),
@@ -145,22 +197,22 @@ class GuardVisitorsPage extends ConsumerWidget {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                color: AppColors.primaryWhite,
+                borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
+                    color: const Color(0xFF6A7BA8).withOpacity(0.10),
+                    blurRadius: 24,
                     offset: const Offset(0, 10),
                   ),
                 ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(22),
                 child: visitorsAsync.when(
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) => _ErrorState(
+                  error: (error, stack) => AppErrorState(
                     message: 'Error: $error',
                     onRetry: () => ref.invalidate(guardVisitorsProvider),
                   ),
@@ -171,12 +223,12 @@ class GuardVisitorsPage extends ConsumerWidget {
                       child: visitors.isEmpty
                           ? ListView(
                               children: [
-                                SizedBox(height: 200.h),
-                                const Center(
-                                  child: Text(
-                                    'No visitors found.',
-                                    style: TextStyle(color: Color(0xFFA3AED0)),
-                                  ),
+                                SizedBox(height: 60.h),
+                                const AppEmptyState(
+                                  icon: PhosphorIconsRegular.users,
+                                  title: 'No visitors yet',
+                                  message:
+                                      'Registered and pre-booked visitors will show up here.',
                                 ),
                               ],
                             )
@@ -228,39 +280,41 @@ class _VisitorCardList extends StatelessWidget {
           itemBuilder: (context, index) {
             final visitor = visitors[index];
             final statusColor = _statusColor(visitor.status);
-            return Container(
-              padding: EdgeInsets.all(14.w),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF4F7FE),
-                borderRadius: BorderRadius.circular(14),
-              ),
+            return PremiumCard(
+              padding: EdgeInsets.all(16.w),
+              radius: 18,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(
-                        backgroundColor: const Color(
-                          0xFF4318FF,
-                        ).withOpacity(0.1),
-                        child: const Icon(
-                          Icons.person,
-                          color: Color(0xFF4318FF),
-                          size: 20,
-                        ),
+                      const GradientIconBadge(
+                        icon: PhosphorIconsFill.user,
+                        gradient: AppColors.brandGradient,
+                        size: 44,
+                        iconSize: 22,
+                        radius: 14,
                       ),
                       SizedBox(width: 12.w),
                       Expanded(
                         child: Text(
                           visitor.visitorName,
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF2B3674),
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
                             fontSize: 15.sp,
+                            letterSpacing: -0.2,
                           ),
                         ),
                       ),
-                      _StatusBadge(status: visitor.status, color: statusColor),
+                      StatusPill(
+                        label: visitor.status.toUpperCase().replaceAll(
+                          '_',
+                          ' ',
+                        ),
+                        color: statusColor,
+                        dense: true,
+                      ),
                     ],
                   ),
                   SizedBox(height: 10.h),
@@ -325,46 +379,20 @@ class _CardInfoRow extends StatelessWidget {
             width: 72.w,
             child: Text(
               label,
-              style: TextStyle(color: const Color(0xFFA3AED0), fontSize: 12.sp),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
             ),
           ),
           Expanded(
             child: Text(
               value,
               style: TextStyle(
-                color: const Color(0xFF2B3674),
-                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
                 fontSize: 13.sp,
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  final String status;
-  final Color color;
-
-  const _StatusBadge({required this.status, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
-        ),
       ),
     );
   }
@@ -416,39 +444,77 @@ class _VisitorActionsState extends ConsumerState<_VisitorActions> {
     final status = widget.visitor.status;
     if (status == 'expected') {
       return widget.showLabels
-          ? ElevatedButton.icon(
+          ? _gradientActionButton(
+              gradient: AppColors.mintGradient,
+              glow: AppColors.accentMint,
+              icon: PhosphorIconsBold.signIn,
+              label: 'Check In',
               onPressed: () => _run('checked_in'),
-              icon: const Icon(Icons.login, size: 18),
-              label: const Text('Check In'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF10B981),
-                foregroundColor: Colors.white,
-              ),
             )
           : IconButton(
-              icon: const Icon(Icons.login, color: Color(0xFF10B981)),
+              icon: const Icon(
+                PhosphorIconsBold.signIn,
+                color: AppColors.success,
+              ),
               onPressed: () => _run('checked_in'),
               tooltip: 'Check In',
             );
     }
     if (status == 'checked_in') {
       return widget.showLabels
-          ? ElevatedButton.icon(
+          ? _gradientActionButton(
+              gradient: AppColors.sunsetGradient,
+              glow: AppColors.accentAmber,
+              icon: PhosphorIconsBold.signOut,
+              label: 'Check Out',
               onPressed: () => _run('checked_out'),
-              icon: const Icon(Icons.logout, size: 18),
-              label: const Text('Check Out'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF59E0B),
-                foregroundColor: Colors.white,
-              ),
             )
           : IconButton(
-              icon: const Icon(Icons.logout, color: Color(0xFFF59E0B)),
+              icon: const Icon(
+                PhosphorIconsBold.signOut,
+                color: AppColors.warning,
+              ),
               onPressed: () => _run('checked_out'),
               tooltip: 'Check Out',
             );
     }
     return const SizedBox.shrink();
+  }
+
+  Widget _gradientActionButton({
+    required Gradient gradient,
+    required Color glow,
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(13),
+        boxShadow: [
+          BoxShadow(
+            color: glow.withOpacity(0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 18),
+        label: Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(13),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -481,14 +547,14 @@ class _PhotoThumbs extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              Icons.no_photography_outlined,
+              PhosphorIconsRegular.imageBroken,
               size: 14.sp,
-              color: const Color(0xFFA3AED0),
+              color: AppColors.textSecondary,
             ),
             SizedBox(width: 6.w),
             Text(
               'No photos captured',
-              style: TextStyle(color: const Color(0xFFA3AED0), fontSize: 12.sp),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
             ),
           ],
         ),
@@ -522,7 +588,7 @@ class _Thumb extends StatelessWidget {
     Widget placeholder(Widget child) => Container(
       width: size,
       height: size,
-      color: const Color(0xFFE0E5F2),
+      color: AppColors.surfaceTint,
       child: Center(child: child),
     );
     return GestureDetector(
@@ -532,34 +598,36 @@ class _Thumb extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.network(
-              photo.url,
+            borderRadius: BorderRadius.circular(12),
+            child: CachedNetworkImage(
+              imageUrl: photo.url,
               width: size,
               height: size,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => placeholder(
+              placeholder: (c, u) => placeholder(
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+              errorWidget: (c, u, e) => placeholder(
                 const Icon(
-                  Icons.broken_image,
-                  color: Color(0xFFA3AED0),
+                  PhosphorIconsRegular.imageBroken,
+                  color: AppColors.textSecondary,
                   size: 18,
                 ),
               ),
-              loadingBuilder: (c, child, prog) => prog == null
-                  ? child
-                  : placeholder(
-                      const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
             ),
           ),
-          SizedBox(height: 4.h),
+          SizedBox(height: 5.h),
           Text(
             photo.label,
-            style: TextStyle(fontSize: 10.sp, color: const Color(0xFFA3AED0)),
+            style: TextStyle(
+              fontSize: 10.sp,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -582,13 +650,26 @@ void _showPhotoViewer(BuildContext context, _LabeledPhoto photo) {
             child: Center(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  photo.url,
+                child: CachedNetworkImage(
+                  imageUrl: photo.url,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Padding(
+                  placeholder: (c, u) => const Padding(
+                    padding: EdgeInsets.all(40),
+                    child: SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.white70,
+                        ),
+                      ),
+                    ),
+                  ),
+                  errorWidget: (c, u, e) => const Padding(
                     padding: EdgeInsets.all(40),
                     child: Icon(
-                      Icons.broken_image,
+                      PhosphorIconsRegular.imageBroken,
                       color: Colors.white54,
                       size: 48,
                     ),
@@ -623,42 +704,4 @@ void _showPhotoViewer(BuildContext context, _LabeledPhoto photo) {
       ),
     ),
   );
-}
-
-class _ErrorState extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorState({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 40),
-            SizedBox(height: 12.h),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFFA3AED0)),
-            ),
-            SizedBox(height: 16.h),
-            ElevatedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4318FF),
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

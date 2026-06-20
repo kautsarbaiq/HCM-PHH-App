@@ -1,7 +1,13 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/repositories/visitor_repository.dart';
+import '../../../../theme/app_colors.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/section_header.dart';
+import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/app_states.dart';
 
 final adminVisitorsProvider =
     AsyncNotifierProvider<AdminVisitorsNotifier, List<Visitor>>(
@@ -31,14 +37,14 @@ class AdminVisitorsNotifier extends AsyncNotifier<List<Visitor>> {
 ({String label, Color color}) _statusStyle(String status) {
   switch (status) {
     case 'checked_in':
-      return (label: 'Checked In', color: const Color(0xFF05CD99));
+      return (label: 'Checked In', color: AppColors.success);
     case 'checked_out':
-      return (label: 'Checked Out', color: const Color(0xFFA3AED0));
+      return (label: 'Checked Out', color: AppColors.textSecondary);
     case 'cancelled':
-      return (label: 'Cancelled', color: const Color(0xFFEE5D50));
+      return (label: 'Cancelled', color: AppColors.error);
     case 'expected':
     default:
-      return (label: 'Expected', color: const Color(0xFFFFB547));
+      return (label: 'Expected', color: AppColors.warning);
   }
 }
 
@@ -96,10 +102,21 @@ void _showPhotoViewer(BuildContext context, _AdminPhoto photo) {
             child: Center(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  photo.url,
+                child: CachedNetworkImage(
+                  imageUrl: photo.url,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Padding(
+                  placeholder: (_, __) => const Padding(
+                    padding: EdgeInsets.all(40),
+                    child: SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: CircularProgressIndicator(
+                        color: Colors.white54,
+                        strokeWidth: 2.5,
+                      ),
+                    ),
+                  ),
+                  errorWidget: (_, __, ___) => const Padding(
                     padding: EdgeInsets.all(40),
                     child: Icon(
                       Icons.broken_image,
@@ -178,14 +195,14 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
           ),
           title: Row(
             children: [
-              const Icon(Icons.badge, color: Color(0xFF4318FF)),
+              const Icon(Icons.badge, color: AppColors.brand),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   visitor.visitorName,
                   style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2B3674),
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
@@ -238,7 +255,7 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
               onPressed: () => Navigator.pop(context),
               child: const Text(
                 'Close',
-                style: TextStyle(color: Color(0xFF4318FF)),
+                style: TextStyle(color: AppColors.brand),
               ),
             ),
           ],
@@ -255,31 +272,20 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
         children: [
           Text(
             label,
-            style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 12),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
           ),
           const SizedBox(height: 4),
           if (statusColor != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                value,
-                style: TextStyle(
-                  color: statusColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            )
+            StatusPill(label: value, color: statusColor)
           else
             Text(
               value,
               style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2B3674),
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
                 fontSize: 16,
               ),
             ),
@@ -298,15 +304,15 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
         children: [
           const Text(
             'Photos',
-            style: TextStyle(color: Color(0xFFA3AED0), fontSize: 12),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
           ),
           const SizedBox(height: 6),
           if (photos.isEmpty)
             const Text(
               'No photos captured',
               style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2B3674),
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
                 fontSize: 14,
               ),
             )
@@ -322,36 +328,34 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(10),
-                              child: Image.network(
-                                p.url,
+                              child: CachedNetworkImage(
+                                imageUrl: p.url,
                                 width: 72,
                                 height: 72,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
+                                placeholder: (c, u) => Container(
                                   width: 72,
                                   height: 72,
-                                  color: const Color(0xFFE0E5F2),
-                                  child: const Icon(
-                                    Icons.broken_image,
-                                    color: Color(0xFFA3AED0),
+                                  color: AppColors.surfaceTint,
+                                  child: const Center(
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                loadingBuilder: (c, child, prog) => prog == null
-                                    ? child
-                                    : Container(
-                                        width: 72,
-                                        height: 72,
-                                        color: const Color(0xFFE0E5F2),
-                                        child: const Center(
-                                          child: SizedBox(
-                                            width: 16,
-                                            height: 16,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
+                                errorWidget: (c, u, e) => Container(
+                                  width: 72,
+                                  height: 72,
+                                  color: AppColors.surfaceTint,
+                                  child: const Icon(
+                                    Icons.broken_image,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -359,7 +363,7 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
                               p.label,
                               style: const TextStyle(
                                 fontSize: 10,
-                                color: Color(0xFFA3AED0),
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ],
@@ -377,13 +381,9 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
   // Compact card used for the narrow-phone visitors layout.
   Widget _buildVisitorCard(Visitor v) {
     final status = _statusStyle(v.status);
-    return Container(
+    return PremiumCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE0E5F2)),
-      ),
+      radius: 18,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -396,73 +396,89 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
                     _AdminPhoto('Face', v.visitorPhotoUrl!),
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      v.visitorPhotoUrl!,
-                      width: 40,
-                      height: 40,
+                    borderRadius: BorderRadius.circular(10),
+                    child: CachedNetworkImage(
+                      imageUrl: v.visitorPhotoUrl!,
+                      width: 44,
+                      height: 44,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        width: 40,
-                        height: 40,
-                        color: const Color(0xFFE0E5F2),
+                      placeholder: (_, __) => Container(
+                        width: 44,
+                        height: 44,
+                        color: AppColors.surfaceTint,
+                        child: const Center(
+                          child: SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
+                      errorWidget: (_, __, ___) => Container(
+                        width: 44,
+                        height: 44,
+                        color: AppColors.surfaceTint,
                         child: const Icon(
                           Icons.person,
-                          size: 20,
-                          color: Color(0xFFA3AED0),
+                          size: 22,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
+              ] else ...[
+                const GradientIconBadge(
+                  icon: Icons.badge_rounded,
+                  gradient: AppColors.brandGradient,
+                  size: 44,
+                  iconSize: 22,
+                ),
+                const SizedBox(width: 12),
               ],
               Expanded(
                 child: Text(
                   v.visitorName,
                   style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2B3674),
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
                     fontSize: 15,
                   ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: status.color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  status.label,
-                  style: TextStyle(
-                    color: status.color,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11,
-                  ),
-                ),
-              ),
+              const SizedBox(width: 8),
+              StatusPill(label: status.label, color: status.color, dense: true),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             'Type: ${_regTypeLabel(v.registrationType)}',
-            style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
           ),
           Text(
             'House: ${v.house?.houseNumber ?? '-'}',
-            style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
           ),
           Text(
             'Logged by: ${_nameOrDash(v.creator?.fullName)}',
-            style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
           ),
           Text(
             'Time: ${_formatTime(v.checkedInAt ?? v.expectedAt)}',
-            style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: 8),
           Row(
@@ -471,7 +487,7 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
               PopupMenuButton<String>(
                 icon: const Icon(
                   Icons.fact_check_outlined,
-                  color: Color(0xFF05CD99),
+                  color: AppColors.success,
                   size: 20,
                 ),
                 tooltip: 'Update Status',
@@ -481,14 +497,18 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
               IconButton(
                 icon: const Icon(
                   Icons.visibility,
-                  color: Color(0xFF4318FF),
+                  color: AppColors.brand,
                   size: 20,
                 ),
                 onPressed: () => _showDetails(v),
                 tooltip: 'View Details',
               ),
               IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                icon: const Icon(
+                  Icons.delete,
+                  color: AppColors.error,
+                  size: 20,
+                ),
                 onPressed: () => _deleteVisitor(v),
                 tooltip: 'Delete Visitor',
               ),
@@ -542,8 +562,8 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
           title: const Text(
             'Delete Visitor Log',
             style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2B3674),
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
             ),
           ),
           content: Text(
@@ -584,368 +604,333 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
   Widget build(BuildContext context) {
     final visitorsAsync = ref.watch(adminVisitorsProvider);
 
-    return Card(
-      color: Colors.white,
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Visitors Log',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2B3674),
-                    ),
-                  ),
-                ),
-                OutlinedButton.icon(
-                  onPressed: () => ref.invalidate(adminVisitorsProvider),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Refresh'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF4318FF),
-                    side: const BorderSide(color: Color(0xFF4318FF)),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              onChanged: (value) => setState(() => _searchQuery = value),
-              decoration: InputDecoration(
-                hintText: 'Search by visitor, house, or who logged it...',
-                prefixIcon: const Icon(Icons.search, color: Color(0xFFA3AED0)),
-                filled: true,
-                fillColor: const Color(0xFFF4F7FE),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide.none,
+    return PremiumCard(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Expanded(
+                child: SectionHeader(
+                  title: 'Visitors Log',
+                  subtitle: 'Track check-ins, evidence photos and status',
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: visitorsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(
-                  child: Text(
-                    'Error: $error',
-                    style: const TextStyle(color: Color(0xFFA3AED0)),
+              const SizedBox(width: 12),
+              OutlinedButton.icon(
+                onPressed: () => ref.invalidate(adminVisitorsProvider),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Refresh'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.brand,
+                  side: const BorderSide(color: AppColors.brand),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                data: (allVisitors) {
-                  final visitors = _filter(allVisitors);
-                  if (visitors.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'No visitors logged',
-                        style: TextStyle(color: Color(0xFFA3AED0)),
-                      ),
-                    );
-                  }
-                  return LayoutBuilder(
-                    builder: (context, constraints) {
-                      // On narrow phones, render a vertical card list instead of a wide table.
-                      if (constraints.maxWidth < 600) {
-                        return ListView.separated(
-                          itemCount: visitors.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, index) =>
-                              _buildVisitorCard(visitors[index]),
-                        );
-                      }
-                      return Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: const Color(0xFFF4F7FE),
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            onChanged: (value) => setState(() => _searchQuery = value),
+            decoration: InputDecoration(
+              hintText: 'Search by visitor, house, or who logged it...',
+              hintStyle: const TextStyle(color: AppColors.textSecondary),
+              prefixIcon: const Icon(
+                Icons.search,
+                color: AppColors.textSecondary,
+              ),
+              filled: true,
+              fillColor: AppColors.surfaceTint,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: visitorsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => AppErrorState(
+                message: '$error',
+                onRetry: () => ref.invalidate(adminVisitorsProvider),
+              ),
+              data: (allVisitors) {
+                final visitors = _filter(allVisitors);
+                if (visitors.isEmpty) {
+                  return AppEmptyState(
+                    icon: Icons.badge_rounded,
+                    title: 'No visitors logged',
+                    message: _searchQuery.isEmpty
+                        ? 'Visitor check-ins logged by guards will appear here.'
+                        : 'No visitors match your search.',
+                    gradient: AppColors.skyGradient,
+                  );
+                }
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    // On narrow phones, render a vertical card list instead of a wide table.
+                    if (constraints.maxWidth < 600) {
+                      return ListView.separated(
+                        itemCount: visitors.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) =>
+                            _buildVisitorCard(visitors[index]),
+                      );
+                    }
+                    return Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: AppColors.surfaceTint,
+                          width: 2,
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: SizedBox(
-                              width: constraints.maxWidth > 760
-                                  ? constraints.maxWidth
-                                  : 760.0,
-                              child: Column(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 24,
-                                      vertical: 16,
-                                    ),
-                                    color: const Color(0xFFF4F7FE),
-                                    child: const Row(
-                                      children: [
-                                        Expanded(
-                                          flex: 3,
-                                          child: Text(
-                                            'Visitor Name',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFFA3AED0),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            'House',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFFA3AED0),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 3,
-                                          child: Text(
-                                            'Logged By',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFFA3AED0),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            'Time',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFFA3AED0),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text(
-                                            'Status',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFFA3AED0),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 3,
-                                          child: Text(
-                                            'Actions',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFFA3AED0),
-                                            ),
-                                            textAlign: TextAlign.right,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: SizedBox(
+                            width: constraints.maxWidth > 760
+                                ? constraints.maxWidth
+                                : 760.0,
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 16,
                                   ),
-                                  Expanded(
-                                    child: ListView.builder(
-                                      itemCount: visitors.length,
-                                      itemBuilder: (context, index) {
-                                        final v = visitors[index];
-                                        final status = _statusStyle(v.status);
-                                        return Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 24,
-                                            vertical: 16,
+                                  color: AppColors.surfaceTint,
+                                  child: const Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          'Visitor Name',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.textSecondary,
                                           ),
-                                          decoration: const BoxDecoration(
-                                            border: Border(
-                                              bottom: BorderSide(
-                                                color: Color(0xFFE0E5F2),
-                                                width: 1,
-                                              ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          'House',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          'Logged By',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          'Time',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          'Status',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          'Actions',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                          textAlign: TextAlign.right,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Expanded(
+                                  child: ListView.builder(
+                                    itemCount: visitors.length,
+                                    itemBuilder: (context, index) {
+                                      final v = visitors[index];
+                                      final status = _statusStyle(v.status);
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 24,
+                                          vertical: 16,
+                                        ),
+                                        decoration: const BoxDecoration(
+                                          border: Border(
+                                            bottom: BorderSide(
+                                              color: Color(0xFFE0E5F2),
+                                              width: 1,
                                             ),
                                           ),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                flex: 3,
-                                                child: Text(
-                                                  v.visitorName,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xFF2B3674),
-                                                  ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              flex: 3,
+                                              child: Text(
+                                                v.visitorName,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  color: AppColors.textPrimary,
                                                 ),
                                               ),
-                                              Expanded(
-                                                flex: 2,
-                                                child: Text(
-                                                  v.house?.houseNumber ?? '-',
-                                                  style: const TextStyle(
-                                                    color: Color(0xFF2B3674),
-                                                  ),
+                                            ),
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text(
+                                                v.house?.houseNumber ?? '-',
+                                                style: const TextStyle(
+                                                  color: AppColors.textPrimary,
                                                 ),
                                               ),
-                                              Expanded(
-                                                flex: 3,
-                                                child: Align(
-                                                  alignment:
-                                                      Alignment.centerLeft,
-                                                  child: Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 8,
-                                                          vertical: 4,
+                                            ),
+                                            Expanded(
+                                              flex: 3,
+                                              child: Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 10,
+                                                        vertical: 5,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        AppColors.surfaceTint,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
                                                         ),
-                                                    decoration: BoxDecoration(
-                                                      color: const Color(
-                                                        0xFFF4F7FE,
-                                                      ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            4,
-                                                          ),
+                                                  ),
+                                                  child: Text(
+                                                    _nameOrDash(
+                                                      v.creator?.fullName,
                                                     ),
-                                                    child: Text(
-                                                      _nameOrDash(
-                                                        v.creator?.fullName,
-                                                      ),
-                                                      style: const TextStyle(
-                                                        color: Color(
-                                                          0xFF2B3674,
-                                                        ),
-                                                        fontSize: 12,
-                                                      ),
+                                                    style: const TextStyle(
+                                                      color:
+                                                          AppColors.textPrimary,
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.w600,
                                                     ),
                                                   ),
                                                 ),
                                               ),
-                                              Expanded(
-                                                flex: 2,
-                                                child: Text(
-                                                  _formatTime(
-                                                    v.checkedInAt ??
-                                                        v.expectedAt,
-                                                  ),
-                                                  style: const TextStyle(
-                                                    color: Color(0xFF2B3674),
-                                                    fontSize: 13,
-                                                  ),
+                                            ),
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text(
+                                                _formatTime(
+                                                  v.checkedInAt ?? v.expectedAt,
+                                                ),
+                                                style: const TextStyle(
+                                                  color: AppColors.textPrimary,
+                                                  fontSize: 13,
                                                 ),
                                               ),
-                                              Expanded(
-                                                flex: 2,
-                                                child: Align(
-                                                  alignment:
-                                                      Alignment.centerLeft,
-                                                  child: Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 12,
-                                                          vertical: 6,
-                                                        ),
-                                                    decoration: BoxDecoration(
-                                                      color: status.color
-                                                          .withOpacity(0.1),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            20,
-                                                          ),
+                                            ),
+                                            Expanded(
+                                              flex: 2,
+                                              child: Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: StatusPill(
+                                                  label: status.label,
+                                                  color: status.color,
+                                                  dense: true,
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 3,
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  PopupMenuButton<String>(
+                                                    icon: const Icon(
+                                                      Icons.fact_check_outlined,
+                                                      color: AppColors.success,
+                                                      size: 18,
                                                     ),
-                                                    child: Text(
-                                                      status.label,
-                                                      style: TextStyle(
-                                                        color: status.color,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 12,
-                                                      ),
-                                                    ),
+                                                    tooltip: 'Update Status',
+                                                    onSelected: (value) =>
+                                                        _updateStatus(v, value),
+                                                    itemBuilder: (_) =>
+                                                        _statusMenuItems(v),
                                                   ),
-                                                ),
+                                                  IconButton(
+                                                    icon: const Icon(
+                                                      Icons.visibility,
+                                                      color: AppColors.brand,
+                                                      size: 18,
+                                                    ),
+                                                    onPressed: () =>
+                                                        _showDetails(v),
+                                                    tooltip: 'View Details',
+                                                  ),
+                                                  IconButton(
+                                                    icon: const Icon(
+                                                      Icons.delete,
+                                                      color: AppColors.error,
+                                                      size: 18,
+                                                    ),
+                                                    onPressed: () =>
+                                                        _deleteVisitor(v),
+                                                    tooltip: 'Delete Visitor',
+                                                  ),
+                                                ],
                                               ),
-                                              Expanded(
-                                                flex: 3,
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.end,
-                                                  children: [
-                                                    PopupMenuButton<String>(
-                                                      icon: const Icon(
-                                                        Icons
-                                                            .fact_check_outlined,
-                                                        color: Color(
-                                                          0xFF05CD99,
-                                                        ),
-                                                        size: 18,
-                                                      ),
-                                                      tooltip: 'Update Status',
-                                                      onSelected: (value) =>
-                                                          _updateStatus(
-                                                            v,
-                                                            value,
-                                                          ),
-                                                      itemBuilder: (_) =>
-                                                          _statusMenuItems(v),
-                                                    ),
-                                                    IconButton(
-                                                      icon: const Icon(
-                                                        Icons.visibility,
-                                                        color: Color(
-                                                          0xFF4318FF,
-                                                        ),
-                                                        size: 18,
-                                                      ),
-                                                      onPressed: () =>
-                                                          _showDetails(v),
-                                                      tooltip: 'View Details',
-                                                    ),
-                                                    IconButton(
-                                                      icon: const Icon(
-                                                        Icons.delete,
-                                                        color: Colors.red,
-                                                        size: 18,
-                                                      ),
-                                                      onPressed: () =>
-                                                          _deleteVisitor(v),
-                                                      tooltip: 'Delete Visitor',
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      );
-                    },
-                  );
-                },
-              ),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

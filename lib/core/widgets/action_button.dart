@@ -27,8 +27,12 @@ class ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = backgroundColor ?? (isPrimary ? AppColors.deepSlate : AppColors.primaryWhite);
-    final fgColor = foregroundColor ?? (isPrimary ? AppColors.primaryWhite : AppColors.deepSlate);
+    final bgColor =
+        backgroundColor ??
+        (isPrimary ? AppColors.deepSlate : AppColors.primaryWhite);
+    final fgColor =
+        foregroundColor ??
+        (isPrimary ? AppColors.primaryWhite : AppColors.deepSlate);
     final borderSide = isPrimary
         ? BorderSide.none
         : const BorderSide(color: AppColors.deepSlate, width: 1.5);
@@ -57,10 +61,7 @@ class ActionButton extends StatelessWidget {
             ],
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),

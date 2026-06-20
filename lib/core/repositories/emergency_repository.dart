@@ -57,7 +57,9 @@ class EmergencyRepository {
       await _supabase.from('emergencies').insert(alert.toJson());
     } catch (e) {
       print('Error triggering emergency: $e');
-      throw Exception('Failed to trigger emergency alert. Please call authorities directly!');
+      throw Exception(
+        'Failed to trigger emergency alert. Please call authorities directly!',
+      );
     }
   }
 
@@ -67,6 +69,8 @@ class EmergencyRepository {
         .stream(primaryKey: ['id'])
         .eq('status', 'Active')
         .order('created_at', ascending: false)
-        .map((maps) => maps.map((map) => EmergencyAlert.fromJson(map)).toList());
+        .map(
+          (maps) => maps.map((map) => EmergencyAlert.fromJson(map)).toList(),
+        );
   }
 }

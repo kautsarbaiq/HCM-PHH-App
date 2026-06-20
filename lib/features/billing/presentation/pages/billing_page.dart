@@ -16,7 +16,9 @@ final billingTabIndexProvider = StateProvider<int>((ref) => 0);
 /// The current resident's bills, fetched live from Supabase (RLS scopes the
 /// rows to the logged-in resident).
 final myBillingsProvider =
-    AsyncNotifierProvider<MyBillingsNotifier, List<Billing>>(() => MyBillingsNotifier());
+    AsyncNotifierProvider<MyBillingsNotifier, List<Billing>>(
+      () => MyBillingsNotifier(),
+    );
 
 class MyBillingsNotifier extends AsyncNotifier<List<Billing>> {
   @override
@@ -26,7 +28,9 @@ class MyBillingsNotifier extends AsyncNotifier<List<Billing>> {
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => ref.read(billingRepositoryProvider).getMyBillings());
+    state = await AsyncValue.guard(
+      () => ref.read(billingRepositoryProvider).getMyBillings(),
+    );
   }
 }
 
@@ -42,7 +46,9 @@ String _formatDate(String? iso) {
 String _formatDateTime(String? iso) {
   if (iso == null || iso.isEmpty) return '-';
   try {
-    return DateFormat('MMM dd, yyyy • HH:mm').format(DateTime.parse(iso).toLocal());
+    return DateFormat(
+      'MMM dd, yyyy • HH:mm',
+    ).format(DateTime.parse(iso).toLocal());
   } catch (_) {
     return iso;
   }
@@ -72,8 +78,14 @@ class BillingPage extends ConsumerWidget {
               child: IndexedStack(
                 index: tabIndex,
                 children: [
-                  _buildActiveBills(context, ref).animate(target: tabIndex == 0 ? 1 : 0).fade(duration: 300.ms).slideY(begin: 0.1, end: 0),
-                  _buildTransactionHistory(ref).animate(target: tabIndex == 1 ? 1 : 0).fade(duration: 300.ms).slideY(begin: 0.1, end: 0),
+                  _buildActiveBills(context, ref)
+                      .animate(target: tabIndex == 0 ? 1 : 0)
+                      .fade(duration: 300.ms)
+                      .slideY(begin: 0.1, end: 0),
+                  _buildTransactionHistory(ref)
+                      .animate(target: tabIndex == 1 ? 1 : 0)
+                      .fade(duration: 300.ms)
+                      .slideY(begin: 0.1, end: 0),
                 ],
               ),
             ),
@@ -103,9 +115,15 @@ class BillingPage extends ConsumerWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.primaryWhite,
-              border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
+              border: Border.all(
+                color: AppColors.primaryBlue.withOpacity(0.3),
+                width: 1.5,
+              ),
             ),
-            child: const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
+            child: const Icon(
+              PhosphorIconsRegular.user,
+              color: AppColors.primaryBlue,
+            ),
           ),
         ),
       ],
@@ -122,14 +140,21 @@ class BillingPage extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: _buildSegmentButton(ref, 0, 'Active Bills', currentIndex)),
+          Expanded(
+            child: _buildSegmentButton(ref, 0, 'Active Bills', currentIndex),
+          ),
           Expanded(child: _buildSegmentButton(ref, 1, 'History', currentIndex)),
         ],
       ),
     );
   }
 
-  Widget _buildSegmentButton(WidgetRef ref, int index, String label, int currentIndex) {
+  Widget _buildSegmentButton(
+    WidgetRef ref,
+    int index,
+    String label,
+    int currentIndex,
+  ) {
     final isSelected = index == currentIndex;
     return GestureDetector(
       onTap: () => ref.read(billingTabIndexProvider.notifier).state = index,
@@ -141,7 +166,13 @@ class BillingPage extends ConsumerWidget {
           color: isSelected ? AppColors.primaryWhite : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           boxShadow: isSelected
-              ? [BoxShadow(color: AppColors.shadowColor, blurRadius: 8, offset: const Offset(0, 2))]
+              ? [
+                  BoxShadow(
+                    color: AppColors.shadowColor,
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
               : [],
         ),
         child: Center(
@@ -150,7 +181,9 @@ class BillingPage extends ConsumerWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+              color: isSelected
+                  ? AppColors.textPrimary
+                  : AppColors.textSecondary,
             ),
           ),
         ),
@@ -167,7 +200,11 @@ class BillingPage extends ConsumerWidget {
       data: (all) {
         final active = all.where((b) => b.status != 'paid').toList();
         if (active.isEmpty) {
-          return _buildEmpty(PhosphorIconsRegular.checkCircle, 'All cleared!', 'You have no outstanding bills.');
+          return _buildEmpty(
+            PhosphorIconsRegular.checkCircle,
+            'All cleared!',
+            'You have no outstanding bills.',
+          );
         }
         return RefreshIndicator(
           onRefresh: () => ref.read(myBillingsProvider.notifier).refresh(),
@@ -179,7 +216,9 @@ class BillingPage extends ConsumerWidget {
               final bill = active[index];
               return BillCard(
                 title: bill.title,
-                period: bill.period?.isNotEmpty == true ? bill.period! : 'Invoice ${bill.invoiceNumber}',
+                period: bill.period?.isNotEmpty == true
+                    ? bill.period!
+                    : 'Invoice ${bill.invoiceNumber}',
                 amount: bill.amount,
                 status: bill.status == 'overdue' ? 'Overdue' : 'Unpaid',
                 dueDate: _formatDate(bill.dueDate),
@@ -188,7 +227,9 @@ class BillingPage extends ConsumerWidget {
                   // local provider) + a server webhook to mark the bill paid.
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Online payment for "${bill.title}" is not yet connected to a payment provider.'),
+                      content: Text(
+                        'Online payment for "${bill.title}" is not yet connected to a payment provider.',
+                      ),
                       backgroundColor: AppColors.primaryBlue,
                     ),
                   );
@@ -210,7 +251,11 @@ class BillingPage extends ConsumerWidget {
       data: (all) {
         final paid = all.where((b) => b.status == 'paid').toList();
         if (paid.isEmpty) {
-          return _buildEmpty(PhosphorIconsRegular.receipt, 'No history yet', 'Your paid bills will appear here.');
+          return _buildEmpty(
+            PhosphorIconsRegular.receipt,
+            'No history yet',
+            'Your paid bills will appear here.',
+          );
         }
         return RefreshIndicator(
           onRefresh: () => ref.read(myBillingsProvider.notifier).refresh(),
@@ -236,7 +281,10 @@ class BillingPage extends ConsumerWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Text('Could not load bills: $error', style: const TextStyle(color: AppColors.textSecondary)),
+        child: Text(
+          'Could not load bills: $error',
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
       ),
     );
   }
@@ -248,9 +296,19 @@ class BillingPage extends ConsumerWidget {
         children: [
           Icon(icon, size: 56, color: AppColors.success.withOpacity(0.6)),
           const SizedBox(height: 16),
-          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(subtitle, style: const TextStyle(color: AppColors.textSecondary)),
+          Text(
+            subtitle,
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
         ],
       ),
     );

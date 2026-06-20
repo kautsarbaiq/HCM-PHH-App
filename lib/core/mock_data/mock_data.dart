@@ -3,21 +3,24 @@ class MockData {
     {
       'id': '1',
       'title': 'Pool Maintenance',
-      'description': 'The main swimming pool will be closed for regular maintenance this Thursday from 8 AM to 2 PM.',
+      'description':
+          'The main swimming pool will be closed for regular maintenance this Thursday from 8 AM to 2 PM.',
       'date': 'Oct 24, 2026',
       'isUrgent': false,
     },
     {
       'id': '2',
       'title': 'Elevator B Out of Service',
-      'description': 'Elevator B in the North Wing is currently undergoing repairs. Please use Elevator A.',
+      'description':
+          'Elevator B in the North Wing is currently undergoing repairs. Please use Elevator A.',
       'date': 'Oct 23, 2026',
       'isUrgent': true,
     },
     {
       'id': '3',
       'title': 'Community BBQ',
-      'description': 'Join us for the monthly community BBQ this Saturday at the rooftop garden!',
+      'description':
+          'Join us for the monthly community BBQ this Saturday at the rooftop garden!',
       'date': 'Oct 20, 2026',
       'isUrgent': false,
     },

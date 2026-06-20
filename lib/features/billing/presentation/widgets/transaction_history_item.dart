@@ -28,9 +28,7 @@ class TransactionHistoryItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.glassBorder),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.glassBorder)),
       ),
       child: Row(
         children: [
@@ -93,7 +91,9 @@ class TransactionHistoryItem extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    isSuccess ? PhosphorIconsFill.checkCircle : PhosphorIconsFill.warningCircle,
+                    isSuccess
+                        ? PhosphorIconsFill.checkCircle
+                        : PhosphorIconsFill.warningCircle,
                     color: isSuccess ? AppColors.primaryBlue : AppColors.error,
                     size: 14,
                   ),
@@ -103,7 +103,9 @@ class TransactionHistoryItem extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: isSuccess ? AppColors.primaryBlue : AppColors.error,
+                      color: isSuccess
+                          ? AppColors.primaryBlue
+                          : AppColors.error,
                     ),
                   ),
                 ],

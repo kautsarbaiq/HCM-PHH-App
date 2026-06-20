@@ -65,8 +65,12 @@ class Visitor {
       visitorPhotoUrl: json['visitor_photo_url'] as String?,
       vehiclePhotoUrl: json['vehicle_photo_url'] as String?,
       licensePhotoUrl: json['license_photo_url'] as String?,
-      house: json['houses'] != null ? House.fromJson(json['houses'] as Map<String, dynamic>) : null,
-      creator: json['profiles'] != null ? Profile.fromJson(json['profiles'] as Map<String, dynamic>) : null,
+      house: json['houses'] != null
+          ? House.fromJson(json['houses'] as Map<String, dynamic>)
+          : null,
+      creator: json['profiles'] != null
+          ? Profile.fromJson(json['profiles'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -104,7 +108,7 @@ class VisitorRepository {
         .from('visitors')
         .select('*, houses(*), profiles!visitors_created_by_fkey(*)')
         .order('created_at', ascending: false);
-    
+
     return (response as List).map((json) => Visitor.fromJson(json)).toList();
   }
 
@@ -114,7 +118,7 @@ class VisitorRepository {
         .select('*, houses(*), profiles!visitors_created_by_fkey(*)')
         .eq('house_id', houseId)
         .order('created_at', ascending: false);
-    
+
     return (response as List).map((json) => Visitor.fromJson(json)).toList();
   }
 
@@ -124,7 +128,7 @@ class VisitorRepository {
         .insert(visitor.toJson())
         .select('*, houses(*), profiles!visitors_created_by_fkey(*)')
         .single();
-        
+
     return Visitor.fromJson(response);
   }
 
@@ -161,7 +165,7 @@ class VisitorRepository {
           .select('*, houses(*), profiles!visitors_created_by_fkey(*)')
           .eq('qr_token', token)
           .single();
-          
+
       return Visitor.fromJson(response);
     } catch (e) {
       return null;

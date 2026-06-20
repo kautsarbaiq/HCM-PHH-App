@@ -67,7 +67,9 @@ class DocumentRepository {
         .from('documents')
         .select()
         .order('created_at', ascending: false);
-    return (response as List).map((json) => AppDocument.fromJson(json)).toList();
+    return (response as List)
+        .map((json) => AppDocument.fromJson(json))
+        .toList();
   }
 
   /// The current resident's personal documents (RLS scopes to user_id = auth.uid()).
@@ -76,6 +78,8 @@ class DocumentRepository {
         .from('resident_documents')
         .select()
         .order('created_at', ascending: true);
-    return (response as List).map((json) => ResidentDocument.fromJson(json)).toList();
+    return (response as List)
+        .map((json) => ResidentDocument.fromJson(json))
+        .toList();
   }
 }

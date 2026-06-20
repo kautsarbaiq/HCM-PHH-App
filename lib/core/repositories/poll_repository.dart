@@ -62,9 +62,9 @@ class PollRepository {
   /// `submit_poll_vote(p_poll_id, p_option_index)` RPC which atomically appends
   /// the voter and increments the option's vote count (see supabase_realize.sql).
   Future<void> submitVote(String pollId, int optionIndex) async {
-    await _supabase.rpc('submit_poll_vote', params: {
-      'p_poll_id': pollId,
-      'p_option_index': optionIndex,
-    });
+    await _supabase.rpc(
+      'submit_poll_vote',
+      params: {'p_poll_id': pollId, 'p_option_index': optionIndex},
+    );
   }
 }

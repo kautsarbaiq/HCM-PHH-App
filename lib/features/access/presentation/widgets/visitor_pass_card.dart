@@ -74,7 +74,10 @@ class VisitorPassCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: badge.color.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -138,10 +141,7 @@ class VisitorPassCard extends StatelessWidget {
           const SizedBox(height: 4),
           const Text(
             'Scan this QR code at the main gate',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
           ),
         ],
       ),

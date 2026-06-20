@@ -66,7 +66,10 @@ class BillCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: isUnpaid
                       ? AppColors.error.withOpacity(0.15)
@@ -141,7 +144,7 @@ class BillCard extends StatelessWidget {
               height: 48,
               backgroundColor: AppColors.primaryBlue,
             ),
-          ]
+          ],
         ],
       ),
     );

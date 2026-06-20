@@ -41,6 +41,8 @@ class ContactRepository {
         .from('emergency_contacts')
         .select()
         .order('sort_order', ascending: true);
-    return (response as List).map((json) => EmergencyContact.fromJson(json)).toList();
+    return (response as List)
+        .map((json) => EmergencyContact.fromJson(json))
+        .toList();
   }
 }

@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/repositories/admin_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
+import '../../../../theme/app_colors.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/section_header.dart';
+import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/app_states.dart';
 import 'houses_admin_page.dart'; // to get adminHousesProvider
 
 class ResidentsAdminPage extends ConsumerStatefulWidget {
@@ -17,8 +22,12 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
   List<Profile> _filterResidents(List<Profile> residents) {
     if (_searchQuery.isEmpty) return residents;
     return residents.where((resident) {
-      final matchesName = resident.fullName.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesEmail = resident.email?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false;
+      final matchesName = resident.fullName.toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      );
+      final matchesEmail =
+          resident.email?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+          false;
       return matchesName || matchesEmail;
     }).toList();
   }
@@ -42,15 +51,20 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Row(
             children: [
-              const Icon(Icons.person, color: Color(0xFF4318FF)),
+              const Icon(Icons.person, color: AppColors.brand),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   resident.fullName,
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             ],
@@ -63,14 +77,21 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
                 _buildDetailItem('House / Unit', _houseLabel(resident.houseId)),
                 _buildDetailItem('Email Address', resident.email ?? '-'),
                 _buildDetailItem('Phone Number', resident.phone ?? '-'),
-                _buildDetailItem('Account Status', resident.status, isStatus: true),
+                _buildDetailItem(
+                  'Account Status',
+                  resident.status,
+                  isStatus: true,
+                ),
               ],
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Close', style: TextStyle(color: Color(0xFF4318FF))),
+              child: const Text(
+                'Close',
+                style: TextStyle(color: AppColors.brand),
+              ),
             ),
           ],
         );
@@ -84,28 +105,27 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
+          ),
           const SizedBox(height: 4),
           if (isStatus)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: (value == 'active' ? const Color(0xFF05CD99) : Colors.orange).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                value.toUpperCase(),
-                style: TextStyle(
-                  color: value == 'active' ? const Color(0xFF05CD99) : Colors.orange,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
+            StatusPill(
+              label: value.toUpperCase(),
+              color: value == 'active' ? AppColors.success : AppColors.warning,
             )
           else
             Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674), fontSize: 16),
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                fontSize: 16,
+              ),
             ),
         ],
       ),
@@ -131,31 +151,36 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header
-        const Text(
-          'Residents Management',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2B3674),
-          ),
+        const SectionHeader(
+          title: 'Residents Management',
+          subtitle: 'Manage residents, houses and account status',
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
 
         // Info banner: residents self-register, so there is no manual "add".
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFF4318FF).withOpacity(0.06),
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.brand.withOpacity(0.06),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.brand.withOpacity(0.12)),
           ),
           child: const Row(
             children: [
-              Icon(Icons.info_outline, color: Color(0xFF4318FF), size: 20),
+              Icon(
+                Icons.info_outline_rounded,
+                color: AppColors.brand,
+                size: 20,
+              ),
               SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Residents register through the app directly. Use the edit action to assign a house or change status.',
-                  style: TextStyle(color: Color(0xFF2B3674), fontSize: 13),
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
                 ),
               ),
             ],
@@ -164,15 +189,9 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
         const SizedBox(height: 16),
 
         // Search Bar
-        Container(
+        PremiumCard(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
-            ],
-          ),
+          radius: 16,
           child: TextField(
             onChanged: (val) {
               setState(() {
@@ -181,8 +200,9 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
             },
             decoration: const InputDecoration(
               hintText: 'Search residents by name or email...',
+              hintStyle: TextStyle(color: AppColors.textSecondary),
               border: InputBorder.none,
-              icon: Icon(Icons.search, color: Color(0xFFA3AED0)),
+              icon: Icon(Icons.search_rounded, color: AppColors.textSecondary),
             ),
           ),
         ),
@@ -190,25 +210,22 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
 
         // Residents Table
         Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
-              ],
-            ),
+          child: PremiumCard(
+            padding: EdgeInsets.zero,
+            radius: 22,
             child: residentsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('Error: $err')),
+              error: (err, stack) => AppErrorState(
+                message: '$err',
+                onRetry: () => ref.invalidate(adminResidentsProvider),
+              ),
               data: (residentsList) {
                 final filtered = _filterResidents(residentsList);
                 if (filtered.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No residents found.',
-                      style: TextStyle(color: Color(0xFFA3AED0), fontSize: 16),
-                    ),
+                  return const AppEmptyState(
+                    icon: Icons.people_alt_rounded,
+                    title: 'No residents found',
+                    message: 'Residents will appear here once they register.',
                   );
                 }
 
@@ -220,13 +237,17 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
                         padding: const EdgeInsets.all(16),
                         itemCount: filtered.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) => _buildResidentMobileCard(filtered[index]),
+                        itemBuilder: (context, index) =>
+                            _buildResidentMobileCard(filtered[index]),
                       );
                     }
                     return ListView.separated(
                       padding: const EdgeInsets.all(16),
                       itemCount: filtered.length,
-                      separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFF4F7FE)),
+                      separatorBuilder: (context, index) => const Divider(
+                        height: 1,
+                        color: AppColors.surfaceTint,
+                      ),
                       itemBuilder: (context, index) {
                         final resident = filtered[index];
                         return _buildResidentCard(resident);
@@ -243,15 +264,17 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
   }
 
   Widget _buildResidentCard(Profile resident) {
+    final isActive = resident.status == 'active';
     return InkWell(
       onTap: () => _showDetails(resident),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0),
         child: Row(
           children: [
-            CircleAvatar(
-              backgroundColor: const Color(0xFF4318FF).withOpacity(0.1),
-              child: const Icon(Icons.person, color: Color(0xFF4318FF)),
+            const GradientIconBadge(
+              icon: Icons.person_rounded,
+              gradient: AppColors.brandGradient,
+              size: 46,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -260,12 +283,19 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
                 children: [
                   Text(
                     resident.fullName,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2B3674)),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     resident.email ?? 'No email',
-                    style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
@@ -279,30 +309,27 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
                     textAlign: TextAlign.right,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674), fontSize: 13),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      fontSize: 13,
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: (resident.status == 'active' ? const Color(0xFF05CD99) : Colors.orange).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      resident.status.toUpperCase(),
-                      style: TextStyle(
-                        color: resident.status == 'active' ? const Color(0xFF05CD99) : Colors.orange,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  const SizedBox(height: 6),
+                  StatusPill(
+                    label: resident.status.toUpperCase(),
+                    color: isActive ? AppColors.success : AppColors.warning,
+                    dense: true,
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 8),
             IconButton(
-              icon: const Icon(Icons.edit, color: Color(0xFFA3AED0)),
+              icon: const Icon(
+                Icons.edit_rounded,
+                color: AppColors.textSecondary,
+              ),
               onPressed: () => _showForm(resident),
             ),
           ],
@@ -314,55 +341,79 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
   // Compact, stacked card used for the narrow-phone residents layout.
   Widget _buildResidentMobileCard(Profile resident) {
     final isActive = resident.status == 'active';
-    final statusColor = isActive ? const Color(0xFF05CD99) : Colors.orange;
     final contact = (resident.email != null && resident.email!.isNotEmpty)
         ? resident.email!
-        : (resident.phone != null && resident.phone!.isNotEmpty ? resident.phone! : 'No contact');
-    return Container(
+        : (resident.phone != null && resident.phone!.isNotEmpty
+              ? resident.phone!
+              : 'No contact');
+    return PremiumCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE0E5F2)),
-      ),
+      radius: 18,
+      onTap: () => _showDetails(resident),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
+              const GradientIconBadge(
+                icon: Icons.person_rounded,
+                gradient: AppColors.brandGradient,
+                size: 42,
+                iconSize: 20,
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   resident.fullName,
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674), fontSize: 15),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                  ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  resident.status.toUpperCase(),
-                  style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 11),
-                ),
+              StatusPill(
+                label: resident.status.toUpperCase(),
+                color: isActive ? AppColors.success : AppColors.warning,
+                dense: true,
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(contact, style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13)),
-          Text('House: ${_houseLabel(resident.houseId)}', style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13)),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
+          Text(
+            contact,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'House: ${_houseLabel(resident.houseId)}',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               IconButton(
-                icon: const Icon(Icons.visibility, color: Color(0xFF4318FF), size: 20),
+                icon: const Icon(
+                  Icons.visibility_rounded,
+                  color: AppColors.brand,
+                  size: 20,
+                ),
                 onPressed: () => _showDetails(resident),
                 tooltip: 'View Details',
               ),
               IconButton(
-                icon: const Icon(Icons.edit, color: Color(0xFFA3AED0), size: 20),
+                icon: const Icon(
+                  Icons.edit_rounded,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
                 onPressed: () => _showForm(resident),
                 tooltip: 'Edit',
               ),
@@ -379,7 +430,8 @@ class _ResidentEditDialog extends ConsumerStatefulWidget {
   const _ResidentEditDialog({required this.resident});
 
   @override
-  ConsumerState<_ResidentEditDialog> createState() => _ResidentEditDialogState();
+  ConsumerState<_ResidentEditDialog> createState() =>
+      _ResidentEditDialogState();
 }
 
 class _ResidentEditDialogState extends ConsumerState<_ResidentEditDialog> {
@@ -403,14 +455,23 @@ class _ResidentEditDialogState extends ConsumerState<_ResidentEditDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: const Text(
         'Edit Resident',
-        style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
+        style: TextStyle(
+          fontWeight: FontWeight.w800,
+          color: AppColors.textPrimary,
+        ),
       ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Assign to House', style: TextStyle(color: Color(0xFF2B3674), fontWeight: FontWeight.bold)),
+            const Text(
+              'Assign to House',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
             const SizedBox(height: 8),
             housesAsync.when(
               loading: () => const CircularProgressIndicator(),
@@ -430,7 +491,9 @@ class _ResidentEditDialogState extends ConsumerState<_ResidentEditDialog> {
                       items: houses.map((house) {
                         return DropdownMenuItem(
                           value: house.id,
-                          child: Text('${house.houseNumber} (${house.houseType})'),
+                          child: Text(
+                            '${house.houseNumber} (${house.houseType})',
+                          ),
                         );
                       }).toList(),
                       onChanged: (val) {
@@ -444,7 +507,13 @@ class _ResidentEditDialogState extends ConsumerState<_ResidentEditDialog> {
               },
             ),
             const SizedBox(height: 16),
-            const Text('Status: ', style: TextStyle(color: Color(0xFF2B3674), fontWeight: FontWeight.bold)),
+            const Text(
+              'Status: ',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -452,8 +521,8 @@ class _ResidentEditDialogState extends ConsumerState<_ResidentEditDialog> {
                 ChoiceChip(
                   label: const Text('Active'),
                   selected: _status == 'active',
-                  selectedColor: const Color(0xFF05CD99).withOpacity(0.2),
-                  checkmarkColor: const Color(0xFF05CD99),
+                  selectedColor: AppColors.success.withOpacity(0.2),
+                  checkmarkColor: AppColors.success,
                   onSelected: (val) {
                     if (val) setState(() => _status = 'active');
                   },
@@ -461,8 +530,8 @@ class _ResidentEditDialogState extends ConsumerState<_ResidentEditDialog> {
                 ChoiceChip(
                   label: const Text('Inactive'),
                   selected: _status == 'inactive',
-                  selectedColor: Colors.orange.withOpacity(0.2),
-                  checkmarkColor: Colors.orange,
+                  selectedColor: AppColors.warning.withOpacity(0.2),
+                  checkmarkColor: AppColors.warning,
                   onSelected: (val) {
                     if (val) setState(() => _status = 'inactive');
                   },
@@ -486,28 +555,45 @@ class _ResidentEditDialogState extends ConsumerState<_ResidentEditDialog> {
                   setState(() => _isLoading = true);
                   try {
                     final repo = ref.read(adminRepositoryProvider);
-                    if (_selectedHouseId != null && _selectedHouseId != widget.resident.houseId) {
-                      await repo.assignHouseToResident(widget.resident.id, _selectedHouseId!);
+                    if (_selectedHouseId != null &&
+                        _selectedHouseId != widget.resident.houseId) {
+                      await repo.assignHouseToResident(
+                        widget.resident.id,
+                        _selectedHouseId!,
+                      );
                     }
                     if (_status != widget.resident.status) {
-                      await repo.updateResidentStatus(widget.resident.id, _status);
+                      await repo.updateResidentStatus(
+                        widget.resident.id,
+                        _status,
+                      );
                     }
                     ref.invalidate(adminResidentsProvider);
                     navigator.pop();
                   } catch (e) {
                     if (mounted) {
-                      messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
+                      messenger.showSnackBar(
+                        SnackBar(content: Text('Error: $e')),
+                      );
                     }
                   } finally {
                     if (mounted) setState(() => _isLoading = false);
                   }
                 },
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4318FF),
+            backgroundColor: AppColors.brand,
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-          child: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white)) : const Text('Save Changes'),
+          child: _isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(color: Colors.white),
+                )
+              : const Text('Save Changes'),
         ),
       ],
     );

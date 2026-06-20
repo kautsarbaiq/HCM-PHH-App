@@ -30,7 +30,11 @@ class AdminRepository {
     }
   }
 
-  Future<void> createHouse(String houseNumber, String unitType, String status) async {
+  Future<void> createHouse(
+    String houseNumber,
+    String unitType,
+    String status,
+  ) async {
     try {
       await _supabase.from('houses').insert({
         'house_number': houseNumber,
@@ -42,13 +46,21 @@ class AdminRepository {
     }
   }
 
-  Future<void> updateHouse(String houseId, String houseNumber, String unitType, String status) async {
+  Future<void> updateHouse(
+    String houseId,
+    String houseNumber,
+    String unitType,
+    String status,
+  ) async {
     try {
-      await _supabase.from('houses').update({
-        'house_number': houseNumber,
-        'unit_type': unitType,
-        'status': status,
-      }).eq('id', houseId);
+      await _supabase
+          .from('houses')
+          .update({
+            'house_number': houseNumber,
+            'unit_type': unitType,
+            'status': status,
+          })
+          .eq('id', houseId);
     } catch (e) {
       throw Exception('Failed to update house');
     }
@@ -79,9 +91,10 @@ class AdminRepository {
 
   Future<void> assignHouseToResident(String residentId, String houseId) async {
     try {
-      await _supabase.from('profiles').update({
-        'house_id': houseId,
-      }).eq('id', residentId);
+      await _supabase
+          .from('profiles')
+          .update({'house_id': houseId})
+          .eq('id', residentId);
     } catch (e) {
       throw Exception('Failed to assign house');
     }
@@ -89,9 +102,10 @@ class AdminRepository {
 
   Future<void> updateResidentStatus(String residentId, String status) async {
     try {
-      await _supabase.from('profiles').update({
-        'status': status,
-      }).eq('id', residentId);
+      await _supabase
+          .from('profiles')
+          .update({'status': status})
+          .eq('id', residentId);
     } catch (e) {
       throw Exception('Failed to update resident status');
     }

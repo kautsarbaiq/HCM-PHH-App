@@ -20,20 +20,30 @@ Future<void> _dialPhone(BuildContext context, String name, String phone) async {
     final launched = await launchUrl(uri);
     if (!launched && context.mounted) {
       messenger.showSnackBar(
-        SnackBar(content: Text('Could not open dialer for $name.'), backgroundColor: AppColors.error),
+        SnackBar(
+          content: Text('Could not open dialer for $name.'),
+          backgroundColor: AppColors.error,
+        ),
       );
     }
   } catch (_) {
     if (context.mounted) {
       messenger.showSnackBar(
-        SnackBar(content: Text('Could not open dialer for $name.'), backgroundColor: AppColors.error),
+        SnackBar(
+          content: Text('Could not open dialer for $name.'),
+          backgroundColor: AppColors.error,
+        ),
       );
     }
   }
 }
 
 String initialsOf(String name) {
-  final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+  final parts = name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((p) => p.isNotEmpty)
+      .toList();
   if (parts.isEmpty) return '?';
   if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
   return (parts[0][0] + parts[1][0]).toUpperCase();
@@ -51,17 +61,53 @@ class CommitteePage extends ConsumerWidget {
           SliverAppBar(
             backgroundColor: AppColors.backgroundGrey,
             pinned: true,
-            leading: IconButton(icon: const Icon(PhosphorIconsRegular.caretLeft), onPressed: () => context.pop()),
-            title: const Text('Committee', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+            leading: IconButton(
+              icon: const Icon(PhosphorIconsRegular.caretLeft),
+              onPressed: () => context.pop(),
+            ),
+            title: const Text(
+              'Committee',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           SliverPadding(
             padding: const EdgeInsets.all(24),
             sliver: membersAsync.when(
-              loading: () => const SliverToBoxAdapter(child: Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))),
-              error: (e, _) => SliverToBoxAdapter(child: Center(child: Padding(padding: const EdgeInsets.all(40), child: Text('Error: $e', style: const TextStyle(color: AppColors.textSecondary))))),
+              loading: () => const SliverToBoxAdapter(
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(40),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              ),
+              error: (e, _) => SliverToBoxAdapter(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: Text(
+                      'Error: $e',
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ),
+                ),
+              ),
               data: (members) {
                 if (members.isEmpty) {
-                  return const SliverToBoxAdapter(child: Center(child: Padding(padding: EdgeInsets.all(40), child: Text('No committee members listed.', style: TextStyle(color: AppColors.textSecondary)))));
+                  return const SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40),
+                        child: Text(
+                          'No committee members listed.',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ),
+                  );
                 }
                 return SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
@@ -70,28 +116,88 @@ class CommitteePage extends ConsumerWidget {
                       padding: const EdgeInsets.only(bottom: 16),
                       child: GlassCard(
                         padding: const EdgeInsets.all(20),
-                        child: Row(children: [
-                          Container(
-                            width: 52, height: 52,
-                            decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.12), shape: BoxShape.circle),
-                            child: Center(child: Text(initialsOf(m.fullName), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryBlue))),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(m.fullName, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                            const SizedBox(height: 2),
-                            Text(m.position ?? 'Committee', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primaryBlue)),
-                            if (m.email != null && m.email!.isNotEmpty) Text(m.email!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                          ])),
-                          if (m.phone != null && m.phone!.isNotEmpty) ...[
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: () => _dialPhone(context, m.fullName, m.phone!),
-                              child: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), shape: BoxShape.circle),
-                                  child: const Icon(PhosphorIconsRegular.phone, color: AppColors.primaryBlue, size: 20)),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryBlue.withOpacity(0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  initialsOf(m.fullName),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primaryBlue,
+                                  ),
+                                ),
+                              ),
                             ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    m.fullName,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    m.position ?? 'Committee',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.primaryBlue,
+                                    ),
+                                  ),
+                                  if (m.email != null && m.email!.isNotEmpty)
+                                    Text(
+                                      m.email!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            if (m.phone != null && m.phone!.isNotEmpty) ...[
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () =>
+                                    _dialPhone(context, m.fullName, m.phone!),
+                                child: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryBlue.withOpacity(
+                                      0.1,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    PhosphorIconsRegular.phone,
+                                    color: AppColors.primaryBlue,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
-                        ]),
+                        ),
                       ),
                     );
                   }, childCount: members.length),

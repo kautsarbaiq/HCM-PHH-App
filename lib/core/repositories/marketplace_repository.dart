@@ -45,6 +45,8 @@ class MarketplaceRepository {
         .from('marketplace_services')
         .select()
         .order('rating', ascending: false);
-    return (response as List).map((json) => MarketService.fromJson(json)).toList();
+    return (response as List)
+        .map((json) => MarketService.fromJson(json))
+        .toList();
   }
 }

@@ -36,7 +36,8 @@ class EFormPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final formsAsync = ref.watch(eFormsProvider);
-    final submitted = ref.watch(mySubmittedFormsProvider).valueOrNull ?? <String>{};
+    final submitted =
+        ref.watch(mySubmittedFormsProvider).valueOrNull ?? <String>{};
 
     return Scaffold(
       body: CustomScrollView(
@@ -44,17 +45,53 @@ class EFormPage extends ConsumerWidget {
           SliverAppBar(
             backgroundColor: AppColors.backgroundGrey,
             pinned: true,
-            leading: IconButton(icon: const Icon(PhosphorIconsRegular.caretLeft), onPressed: () => context.pop()),
-            title: const Text('E-Form', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+            leading: IconButton(
+              icon: const Icon(PhosphorIconsRegular.caretLeft),
+              onPressed: () => context.pop(),
+            ),
+            title: const Text(
+              'E-Form',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           SliverPadding(
             padding: const EdgeInsets.all(24),
             sliver: formsAsync.when(
-              loading: () => const SliverToBoxAdapter(child: Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))),
-              error: (e, _) => SliverToBoxAdapter(child: Center(child: Padding(padding: const EdgeInsets.all(40), child: Text('Error: $e', style: const TextStyle(color: AppColors.textSecondary))))),
+              loading: () => const SliverToBoxAdapter(
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(40),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              ),
+              error: (e, _) => SliverToBoxAdapter(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: Text(
+                      'Error: $e',
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ),
+                ),
+              ),
               data: (forms) {
                 if (forms.isEmpty) {
-                  return const SliverToBoxAdapter(child: Center(child: Padding(padding: EdgeInsets.all(40), child: Text('No forms available.', style: TextStyle(color: AppColors.textSecondary)))));
+                  return const SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40),
+                        child: Text(
+                          'No forms available.',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ),
+                  );
                 }
                 return SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
@@ -64,48 +101,108 @@ class EFormPage extends ConsumerWidget {
                       padding: const EdgeInsets.only(bottom: 16),
                       child: GlassCard(
                         padding: const EdgeInsets.all(20),
-                        child: Row(children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(color: AppColors.backgroundGrey, borderRadius: BorderRadius.circular(16)),
-                            child: Icon(_formIcon(form.category), color: AppColors.deepSlate, size: 24),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(form.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                            if (form.description != null) ...[
-                              const SizedBox(height: 4),
-                              Text(form.description!, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-                            ],
-                          ])),
-                          const SizedBox(width: 12),
-                          if (isSubmitted)
+                        child: Row(
+                          children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
-                              child: const Text('Submitted', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
-                            )
-                          else
-                            ElevatedButton(
-                              onPressed: () async {
-                                final messenger = ScaffoldMessenger.of(context);
-                                try {
-                                  await ref.read(formRepositoryProvider).submitForm(form.id);
-                                  ref.invalidate(mySubmittedFormsProvider);
-                                  messenger.showSnackBar(SnackBar(content: Text('"${form.title}" submitted.'), backgroundColor: AppColors.success));
-                                } catch (e) {
-                                  messenger.showSnackBar(SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error));
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primaryBlue,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.backgroundGrey,
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                              child: const Text('Apply'),
+                              child: Icon(
+                                _formIcon(form.category),
+                                color: AppColors.deepSlate,
+                                size: 24,
+                              ),
                             ),
-                        ]),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    form.title,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  if (form.description != null) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      form.description!,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            if (isSubmitted)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryBlue.withOpacity(
+                                    0.15,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  'Submitted',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primaryBlue,
+                                  ),
+                                ),
+                              )
+                            else
+                              ElevatedButton(
+                                onPressed: () async {
+                                  final messenger = ScaffoldMessenger.of(
+                                    context,
+                                  );
+                                  try {
+                                    await ref
+                                        .read(formRepositoryProvider)
+                                        .submitForm(form.id);
+                                    ref.invalidate(mySubmittedFormsProvider);
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          '"${form.title}" submitted.',
+                                        ),
+                                        backgroundColor: AppColors.success,
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text('Failed: $e'),
+                                        backgroundColor: AppColors.error,
+                                      ),
+                                    );
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primaryBlue,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: const Text('Apply'),
+                              ),
+                          ],
+                        ),
                       ),
                     );
                   }, childCount: forms.length),

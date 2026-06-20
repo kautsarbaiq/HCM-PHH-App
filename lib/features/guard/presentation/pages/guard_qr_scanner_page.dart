@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/repositories/visitor_repository.dart';
+import '../../../../core/widgets/status_pill.dart';
+import '../../../../theme/app_colors.dart';
 import 'guard_visitors_page.dart'; // For guardVisitorsProvider
 
 class GuardQrScannerPage extends ConsumerStatefulWidget {
@@ -15,7 +17,8 @@ class GuardQrScannerPage extends ConsumerStatefulWidget {
   ConsumerState<GuardQrScannerPage> createState() => _GuardQrScannerPageState();
 }
 
-class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage> with SingleTickerProviderStateMixin {
+class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage>
+    with SingleTickerProviderStateMixin {
   late MobileScannerController _scannerController;
   late AnimationController _animationController;
   bool _isProcessing = false;
@@ -93,12 +96,16 @@ class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage> with Si
       if (visitor != null) {
         await _showVisitorDetails(visitor);
       } else {
-        await _showErrorDialog('Invalid QR Code. No visitor found with this token.');
+        await _showErrorDialog(
+          'Invalid QR Code. No visitor found with this token.',
+        );
       }
     } catch (e) {
       if (!mounted) return;
       _dismissLoadingDialog();
-      await _showErrorDialog('An error occurred while verifying the QR code: $e');
+      await _showErrorDialog(
+        'An error occurred while verifying the QR code: $e',
+      );
     } finally {
       // Only re-enable scanning once any result dialog is dismissed.
       if (mounted) {
@@ -132,7 +139,9 @@ class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage> with Si
           return;
         } else {
           _dismissLoadingDialog();
-          await _showErrorDialog('Could not read QR code from the selected image.');
+          await _showErrorDialog(
+            'Could not read QR code from the selected image.',
+          );
         }
       } else {
         _dismissLoadingDialog();
@@ -152,12 +161,47 @@ class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage> with Si
       context: context,
       useRootNavigator: true,
       builder: (context) => AlertDialog(
-        title: const Text('Scan Failed', style: TextStyle(color: Colors.red)),
-        content: Text(message),
+        backgroundColor: AppColors.primaryWhite,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        title: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                PhosphorIconsFill.warningCircle,
+                color: AppColors.error,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Flexible(
+              child: Text(
+                'Scan Failed',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(color: AppColors.textSecondary, height: 1.4),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            style: TextButton.styleFrom(foregroundColor: AppColors.brand),
+            child: const Text(
+              'OK',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
           ),
         ],
       ),
@@ -174,12 +218,40 @@ class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage> with Si
       context: context,
       useRootNavigator: true,
       builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: AppColors.primaryWhite,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: Row(
-          children: const [
-            Icon(PhosphorIconsFill.checkCircle, color: Color(0xFF10B981), size: 32),
-            SizedBox(width: 12),
-            Flexible(child: Text('Scan Successful', style: TextStyle(color: Color(0xFF2B3674)))),
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: AppColors.mintGradient,
+                borderRadius: BorderRadius.circular(13),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.accentMint.withOpacity(0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                PhosphorIconsFill.checkCircle,
+                color: Colors.white,
+                size: 26,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Flexible(
+              child: Text(
+                'Scan Successful',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
           ],
         ),
         content: SingleChildScrollView(
@@ -192,23 +264,61 @@ class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage> with Si
               _buildDetailRow('Purpose', visitor.purpose),
               _buildDetailRow('Date', dateStr),
               _buildDetailRow('Plate No.', visitor.vehiclePlate ?? '-'),
-              _buildDetailRow('Status', visitor.status.toUpperCase()),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      width: 100,
+                      child: Text(
+                        'Status',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    StatusPill(
+                      label: visitor.status.toUpperCase(),
+                      color: _scanStatusColor(visitor.status),
+                      dense: true,
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Close'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.textSecondary,
+            ),
+            child: const Text(
+              'Close',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
           ),
           if (visitor.status == 'expected')
-            _CheckInButton(
-              visitorId: visitor.id,
-              dialogContext: dialogContext,
-            ),
+            _CheckInButton(visitorId: visitor.id, dialogContext: dialogContext),
         ],
       ),
     );
+  }
+
+  Color _scanStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'expected':
+        return AppColors.warning;
+      case 'checked_in':
+        return AppColors.success;
+      case 'checked_out':
+        return AppColors.textSecondary;
+      default:
+        return AppColors.info;
+    }
   }
 
   Widget _buildDetailRow(String label, String value) {
@@ -221,13 +331,19 @@ class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage> with Si
             width: 100,
             child: Text(
               label,
-              style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+              ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(color: Color(0xFF2B3674), fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -244,7 +360,8 @@ class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage> with Si
             builder: (context, constraints) {
               // Size the reticle from the available area so it scales on small
               // phones and tablets alike.
-              final reticleSize = math.min(constraints.maxWidth, constraints.maxHeight) * 0.65;
+              final reticleSize =
+                  math.min(constraints.maxWidth, constraints.maxHeight) * 0.65;
               return Stack(
                 children: [
                   MobileScanner(
@@ -262,14 +379,33 @@ class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage> with Si
                             width: reticleSize,
                             height: reticleSize,
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.5),
+                                width: 2,
+                              ),
                               borderRadius: BorderRadius.circular(20),
                             ),
                           ),
-                          Positioned(top: 0, left: 0, child: _buildCorner(top: true, left: true)),
-                          Positioned(top: 0, right: 0, child: _buildCorner(top: true, left: false)),
-                          Positioned(bottom: 0, left: 0, child: _buildCorner(top: false, left: true)),
-                          Positioned(bottom: 0, right: 0, child: _buildCorner(top: false, left: false)),
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            child: _buildCorner(top: true, left: true),
+                          ),
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: _buildCorner(top: true, left: false),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            child: _buildCorner(top: false, left: true),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: _buildCorner(top: false, left: false),
+                          ),
                           // Scanning line animation
                           AnimatedBuilder(
                             animation: _animationController,
@@ -284,10 +420,12 @@ class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage> with Si
                                     color: const Color(0xFF10B981),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFF10B981).withOpacity(0.5),
+                                        color: const Color(
+                                          0xFF10B981,
+                                        ).withOpacity(0.5),
                                         blurRadius: 10,
                                         spreadRadius: 2,
-                                      )
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -299,32 +437,70 @@ class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage> with Si
                     ),
                   ),
                   Positioned(
-                    bottom: 24,
+                    bottom: 28,
                     left: 16,
                     right: 16,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          'Position the QR code within the frame',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.35),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: const Text(
+                            'Position the QR code within the frame',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: _isProcessing ? null : _scanFromGallery,
-                          icon: const Icon(PhosphorIconsRegular.image),
-                          label: const Text('Scan from Gallery'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: const Color(0xFF2B3674),
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        const SizedBox(height: 18),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: AppColors.mintGradient,
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.accentMint.withOpacity(0.45),
+                                blurRadius: 18,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: _isProcessing ? null : _scanFromGallery,
+                            icon: const Icon(
+                              PhosphorIconsRegular.image,
+                              size: 20,
+                            ),
+                            label: const Text(
+                              'Scan from Gallery',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 26,
+                                vertical: 13,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              elevation: 0,
+                            ),
                           ),
                         ),
                       ],
@@ -332,19 +508,20 @@ class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage> with Si
                   ),
                   // Camera controls overlay
                   Positioned(
-                    top: 12,
-                    right: 12,
+                    top: 14,
+                    right: 14,
                     child: Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.highlight, color: Colors.white),
-                          onPressed: () => _scannerController.toggleTorch(),
+                        _overlayControl(
+                          icon: Icons.highlight,
                           tooltip: 'Toggle torch',
+                          onPressed: () => _scannerController.toggleTorch(),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.cameraswitch, color: Colors.white),
-                          onPressed: () => _scannerController.switchCamera(),
+                        const SizedBox(width: 10),
+                        _overlayControl(
+                          icon: Icons.cameraswitch,
                           tooltip: 'Switch camera',
+                          onPressed: () => _scannerController.switchCamera(),
                         ),
                       ],
                     ),
@@ -358,16 +535,42 @@ class _GuardQrScannerPageState extends ConsumerState<GuardQrScannerPage> with Si
     );
   }
 
+  Widget _overlayControl({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.35),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.white),
+        onPressed: onPressed,
+        tooltip: tooltip,
+      ),
+    );
+  }
+
   Widget _buildCorner({required bool top, required bool left}) {
     return Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
         border: Border(
-          top: top ? const BorderSide(color: Color(0xFF10B981), width: 4) : BorderSide.none,
-          left: left ? const BorderSide(color: Color(0xFF10B981), width: 4) : BorderSide.none,
-          right: !left ? const BorderSide(color: Color(0xFF10B981), width: 4) : BorderSide.none,
-          bottom: !top ? const BorderSide(color: Color(0xFF10B981), width: 4) : BorderSide.none,
+          top: top
+              ? const BorderSide(color: Color(0xFF10B981), width: 4)
+              : BorderSide.none,
+          left: left
+              ? const BorderSide(color: Color(0xFF10B981), width: 4)
+              : BorderSide.none,
+          right: !left
+              ? const BorderSide(color: Color(0xFF10B981), width: 4)
+              : BorderSide.none,
+          bottom: !top
+              ? const BorderSide(color: Color(0xFF10B981), width: 4)
+              : BorderSide.none,
         ),
         borderRadius: BorderRadius.only(
           topLeft: top && left ? const Radius.circular(20) : Radius.zero,
@@ -400,33 +603,65 @@ class _CheckInButtonState extends ConsumerState<_CheckInButton> {
     setState(() => _busy = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await ref.read(guardVisitorsProvider.notifier).updateStatus(widget.visitorId, 'checked_in');
+      await ref
+          .read(guardVisitorsProvider.notifier)
+          .updateStatus(widget.visitorId, 'checked_in');
       if (widget.dialogContext.mounted) {
         Navigator.pop(widget.dialogContext);
       }
       messenger.showSnackBar(
-        const SnackBar(content: Text('Visitor checked in successfully!'), backgroundColor: Colors.green),
+        const SnackBar(
+          content: Text('Visitor checked in successfully!'),
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
       if (mounted) setState(() => _busy = false);
       messenger.showSnackBar(
-        SnackBar(content: Text('Check-in failed: $e'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Check-in failed: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
-      onPressed: _busy ? null : _checkIn,
-      child: _busy
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-            )
-          : const Text('Check In Visitor', style: TextStyle(color: Colors.white)),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: _busy ? null : AppColors.mintGradient,
+        color: _busy ? AppColors.textSecondary.withOpacity(0.3) : null,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          disabledBackgroundColor: Colors.transparent,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        onPressed: _busy ? null : _checkIn,
+        child: _busy
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Text(
+                'Check In Visitor',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+      ),
     );
   }
 }

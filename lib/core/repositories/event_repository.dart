@@ -55,7 +55,9 @@ class EventRepository {
         .select()
         .order('event_date', ascending: true);
 
-    return (response as List).map((json) => CommunityEvent.fromJson(json)).toList();
+    return (response as List)
+        .map((json) => CommunityEvent.fromJson(json))
+        .toList();
   }
 
   /// Toggle the current user's RSVP for an event. Backed by the

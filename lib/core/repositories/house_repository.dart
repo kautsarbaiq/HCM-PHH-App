@@ -8,7 +8,7 @@ class House {
   final String houseType;
   final String status;
   final String? ownerId;
-  
+
   // Joined fields
   final Profile? owner;
 
@@ -28,8 +28,8 @@ class House {
       houseType: json['house_type'] as String,
       status: json['status'] as String,
       ownerId: json['owner_id'] as String?,
-      owner: json['profiles'] != null 
-          ? Profile.fromJson(json['profiles'] as Map<String, dynamic>) 
+      owner: json['profiles'] != null
+          ? Profile.fromJson(json['profiles'] as Map<String, dynamic>)
           : null,
     );
   }
@@ -58,7 +58,7 @@ class HouseRepository {
         .from('houses')
         .select('*, profiles!houses_owner_id_fkey(*)')
         .order('house_number');
-    
+
     return (response as List).map((json) => House.fromJson(json)).toList();
   }
 
@@ -68,7 +68,7 @@ class HouseRepository {
         .select('*, profiles!houses_owner_id_fkey(*)')
         .eq('id', id)
         .single();
-    
+
     return House.fromJson(response);
   }
 
@@ -78,7 +78,7 @@ class HouseRepository {
         .insert(house.toJson())
         .select()
         .single();
-        
+
     return House.fromJson(response);
   }
 
@@ -89,7 +89,7 @@ class HouseRepository {
         .eq('id', id)
         .select()
         .single();
-        
+
     return House.fromJson(response);
   }
 

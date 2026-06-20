@@ -10,7 +10,8 @@ class EmergencyBottomSheet extends ConsumerStatefulWidget {
   const EmergencyBottomSheet({super.key});
 
   @override
-  ConsumerState<EmergencyBottomSheet> createState() => _EmergencyBottomSheetState();
+  ConsumerState<EmergencyBottomSheet> createState() =>
+      _EmergencyBottomSheetState();
 }
 
 class _EmergencyBottomSheetState extends ConsumerState<EmergencyBottomSheet> {
@@ -80,7 +81,10 @@ class _EmergencyBottomSheetState extends ConsumerState<EmergencyBottomSheet> {
             color: AppColors.primaryWhite.withOpacity(0.92),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             border: Border(
-              top: BorderSide(color: AppColors.primaryWhite.withOpacity(0.5), width: 1.5),
+              top: BorderSide(
+                color: AppColors.primaryWhite.withOpacity(0.5),
+                width: 1.5,
+              ),
             ),
           ),
           child: SafeArea(
@@ -187,7 +191,12 @@ class _EmergencyBottomSheetState extends ConsumerState<EmergencyBottomSheet> {
     return GestureDetector(
       onTap: disabled
           ? null
-          : () => _trigger(type: type, title: title, subtitle: subtitle, color: color),
+          : () => _trigger(
+              type: type,
+              title: title,
+              subtitle: subtitle,
+              color: color,
+            ),
       child: Opacity(
         opacity: disabled && !isThisSending ? 0.5 : 1.0,
         child: Container(
@@ -240,9 +249,16 @@ class _EmergencyBottomSheetState extends ConsumerState<EmergencyBottomSheet> {
                   ? SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: color),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: color,
+                      ),
                     )
-                  : Icon(PhosphorIconsRegular.caretRight, color: color, size: 18),
+                  : Icon(
+                      PhosphorIconsRegular.caretRight,
+                      color: color,
+                      size: 18,
+                    ),
             ],
           ),
         ),

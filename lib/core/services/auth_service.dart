@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-final supabaseProvider = Provider<SupabaseClient>((ref) => Supabase.instance.client);
+final supabaseProvider = Provider<SupabaseClient>(
+  (ref) => Supabase.instance.client,
+);
 
 final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService(ref.read(supabaseProvider));
@@ -16,21 +18,26 @@ class AuthService {
 
   AuthService(this._supabase);
 
-  Future<AuthResponse> signInWithEmailPassword(String email, String password) async {
+  Future<AuthResponse> signInWithEmailPassword(
+    String email,
+    String password,
+  ) async {
     return await _supabase.auth.signInWithPassword(
       email: email,
       password: password,
     );
   }
 
-  Future<AuthResponse> signUpWithEmailPassword(String email, String password, String fullName, String role) async {
+  Future<AuthResponse> signUpWithEmailPassword(
+    String email,
+    String password,
+    String fullName,
+    String role,
+  ) async {
     return await _supabase.auth.signUp(
       email: email,
       password: password,
-      data: {
-        'full_name': fullName,
-        'role': role,
-      },
+      data: {'full_name': fullName, 'role': role},
     );
   }
 

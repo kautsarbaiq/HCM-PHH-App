@@ -15,18 +15,29 @@ class StorageRepository {
   Future<String> uploadAvatar(File imageFile, String userId) async {
     try {
       final fileExtension = path.extension(imageFile.path);
-      final fileName = '$userId-${DateTime.now().millisecondsSinceEpoch}$fileExtension';
+      final fileName =
+          '$userId-${DateTime.now().millisecondsSinceEpoch}$fileExtension';
       final storagePath = '$userId/$fileName';
 
       // Upload to 'avatars' bucket
-      await _supabase.storage.from('avatars').upload(storagePath, imageFile,
-          fileOptions: const FileOptions(cacheControl: '3600', upsert: true));
+      await _supabase.storage
+          .from('avatars')
+          .upload(
+            storagePath,
+            imageFile,
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+          );
 
       // Get public URL
-      final publicUrl = _supabase.storage.from('avatars').getPublicUrl(storagePath);
-      
+      final publicUrl = _supabase.storage
+          .from('avatars')
+          .getPublicUrl(storagePath);
+
       // Update profile
-      await _supabase.from('profiles').update({'avatar_url': publicUrl}).eq('id', userId);
+      await _supabase
+          .from('profiles')
+          .update({'avatar_url': publicUrl})
+          .eq('id', userId);
 
       return publicUrl;
     } catch (e) {
@@ -38,13 +49,21 @@ class StorageRepository {
   Future<String> uploadGuardEvidence(File imageFile, String visitorId) async {
     try {
       final fileExtension = path.extension(imageFile.path);
-      final fileName = '$visitorId-${DateTime.now().millisecondsSinceEpoch}$fileExtension';
+      final fileName =
+          '$visitorId-${DateTime.now().millisecondsSinceEpoch}$fileExtension';
 
       // Upload to 'guard_evidence' bucket
-      await _supabase.storage.from('guard_evidence').upload(fileName, imageFile,
-          fileOptions: const FileOptions(cacheControl: '3600', upsert: true));
+      await _supabase.storage
+          .from('guard_evidence')
+          .upload(
+            fileName,
+            imageFile,
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+          );
 
-      final publicUrl = _supabase.storage.from('guard_evidence').getPublicUrl(fileName);
+      final publicUrl = _supabase.storage
+          .from('guard_evidence')
+          .getPublicUrl(fileName);
       return publicUrl;
     } catch (e) {
       print('Error uploading evidence: $e');

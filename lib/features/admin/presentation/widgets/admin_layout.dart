@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../theme/app_colors.dart';
+
 class AdminLayout extends StatelessWidget {
   final Widget child;
 
@@ -14,25 +16,36 @@ class AdminLayout extends StatelessWidget {
     final isDesktop = MediaQuery.of(context).size.width >= 1024;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE),
+      backgroundColor: AppColors.backgroundGrey,
       drawer: isDesktop ? null : _buildSidebar(context, isDesktop: false),
       appBar: isDesktop
           ? null
           : AppBar(
               backgroundColor: Colors.white,
               elevation: 0,
-              iconTheme: const IconThemeData(color: Color(0xFF2B3674)),
-              title: const Text(
-                'PHH housing',
-                style: TextStyle(
-                  color: Color(0xFF2B3674),
-                  fontWeight: FontWeight.bold,
-                ),
+              iconTheme: const IconThemeData(color: AppColors.textPrimary),
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _logoBadge(28),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'PHH Housing',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.logout, color: Color(0xFFA3AED0)),
-                  onPressed: () async => Supabase.instance.client.auth.signOut(),
+                  icon: const Icon(
+                    Icons.logout_rounded,
+                    color: AppColors.error,
+                  ),
+                  onPressed: () async =>
+                      Supabase.instance.client.auth.signOut(),
                   tooltip: 'Logout',
                 ),
                 const SizedBox(width: 8),
@@ -49,8 +62,11 @@ class AdminLayout extends StatelessWidget {
                 if (isDesktop) _buildTopBar(context),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-                    child: child, // Removed the constrained white container so pages can define their own cards
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0,
+                      vertical: 12.0,
+                    ),
+                    child: child,
                   ),
                 ),
               ],
@@ -61,18 +77,48 @@ class AdminLayout extends StatelessWidget {
     );
   }
 
+  Widget _logoBadge(double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: AppColors.brandGradient,
+        borderRadius: BorderRadius.circular(size * 0.3),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.brand.withOpacity(0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Icon(
+        Icons.holiday_village_rounded,
+        color: Colors.white,
+        size: size * 0.6,
+      ),
+    );
+  }
+
   Widget _buildTopBar(BuildContext context) {
     final String location = GoRouterState.of(context).uri.path;
     String title = 'Dashboard';
-    if (location.contains('residents')) title = 'Residents';
-    else if (location.contains('houses')) title = 'Houses';
-    else if (location.contains('announcements')) title = 'Announcements';
-    else if (location.contains('banners')) title = 'Banners';
-    else if (location.contains('billings')) title = 'Billings';
-    else if (location.contains('visitors')) title = 'Visitors';
+    if (location.contains('residents')) {
+      title = 'Residents';
+    } else if (location.contains('houses')) {
+      title = 'Houses';
+    } else if (location.contains('announcements')) {
+      title = 'Announcements';
+    } else if (location.contains('banners')) {
+      title = 'Banners';
+    } else if (location.contains('billings')) {
+      title = 'Billings';
+    } else if (location.contains('visitors')) {
+      title = 'Visitors';
+    }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
       color: Colors.transparent,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -84,60 +130,73 @@ class AdminLayout extends StatelessWidget {
                 Text(
                   'Pages / Admin / $title',
                   style: const TextStyle(
-                    color: Color(0xFFA3AED0),
-                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   title,
                   style: const TextStyle(
-                    color: Color(0xFF2B3674),
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
                   ),
                 ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                )
+                  color: const Color(0xFF6A7BA8).withOpacity(0.10),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
               ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Color(0xFF4318FF),
-                  child: Icon(Icons.person, color: Colors.white, size: 20),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: const BoxDecoration(
+                    gradient: AppColors.brandGradient,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.person_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 const Text(
                   'Admin',
                   style: TextStyle(
-                    color: Color(0xFF2B3674),
-                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 6),
                 IconButton(
-                  icon: const Icon(Icons.logout, color: Color(0xFFA3AED0)),
-                  onPressed: () async => Supabase.instance.client.auth.signOut(),
+                  icon: const Icon(
+                    Icons.logout_rounded,
+                    color: AppColors.error,
+                  ),
+                  onPressed: () async =>
+                      Supabase.instance.client.auth.signOut(),
                   tooltip: 'Logout',
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -145,165 +204,182 @@ class AdminLayout extends StatelessWidget {
 
   Widget _buildSidebar(BuildContext context, {required bool isDesktop}) {
     final String location = GoRouterState.of(context).uri.path;
-    // On desktop keep the full sidebar; as a drawer, cap to 80% of the screen
-    // so it never swallows the whole viewport on small phones.
-    final double sidebarWidth =
-        isDesktop ? 280 : math.min(280, MediaQuery.of(context).size.width * 0.8);
+    final double sidebarWidth = isDesktop
+        ? 270
+        : math.min(280, MediaQuery.of(context).size.width * 0.82);
 
     return Container(
       width: sidebarWidth,
       color: Colors.white,
-      child: Column(
-        children: [
-          const SizedBox(height: 40),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.admin_panel_settings_rounded, color: Color(0xFF4318FF), size: 32),
-              SizedBox(width: 12),
-              Text(
-                'PHH housing',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2B3674),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 40),
-          const Divider(color: Color(0xFFF4F7FE), thickness: 2, height: 1),
-          const SizedBox(height: 20),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 28),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _SidebarItem(
-                  icon: Icons.dashboard_rounded,
-                  title: 'Dashboard',
-                  isSelected: location == '/admin/dashboard',
-                  onTap: () {
-                    context.go('/admin/dashboard');
-                    if (!isDesktop) Navigator.pop(context);
-                  },
-                ),
-                _SidebarItem(
-                  icon: Icons.people_alt_rounded,
-                  title: 'Residents',
-                  isSelected: location.startsWith('/admin/residents'),
-                  onTap: () {
-                    context.go('/admin/residents');
-                    if (!isDesktop) Navigator.pop(context);
-                  },
-                ),
-                _SidebarItem(
-                  icon: Icons.house_rounded,
-                  title: 'Houses & Units',
-                  isSelected: location.startsWith('/admin/houses'),
-                  onTap: () {
-                    context.go('/admin/houses');
-                    if (!isDesktop) Navigator.pop(context);
-                  },
-                ),
-                _SidebarItem(
-                  icon: Icons.campaign_rounded,
-                  title: 'Announcements',
-                  isSelected: location.startsWith('/admin/announcements'),
-                  onTap: () {
-                    context.go('/admin/announcements');
-                    if (!isDesktop) Navigator.pop(context);
-                  },
-                ),
-                _SidebarItem(
-                  icon: Icons.view_carousel_rounded,
-                  title: 'Banners',
-                  isSelected: location.startsWith('/admin/banners'),
-                  onTap: () {
-                    context.go('/admin/banners');
-                    if (!isDesktop) Navigator.pop(context);
-                  },
-                ),
-                _SidebarItem(
-                  icon: Icons.receipt_long_rounded,
-                  title: 'Billings',
-                  isSelected: location.startsWith('/admin/billings'),
-                  onTap: () {
-                    context.go('/admin/billings');
-                    if (!isDesktop) Navigator.pop(context);
-                  },
-                ),
-                _SidebarItem(
-                  icon: Icons.badge_rounded,
-                  title: 'Visitors',
-                  isSelected: location.startsWith('/admin/visitors'),
-                  onTap: () {
-                    context.go('/admin/visitors');
-                    if (!isDesktop) Navigator.pop(context);
-                  },
+                _logoBadge(40),
+                const SizedBox(width: 12),
+                const Text(
+                  'PHH Housing',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 28),
+            Container(height: 1, color: const Color(0xFFEEF1FA)),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                children: [
+                  _item(
+                    context,
+                    Icons.dashboard_rounded,
+                    'Dashboard',
+                    '/admin/dashboard',
+                    location == '/admin/dashboard',
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.people_alt_rounded,
+                    'Residents',
+                    '/admin/residents',
+                    location.startsWith('/admin/residents'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.house_rounded,
+                    'Houses & Units',
+                    '/admin/houses',
+                    location.startsWith('/admin/houses'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.campaign_rounded,
+                    'Announcements',
+                    '/admin/announcements',
+                    location.startsWith('/admin/announcements'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.view_carousel_rounded,
+                    'Banners',
+                    '/admin/banners',
+                    location.startsWith('/admin/banners'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.receipt_long_rounded,
+                    'Billings',
+                    '/admin/billings',
+                    location.startsWith('/admin/billings'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.badge_rounded,
+                    'Visitors',
+                    '/admin/visitors',
+                    location.startsWith('/admin/visitors'),
+                    isDesktop,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: _item(
+                context,
+                Icons.logout_rounded,
+                'Logout',
+                null,
+                false,
+                isDesktop,
+                isLogout: true,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-}
 
-class _SidebarItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _SidebarItem({
-    required this.icon,
-    required this.title,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _item(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String? path,
+    bool selected,
+    bool isDesktop, {
+    bool isLogout = false,
+  }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF4318FF).withOpacity(0.05) : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                color: isSelected ? const Color(0xFF4318FF) : const Color(0xFFA3AED0),
-                size: 24,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: isSelected ? const Color(0xFF2B3674) : const Color(0xFFA3AED0),
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    fontSize: 16,
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () async {
+            if (isLogout) {
+              await Supabase.instance.client.auth.signOut();
+              return;
+            }
+            if (path != null) {
+              context.go(path);
+              if (!isDesktop) Navigator.pop(context);
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            decoration: BoxDecoration(
+              gradient: selected ? AppColors.brandGradient : null,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: AppColors.brand.withOpacity(0.30),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 22,
+                  color: selected
+                      ? Colors.white
+                      : (isLogout ? AppColors.error : AppColors.textSecondary),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: selected
+                          ? Colors.white
+                          : (isLogout
+                                ? AppColors.error
+                                : AppColors.textPrimary),
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
-              ),
-              if (isSelected)
-                Container(
-                  width: 4,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4318FF),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

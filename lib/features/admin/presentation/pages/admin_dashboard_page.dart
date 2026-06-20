@@ -3,19 +3,48 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-typedef DashboardStats = ({int residents, int houses, int activeBillings, int todayVisitors});
+import '../../../../theme/app_colors.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/section_header.dart';
 
-final adminDashboardStatsProvider = FutureProvider.autoDispose<DashboardStats>((ref) async {
+typedef DashboardStats = ({
+  int residents,
+  int houses,
+  int activeBillings,
+  int todayVisitors,
+});
+
+final adminDashboardStatsProvider = FutureProvider.autoDispose<DashboardStats>((
+  ref,
+) async {
   final supabase = Supabase.instance.client;
   final now = DateTime.now();
-  final startOfDay = DateTime(now.year, now.month, now.day).toUtc().toIso8601String();
+  final startOfDay = DateTime(
+    now.year,
+    now.month,
+    now.day,
+  ).toUtc().toIso8601String();
 
-  final residents = await supabase.from('profiles').count(CountOption.exact).eq('role', 'resident');
+  final residents = await supabase
+      .from('profiles')
+      .count(CountOption.exact)
+      .eq('role', 'resident');
   final houses = await supabase.from('houses').count(CountOption.exact);
-  final activeBillings = await supabase.from('billings').count(CountOption.exact).eq('status', 'unpaid');
-  final todayVisitors = await supabase.from('visitors').count(CountOption.exact).gte('created_at', startOfDay);
+  final activeBillings = await supabase
+      .from('billings')
+      .count(CountOption.exact)
+      .eq('status', 'unpaid');
+  final todayVisitors = await supabase
+      .from('visitors')
+      .count(CountOption.exact)
+      .gte('created_at', startOfDay);
 
-  return (residents: residents, houses: houses, activeBillings: activeBillings, todayVisitors: todayVisitors);
+  return (
+    residents: residents,
+    houses: houses,
+    activeBillings: activeBillings,
+    todayVisitors: todayVisitors,
+  );
 });
 
 class AdminDashboardPage extends ConsumerWidget {
@@ -38,37 +67,115 @@ class AdminDashboardPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Welcome to PHH housing Dashboard',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
+          // Hero welcome banner — brand gradient with a logo badge.
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: AppColors.brandGradient,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.brand.withOpacity(0.30),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
                 ),
-              ),
-              IconButton(
-                onPressed: () => ref.invalidate(adminDashboardStatsProvider),
-                icon: isLoading
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.refresh, color: Color(0xFF4318FF)),
-                tooltip: 'Refresh stats',
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Here is an overview of the community.',
-            style: TextStyle(fontSize: 16, color: Color(0xFFA3AED0)),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.18),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: const Icon(
+                    Icons.holiday_village_rounded,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(width: 18),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Welcome to PHH Housing',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        'Here is an overview of the community.',
+                        style: TextStyle(fontSize: 14, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => ref.invalidate(adminDashboardStatsProvider),
+                  icon: isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.refresh_rounded, color: Colors.white),
+                  tooltip: 'Refresh stats',
+                ),
+              ],
+            ),
           ),
           if (hasError) ...[
-            const SizedBox(height: 12),
-            Text('Could not load stats: ${statsAsync.error}', style: const TextStyle(color: Color(0xFFEE5D50), fontSize: 13)),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.10),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    color: AppColors.error,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Could not load stats: ${statsAsync.error}',
+                      style: const TextStyle(
+                        color: AppColors.error,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
-          const SizedBox(height: 32),
+          const SizedBox(height: 28),
+          const SectionHeader(
+            title: 'Overview',
+            subtitle: 'Key community metrics at a glance',
+          ),
+          const SizedBox(height: 18),
           // Dashboard Cards — size to the available width so they fit phones.
           LayoutBuilder(
             builder: (context, constraints) {
-              const spacing = 24.0;
+              const spacing = 18.0;
               final maxW = constraints.maxWidth;
               // One per row on narrow phones, two-up on mid widths, else flow.
               double cardWidth;
@@ -83,81 +190,135 @@ class AdminDashboardPage extends ConsumerWidget {
                 spacing: spacing,
                 runSpacing: spacing,
                 children: [
-                  _buildStatCard(cardWidth, 'Total Residents', fmt(stats?.residents), Icons.people_rounded, const Color(0xFF4318FF)),
-                  _buildStatCard(cardWidth, 'Total Houses', fmt(stats?.houses), Icons.house_rounded, const Color(0xFF00B5D8)),
-                  _buildStatCard(cardWidth, 'Active Billings', fmt(stats?.activeBillings), Icons.receipt_long_rounded, const Color(0xFFFFB547)),
-                  _buildStatCard(cardWidth, 'Today Visitors', fmt(stats?.todayVisitors), Icons.badge_rounded, const Color(0xFF05CD99)),
+                  _buildStatCard(
+                    cardWidth,
+                    'Total Residents',
+                    fmt(stats?.residents),
+                    Icons.people_rounded,
+                    AppColors.brandGradient,
+                  ),
+                  _buildStatCard(
+                    cardWidth,
+                    'Total Houses',
+                    fmt(stats?.houses),
+                    Icons.house_rounded,
+                    AppColors.skyGradient,
+                  ),
+                  _buildStatCard(
+                    cardWidth,
+                    'Active Billings',
+                    fmt(stats?.activeBillings),
+                    Icons.receipt_long_rounded,
+                    AppColors.sunsetGradient,
+                  ),
+                  _buildStatCard(
+                    cardWidth,
+                    'Today Visitors',
+                    fmt(stats?.todayVisitors),
+                    Icons.badge_rounded,
+                    AppColors.mintGradient,
+                  ),
                 ],
               );
             },
           ),
-          const SizedBox(height: 40),
-          // Placeholder for charts or recent activities
-          Container(
-            width: double.infinity,
+          const SizedBox(height: 36),
+          const SectionHeader(
+            title: 'Recent Activities',
+            subtitle: 'Latest community updates',
+          ),
+          const SizedBox(height: 18),
+          PremiumCard(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF4F7FE),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  'Recent Activities',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
+                const GradientIconBadge(
+                  icon: Icons.history_rounded,
+                  gradient: AppColors.brandGradient,
+                  size: 50,
+                  iconSize: 24,
+                  radius: 16,
                 ),
-                SizedBox(height: 16),
-                Text('No recent activities to show.', style: TextStyle(color: Color(0xFFA3AED0))),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'No recent activities',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'New activity will appear here.',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildStatCard(double width, String title, String value, IconData icon, Color iconColor) {
-    return Container(
+  Widget _buildStatCard(
+    double width,
+    String title,
+    String value,
+    IconData icon,
+    Gradient gradient,
+  ) {
+    return SizedBox(
       width: width,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE0E5F2)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: iconColor.withOpacity(0.1),
-            child: Icon(icon, color: iconColor, size: 28),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 14, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(color: Color(0xFF2B3674), fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-              ],
+      child: PremiumCard(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: [
+            GradientIconBadge(
+              icon: icon,
+              gradient: gradient,
+              size: 52,
+              iconSize: 26,
+              radius: 16,
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

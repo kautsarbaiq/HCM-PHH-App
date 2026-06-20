@@ -30,7 +30,9 @@ class _CreateTicketModalState extends ConsumerState<CreateTicketModal> {
 
   void _submitTicket() async {
     if (_titleController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a ticket title.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a ticket title.')),
+      );
       return;
     }
 
@@ -38,7 +40,8 @@ class _CreateTicketModalState extends ConsumerState<CreateTicketModal> {
 
     try {
       final profile = await ref.read(currentProfileProvider.future);
-      if (profile == null) throw Exception('You must be logged in to create a ticket.');
+      if (profile == null)
+        throw Exception('You must be logged in to create a ticket.');
 
       final ticket = Ticket(
         id: '', // Supabase generates this
@@ -55,12 +58,17 @@ class _CreateTicketModalState extends ConsumerState<CreateTicketModal> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ticket created successfully!'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Ticket created successfully!'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
       }
     } finally {
       if (mounted) {
@@ -84,7 +92,10 @@ class _CreateTicketModalState extends ConsumerState<CreateTicketModal> {
             color: AppColors.primaryWhite.withOpacity(0.92),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
             border: Border(
-              top: BorderSide(color: AppColors.primaryWhite.withOpacity(0.6), width: 1.5),
+              top: BorderSide(
+                color: AppColors.primaryWhite.withOpacity(0.6),
+                width: 1.5,
+              ),
             ),
           ),
           child: SingleChildScrollView(
@@ -114,12 +125,19 @@ class _CreateTicketModalState extends ConsumerState<CreateTicketModal> {
                 const SizedBox(height: 8),
                 const Text(
                   'Report an issue, request maintenance, or submit feedback to the management office.',
-                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 32),
                 const Text(
                   'Issue Title',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 GlassTextField(
@@ -130,7 +148,11 @@ class _CreateTicketModalState extends ConsumerState<CreateTicketModal> {
                 const SizedBox(height: 20),
                 const Text(
                   'Description',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 GlassTextField(
@@ -141,7 +163,11 @@ class _CreateTicketModalState extends ConsumerState<CreateTicketModal> {
                 ),
                 const SizedBox(height: 32),
                 _isSubmitting
-                    ? const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primaryBlue,
+                        ),
+                      )
                     : ActionButton(
                         label: 'Submit Ticket',
                         onPressed: _submitTicket,

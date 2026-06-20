@@ -95,7 +95,7 @@ class FacilityRepository {
           .select()
           .eq('booked_by', userId)
           .order('date', ascending: true);
-      
+
       return (response as List).map((json) => Booking.fromJson(json)).toList();
     } catch (e) {
       print('Error fetching bookings: $e');
@@ -109,7 +109,7 @@ class FacilityRepository {
         .insert(booking.toJson())
         .select()
         .single();
-        
+
     return Booking.fromJson(response);
   }
 }

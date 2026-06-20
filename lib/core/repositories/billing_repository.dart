@@ -37,14 +37,18 @@ class Billing {
       id: json['id'] as String,
       invoiceNumber: json['invoice_number'] as String,
       title: json['title'] as String? ?? '',
-      amount: rawAmount is num ? rawAmount.toDouble() : double.tryParse('$rawAmount') ?? 0,
+      amount: rawAmount is num
+          ? rawAmount.toDouble()
+          : double.tryParse('$rawAmount') ?? 0,
       dueDate: json['due_date'] as String?,
       status: json['status'] as String? ?? 'unpaid',
       period: json['period'] as String?,
       paidAt: json['paid_at'] as String?,
       residentId: json['resident_id'] as String,
       houseId: json['house_id'] as String,
-      resident: json['resident'] != null ? Profile.fromJson(json['resident'] as Map<String, dynamic>) : null,
+      resident: json['resident'] != null
+          ? Profile.fromJson(json['resident'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -72,7 +76,8 @@ class BillingRepository {
 
   BillingRepository(this._supabase);
 
-  static const _selectWithResident = '*, resident:profiles!billings_resident_id_fkey(*)';
+  static const _selectWithResident =
+      '*, resident:profiles!billings_resident_id_fkey(*)';
 
   Future<List<Billing>> getAllBillings() async {
     final response = await _supabase

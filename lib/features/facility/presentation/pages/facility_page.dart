@@ -59,20 +59,46 @@ class FacilityPage extends ConsumerWidget {
             ),
             title: const Text(
               'Book Facilities',
-              style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           SliverPadding(
             padding: const EdgeInsets.all(24),
             sliver: facilitiesAsync.when(
-              loading: () => const SliverToBoxAdapter(child: Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))),
+              loading: () => const SliverToBoxAdapter(
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(40),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              ),
               error: (err, _) => SliverToBoxAdapter(
-                child: Center(child: Padding(padding: const EdgeInsets.all(40), child: Text('Could not load facilities: $err', style: const TextStyle(color: AppColors.textSecondary)))),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: Text(
+                      'Could not load facilities: $err',
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ),
+                ),
               ),
               data: (facilities) {
                 if (facilities.isEmpty) {
                   return const SliverToBoxAdapter(
-                    child: Center(child: Padding(padding: EdgeInsets.all(40), child: Text('No facilities available.', style: TextStyle(color: AppColors.textSecondary)))),
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40),
+                        child: Text(
+                          'No facilities available.',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ),
                   );
                 }
                 return SliverGrid(
@@ -82,24 +108,22 @@ class FacilityPage extends ConsumerWidget {
                     crossAxisSpacing: 16,
                     childAspectRatio: 0.85,
                   ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final facility = facilities[index];
-                      return FacilityCard(
-                        icon: _facilityIcon(facility.iconName),
-                        name: facility.name,
-                        onBook: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) => BookingBottomSheet(facilityName: facility.name),
-                          );
-                        },
-                      );
-                    },
-                    childCount: facilities.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final facility = facilities[index];
+                    return FacilityCard(
+                      icon: _facilityIcon(facility.iconName),
+                      name: facility.name,
+                      onBook: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) =>
+                              BookingBottomSheet(facilityName: facility.name),
+                        );
+                      },
+                    );
+                  }, childCount: facilities.length),
                 );
               },
             ),

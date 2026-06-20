@@ -60,7 +60,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       if (mounted) {
         setState(() => _isSigningOut = false);
         messenger.showSnackBar(
-          SnackBar(content: Text('Could not sign out. Please try again. ($e)'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Could not sign out. Please try again. ($e)'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -68,12 +71,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   Future<void> _uploadAvatar() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512, maxHeight: 512);
-    
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+    );
+
     if (pickedFile == null) return;
 
     setState(() => _isUploading = true);
-    
+
     try {
       final file = File(pickedFile.path);
       final profile = await ref.read(currentProfileProvider.future);
@@ -84,13 +91,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       // Refresh profile data and re-attempt loading the (new) avatar image.
       _avatarFailed = false;
       ref.invalidate(currentProfileProvider);
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Avatar updated successfully!'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Avatar updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
       }
     } finally {
       if (mounted) {
@@ -112,14 +126,23 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               icon: const Icon(PhosphorIconsRegular.caretLeft),
               onPressed: () => context.pop(),
             ),
-            title: const Text('Profile', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+            title: const Text(
+              'Profile',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             actions: [
               IconButton(
                 icon: _isSigningOut
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.red,
+                        ),
                       )
                     : const Icon(PhosphorIconsRegular.signOut),
                 color: Colors.red,
@@ -141,7 +164,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   const SizedBox(height: 16),
                   _buildDocumentGrid(),
                   const SizedBox(height: 32),
-                  _buildSectionHeader('Financial Records', onTap: () => context.go('/bills')),
+                  _buildSectionHeader(
+                    'Financial Records',
+                    onTap: () => context.go('/bills'),
+                  ),
                   const SizedBox(height: 16),
                   _buildFinanceList(),
                   const SizedBox(height: 100),
@@ -156,7 +182,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   Widget _buildProfileHeader(WidgetRef ref) {
     final profileAsync = ref.watch(currentProfileProvider);
-    
+
     return Column(
       children: [
         Stack(
@@ -167,25 +193,35 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               height: 130,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2), width: 4),
+                border: Border.all(
+                  color: AppColors.primaryBlue.withOpacity(0.2),
+                  width: 4,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.primaryBlue.withOpacity(0.1),
                     blurRadius: 20,
                     spreadRadius: 5,
-                  )
+                  ),
                 ],
               ),
               child: _isUploading
                   ? const CircularProgressIndicator()
                   : Builder(
                       builder: (context) {
-                        final avatarUrl = profileAsync.whenOrNull(data: (profile) => profile?.avatarUrl);
-                        final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty && !_avatarFailed;
+                        final avatarUrl = profileAsync.whenOrNull(
+                          data: (profile) => profile?.avatarUrl,
+                        );
+                        final hasAvatar =
+                            avatarUrl != null &&
+                            avatarUrl.isNotEmpty &&
+                            !_avatarFailed;
                         return CircleAvatar(
                           radius: 60,
                           backgroundColor: Colors.grey[300],
-                          backgroundImage: hasAvatar ? NetworkImage(avatarUrl) : null,
+                          backgroundImage: hasAvatar
+                              ? NetworkImage(avatarUrl)
+                              : null,
                           onBackgroundImageError: hasAvatar
                               ? (_, __) {
                                   // Fall back to the default icon on a broken/expired URL.
@@ -194,7 +230,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                   }
                                 }
                               : null,
-                          child: hasAvatar ? null : const Icon(PhosphorIconsRegular.user, size: 60, color: Colors.grey),
+                          child: hasAvatar
+                              ? null
+                              : const Icon(
+                                  PhosphorIconsRegular.user,
+                                  size: 60,
+                                  color: Colors.grey,
+                                ),
                         );
                       },
                     ),
@@ -213,10 +255,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
                         blurRadius: 10,
-                      )
+                      ),
                     ],
                   ),
-                  child: const Icon(PhosphorIconsFill.camera, size: 20, color: AppColors.primaryBlue),
+                  child: const Icon(
+                    PhosphorIconsFill.camera,
+                    size: 20,
+                    color: AppColors.primaryBlue,
+                  ),
                 ),
               ),
             ),
@@ -247,14 +293,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   Widget _buildInfoCard(WidgetRef ref) {
     final profileAsync = ref.watch(currentProfileProvider);
-    final email = Supabase.instance.client.auth.currentUser?.email ?? 'No email';
+    final email =
+        Supabase.instance.client.auth.currentUser?.email ?? 'No email';
     final houseId = profileAsync.value?.houseId ?? 'Not Assigned';
-    
+
     return GlassCard(
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          _buildInfoRow(PhosphorIconsRegular.phone, 'Phone', profileAsync.value?.phone ?? '-'),
+          _buildInfoRow(
+            PhosphorIconsRegular.phone,
+            'Phone',
+            profileAsync.value?.phone ?? '-',
+          ),
           const Divider(height: 32, thickness: 0.5),
           _buildInfoRow(PhosphorIconsRegular.envelopeSimple, 'Email', email),
           const Divider(height: 32, thickness: 0.5),
@@ -280,13 +331,30 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
               const SizedBox(height: 2),
-              Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
             ],
           ),
         ),
-        const Icon(PhosphorIconsRegular.caretRight, size: 16, color: AppColors.textSecondary),
+        const Icon(
+          PhosphorIconsRegular.caretRight,
+          size: 16,
+          color: AppColors.textSecondary,
+        ),
       ],
     );
   }
@@ -296,14 +364,32 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
-          child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
         ),
         // Only show the "see more" caret when the header is actually actionable.
-        if (onTap != null) const Icon(PhosphorIconsRegular.caretRight, size: 18, color: AppColors.textSecondary),
+        if (onTap != null)
+          const Icon(
+            PhosphorIconsRegular.caretRight,
+            size: 18,
+            color: AppColors.textSecondary,
+          ),
       ],
     );
     if (onTap == null) return row;
-    return GestureDetector(onTap: onTap, behavior: HitTestBehavior.opaque, child: row);
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: row,
+    );
   }
 
   Widget _buildDocumentGrid() {
@@ -312,12 +398,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       height: 140,
       child: docsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: AppColors.textSecondary))),
+        error: (e, _) => Center(
+          child: Text(
+            'Error: $e',
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
         data: (docs) {
           if (docs.isEmpty) {
             return Container(
               alignment: Alignment.centerLeft,
-              child: const Text('No documents issued yet.', style: TextStyle(color: AppColors.textSecondary)),
+              child: const Text(
+                'No documents issued yet.',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
             );
           }
           return ListView(
@@ -363,9 +457,26 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               child: Icon(icon, size: 20, color: AppColors.deepSlate),
             ),
             const SizedBox(height: 16),
-            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             const SizedBox(height: 4),
-            Text(subtitle, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 10,
+                color: AppColors.textSecondary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),
@@ -380,7 +491,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       final uri = Uri.tryParse(doc.fileUrl!);
       if (uri != null) {
         try {
-          final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+          final launched = await launchUrl(
+            uri,
+            mode: LaunchMode.externalApplication,
+          );
           if (launched) return;
         } catch (_) {
           // Fall through to the detail dialog below.
@@ -399,28 +513,43 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (doc.documentType != null && doc.documentType!.isNotEmpty)
-              Text('Type: ${doc.documentType}', style: const TextStyle(color: AppColors.textSecondary)),
+              Text(
+                'Type: ${doc.documentType}',
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
             if (doc.referenceCode != null && doc.referenceCode!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: Text('Reference: ${doc.referenceCode}', style: const TextStyle(color: AppColors.textSecondary)),
+                child: Text(
+                  'Reference: ${doc.referenceCode}',
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
               ),
             if (!hasFile)
               const Padding(
                 padding: EdgeInsets.only(top: 8),
-                child: Text('No file attached to this document yet.', style: TextStyle(color: AppColors.textSecondary)),
+                child: Text(
+                  'No file attached to this document yet.',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
               ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Close'),
+          ),
         ],
       ),
     );
 
     if (hasFile) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Could not open the document file.'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('Could not open the document file.'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -432,7 +561,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         children: [
           _buildFinanceRow(PhosphorIconsRegular.receipt, 'Monthly Statements'),
           const SizedBox(height: 8),
-          _buildFinanceRow(PhosphorIconsRegular.shieldCheck, 'Maintenance Receipts'),
+          _buildFinanceRow(
+            PhosphorIconsRegular.shieldCheck,
+            'Maintenance Receipts',
+          ),
           const SizedBox(height: 8),
           _buildFinanceRow(PhosphorIconsRegular.bank, 'Billing Accounts'),
         ],
@@ -455,9 +587,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             Icon(icon, size: 22, color: AppColors.deepSlate),
             const SizedBox(width: 16),
             Expanded(
-              child: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textPrimary)),
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+              ),
             ),
-            const Icon(PhosphorIconsRegular.caretRight, size: 18, color: AppColors.textSecondary),
+            const Icon(
+              PhosphorIconsRegular.caretRight,
+              size: 18,
+              color: AppColors.textSecondary,
+            ),
           ],
         ),
       ),

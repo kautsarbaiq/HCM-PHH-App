@@ -68,7 +68,8 @@ class NoticeSlider extends ConsumerWidget {
                 scrollDirection: Axis.horizontal,
                 itemCount: notices.length,
                 separatorBuilder: (context, index) => const SizedBox(width: 16),
-                itemBuilder: (context, index) => _buildNoticeCard(notices[index]),
+                itemBuilder: (context, index) =>
+                    _buildNoticeCard(notices[index]),
               );
             },
           ),
@@ -98,7 +99,9 @@ class NoticeSlider extends ConsumerWidget {
             Row(
               children: [
                 Icon(
-                  isUrgent ? PhosphorIconsRegular.warningCircle : PhosphorIconsRegular.info,
+                  isUrgent
+                      ? PhosphorIconsRegular.warningCircle
+                      : PhosphorIconsRegular.info,
                   color: isUrgent ? AppColors.error : AppColors.primaryBlue,
                   size: 20,
                 ),

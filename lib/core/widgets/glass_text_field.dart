@@ -61,14 +61,14 @@ class _GlassTextFieldState extends State<GlassTextField> {
                   color: AppColors.primaryBlue.withOpacity(0.1),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
-                )
+                ),
               ]
             : [
                 BoxShadow(
                   color: AppColors.shadowColor,
                   blurRadius: 16,
                   offset: const Offset(0, 4),
-                )
+                ),
               ],
       ),
       child: ClipRRect(
@@ -95,12 +95,17 @@ class _GlassTextFieldState extends State<GlassTextField> {
               prefixIcon: widget.prefixIcon != null
                   ? Icon(
                       widget.prefixIcon,
-                      color: _isFocused ? AppColors.primaryBlue : AppColors.textSecondary,
+                      color: _isFocused
+                          ? AppColors.primaryBlue
+                          : AppColors.textSecondary,
                       size: 20,
                     )
                   : null,
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 16,
+              ),
             ),
           ),
         ),

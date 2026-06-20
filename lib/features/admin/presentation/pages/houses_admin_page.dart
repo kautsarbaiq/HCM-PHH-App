@@ -2,8 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/repositories/admin_repository.dart';
 import '../../../../core/repositories/house_repository.dart';
+import '../../../../theme/app_colors.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/section_header.dart';
+import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/app_states.dart';
 
-final adminHousesProvider = AsyncNotifierProvider<AdminHousesNotifier, List<House>>(() => AdminHousesNotifier());
+final adminHousesProvider =
+    AsyncNotifierProvider<AdminHousesNotifier, List<House>>(
+      () => AdminHousesNotifier(),
+    );
 
 class AdminHousesNotifier extends AsyncNotifier<List<House>> {
   @override
@@ -77,14 +85,19 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Row(
             children: [
-              const Icon(Icons.house, color: Color(0xFF4318FF)),
+              const Icon(Icons.house_rounded, color: AppColors.brand),
               const SizedBox(width: 8),
               Text(
                 house.houseNumber,
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ],
           ),
@@ -96,13 +109,20 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
               _buildDetailItem('House No / Address', house.houseNumber),
               _buildDetailItem('Owner / Occupant', _occupantName(house)),
               _buildDetailItem('Unit Type', house.houseType),
-              _buildDetailItem('Occupancy Status', house.status == 'occupied' ? 'Occupied' : 'Vacant', isStatus: true),
+              _buildDetailItem(
+                'Occupancy Status',
+                house.status == 'occupied' ? 'Occupied' : 'Vacant',
+                isStatus: true,
+              ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Close', style: TextStyle(color: Color(0xFF4318FF))),
+              child: const Text(
+                'Close',
+                style: TextStyle(color: AppColors.brand),
+              ),
             ),
           ],
         );
@@ -116,28 +136,29 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
+          ),
           const SizedBox(height: 4),
           if (isStatus)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: (value == 'Occupied' ? const Color(0xFF05CD99) : const Color(0xFFFFB547)).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                value,
-                style: TextStyle(
-                  color: value == 'Occupied' ? const Color(0xFF05CD99) : const Color(0xFFFFB547),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
+            StatusPill(
+              label: value,
+              color: value == 'Occupied'
+                  ? AppColors.success
+                  : AppColors.warning,
             )
           else
             Text(
               value,
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674), fontSize: 16),
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                fontSize: 16,
+              ),
             ),
         ],
       ),
@@ -146,8 +167,12 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
 
   void _showForm({House? house}) {
     final isEdit = house != null;
-    final houseNoController = TextEditingController(text: house?.houseNumber ?? '');
-    final typeController = TextEditingController(text: house?.houseType ?? 'Type A');
+    final houseNoController = TextEditingController(
+      text: house?.houseNumber ?? '',
+    );
+    final typeController = TextEditingController(
+      text: house?.houseType ?? 'Type A',
+    );
     String status = house?.status ?? 'vacant';
     bool isSaving = false;
 
@@ -158,24 +183,43 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
           builder: (context, setDialogState) {
             return AlertDialog(
               backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               title: Text(
                 isEdit ? 'Edit House' : 'Add New House',
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
               ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildTextField(houseNoController, 'House Number / Block', Icons.house),
-                    _buildTextField(typeController, 'Unit Type (e.g. Type A)', Icons.layers),
+                    _buildTextField(
+                      houseNoController,
+                      'House Number / Block',
+                      Icons.house,
+                    ),
+                    _buildTextField(
+                      typeController,
+                      'Unit Type (e.g. Type A)',
+                      Icons.layers,
+                    ),
                     const SizedBox(height: 16),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Padding(
                           padding: EdgeInsets.only(top: 8.0),
-                          child: Text('Status: ', style: TextStyle(color: Color(0xFF2B3674), fontWeight: FontWeight.bold)),
+                          child: Text(
+                            'Status: ',
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -186,19 +230,25 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                               ChoiceChip(
                                 label: const Text('Occupied'),
                                 selected: status == 'occupied',
-                                selectedColor: const Color(0xFF05CD99).withOpacity(0.2),
-                                checkmarkColor: const Color(0xFF05CD99),
+                                selectedColor: AppColors.success.withOpacity(
+                                  0.2,
+                                ),
+                                checkmarkColor: AppColors.success,
                                 onSelected: (val) {
-                                  if (val) setDialogState(() => status = 'occupied');
+                                  if (val)
+                                    setDialogState(() => status = 'occupied');
                                 },
                               ),
                               ChoiceChip(
                                 label: const Text('Vacant'),
                                 selected: status == 'vacant',
-                                selectedColor: const Color(0xFFFFB547).withOpacity(0.2),
-                                checkmarkColor: const Color(0xFFFFB547),
+                                selectedColor: AppColors.warning.withOpacity(
+                                  0.2,
+                                ),
+                                checkmarkColor: AppColors.warning,
                                 onSelected: (val) {
-                                  if (val) setDialogState(() => status = 'vacant');
+                                  if (val)
+                                    setDialogState(() => status = 'vacant');
                                 },
                               ),
                             ],
@@ -212,7 +262,10 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
               actions: [
                 TextButton(
                   onPressed: isSaving ? null : () => Navigator.pop(context),
-                  child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: isSaving
@@ -221,7 +274,9 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                           final messenger = ScaffoldMessenger.of(context);
                           if (houseNoController.text.isEmpty) {
                             messenger.showSnackBar(
-                              const SnackBar(content: Text('Please enter a house number.')),
+                              const SnackBar(
+                                content: Text('Please enter a house number.'),
+                              ),
                             );
                             return;
                           }
@@ -229,18 +284,24 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                           setDialogState(() => isSaving = true);
                           try {
                             if (isEdit) {
-                              await ref.read(adminHousesProvider.notifier).updateHouse(house.id, {
-                                'house_number': houseNoController.text,
-                                'house_type': typeController.text,
-                                'status': status,
-                              });
+                              await ref
+                                  .read(adminHousesProvider.notifier)
+                                  .updateHouse(house.id, {
+                                    'house_number': houseNoController.text,
+                                    'house_type': typeController.text,
+                                    'status': status,
+                                  });
                             } else {
-                              await ref.read(adminHousesProvider.notifier).addHouse(House(
-                                id: '',
-                                houseNumber: houseNoController.text,
-                                houseType: typeController.text,
-                                status: status,
-                              ));
+                              await ref
+                                  .read(adminHousesProvider.notifier)
+                                  .addHouse(
+                                    House(
+                                      id: '',
+                                      houseNumber: houseNoController.text,
+                                      houseType: typeController.text,
+                                      status: status,
+                                    ),
+                                  );
                             }
                             navigator.pop();
                           } catch (e) {
@@ -249,12 +310,21 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                           }
                         },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4318FF),
+                    backgroundColor: AppColors.brand,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: isSaving
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
                       : Text(isEdit ? 'Save Changes' : 'Create'),
                 ),
               ],
@@ -265,14 +335,18 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: const Color(0xFFA3AED0)),
+          prefixIcon: Icon(icon, color: AppColors.textSecondary),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: Color(0xFFE0E5F2)),
@@ -283,7 +357,7 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF4318FF)),
+            borderSide: const BorderSide(color: AppColors.brand),
           ),
         ),
       ),
@@ -296,9 +370,19 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Delete House', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674))),
-          content: Text('Are you sure you want to delete ${house.houseNumber}? This action cannot be undone.'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Delete House',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to delete ${house.houseNumber}? This action cannot be undone.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -308,13 +392,21 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
               onPressed: () async {
                 final navigator = Navigator.of(context);
                 try {
-                  await ref.read(adminHousesProvider.notifier).deleteHouse(house.id);
+                  await ref
+                      .read(adminHousesProvider.notifier)
+                      .deleteHouse(house.id);
                   navigator.pop();
                 } catch (e) {
                   _showError(e);
                 }
               },
-              child: const Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Delete',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         );
@@ -328,161 +420,234 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
     // Warm the residents list so occupant names resolve in the Owner column.
     ref.watch(adminResidentsProvider);
 
-    return Card(
-      color: Colors.white,
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Houses & Units Management',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2B3674),
-                    ),
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () => _showForm(),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add House'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4318FF),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            TextField(
-              onChanged: (value) => setState(() => _searchQuery = value),
-              decoration: InputDecoration(
-                hintText: 'Search by house number or owner...',
-                prefixIcon: const Icon(Icons.search, color: Color(0xFFA3AED0)),
-                filled: true,
-                fillColor: const Color(0xFFF4F7FE),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide.none,
+    return PremiumCard(
+      padding: const EdgeInsets.all(24.0),
+      radius: 22,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Expanded(
+                child: SectionHeader(
+                  title: 'Houses & Units',
+                  subtitle: 'Manage units and occupancy',
                 ),
               ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: () => _showForm(),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Add House'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.brand,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          TextField(
+            onChanged: (value) => setState(() => _searchQuery = value),
+            decoration: InputDecoration(
+              hintText: 'Search by house number or owner...',
+              hintStyle: const TextStyle(color: AppColors.textSecondary),
+              prefixIcon: const Icon(
+                Icons.search_rounded,
+                color: AppColors.textSecondary,
+              ),
+              filled: true,
+              fillColor: AppColors.surfaceTint,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide.none,
+              ),
             ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: housesAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(child: Text('Error: $error')),
-                data: (houses) {
-                  final filteredHouses = _filterHouses(houses);
-                  
-                  if (filteredHouses.isEmpty) {
-                    return const Center(
-                      child: Text('No houses found.', style: TextStyle(color: Color(0xFFA3AED0))),
-                    );
-                  }
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: housesAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => AppErrorState(
+                message: '$error',
+                onRetry: () => ref.invalidate(adminHousesProvider),
+              ),
+              data: (houses) {
+                final filteredHouses = _filterHouses(houses);
 
-                  return LayoutBuilder(
-                    builder: (context, constraints) {
-                      // On narrow phones, render a vertical card list instead of a wide table.
-                      if (constraints.maxWidth < 600) {
-                        return ListView.separated(
-                          itemCount: filteredHouses.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
-                          itemBuilder: (context, index) => _buildHouseCard(filteredHouses[index]),
-                        );
-                      }
-                      return Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFE0E5F2)),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
+                if (filteredHouses.isEmpty) {
+                  return AppEmptyState(
+                    icon: Icons.house_rounded,
+                    title: 'No houses found',
+                    message: 'Add a house to get started.',
+                    actionLabel: 'Add House',
+                    onAction: () => _showForm(),
+                  );
+                }
+
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    // On narrow phones, render a vertical card list instead of a wide table.
+                    if (constraints.maxWidth < 600) {
+                      return ListView.separated(
+                        itemCount: filteredHouses.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) =>
+                            _buildHouseCard(filteredHouses[index]),
+                      );
+                    }
+                    return Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFFE0E5F2)),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       child: SingleChildScrollView(
-                        child: DataTable(
-                          headingRowColor: MaterialStateProperty.all(const Color(0xFFF4F7FE)),
-                          columns: const [
-                            DataColumn(label: Text('House No.', style: TextStyle(color: Color(0xFFA3AED0), fontWeight: FontWeight.bold))),
-                            DataColumn(label: Text('Type', style: TextStyle(color: Color(0xFFA3AED0), fontWeight: FontWeight.bold))),
-                            DataColumn(label: Text('Owner', style: TextStyle(color: Color(0xFFA3AED0), fontWeight: FontWeight.bold))),
-                            DataColumn(label: Text('Status', style: TextStyle(color: Color(0xFFA3AED0), fontWeight: FontWeight.bold))),
-                            DataColumn(label: Text('Actions', style: TextStyle(color: Color(0xFFA3AED0), fontWeight: FontWeight.bold))),
-                          ],
-                          rows: filteredHouses.map((house) {
-                            return DataRow(
-                              cells: [
-                                DataCell(
-                                  Text(
-                                    house.houseNumber,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674)),
+                        scrollDirection: Axis.horizontal,
+                        child: SingleChildScrollView(
+                          child: DataTable(
+                            headingRowColor: MaterialStateProperty.all(
+                              AppColors.surfaceTint,
+                            ),
+                            columns: const [
+                              DataColumn(
+                                label: Text(
+                                  'House No.',
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                                DataCell(Text(house.houseType, style: const TextStyle(color: Color(0xFF2B3674)))),
-                                DataCell(Text(_occupantName(house), style: const TextStyle(color: Color(0xFF2B3674)))),
-                                DataCell(
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: (house.status == 'occupied' ? const Color(0xFF05CD99) : const Color(0xFFFFB547)).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(20),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'Type',
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'Owner',
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'Status',
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'Actions',
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                            rows: filteredHouses.map((house) {
+                              return DataRow(
+                                cells: [
+                                  DataCell(
+                                    Text(
+                                      house.houseNumber,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                      ),
                                     ),
-                                    child: Text(
-                                      house.status == 'occupied' ? 'Occupied' : 'Vacant',
-                                      style: TextStyle(
-                                        color: house.status == 'occupied' ? const Color(0xFF05CD99) : const Color(0xFFFFB547),
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      house.houseType,
+                                      style: const TextStyle(
+                                        color: AppColors.textPrimary,
                                       ),
                                     ),
                                   ),
-                                ),
-                                DataCell(
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.visibility, color: Color(0xFFA3AED0)),
-                                        onPressed: () => _showDetails(house),
-                                        tooltip: 'View Details',
+                                  DataCell(
+                                    Text(
+                                      _occupantName(house),
+                                      style: const TextStyle(
+                                        color: AppColors.textPrimary,
                                       ),
-                                      IconButton(
-                                        icon: const Icon(Icons.edit, color: Color(0xFF4318FF)),
-                                        onPressed: () => _showForm(house: house),
-                                        tooltip: 'Edit',
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete, color: Colors.red),
-                                        onPressed: () => _deleteHouse(house),
-                                        tooltip: 'Delete',
-                                      ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            );
-                          }).toList(),
+                                  DataCell(
+                                    StatusPill(
+                                      label: house.status == 'occupied'
+                                          ? 'Occupied'
+                                          : 'Vacant',
+                                      color: house.status == 'occupied'
+                                          ? AppColors.success
+                                          : AppColors.warning,
+                                      dense: true,
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.visibility_rounded,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                          onPressed: () => _showDetails(house),
+                                          tooltip: 'View Details',
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.edit_rounded,
+                                            color: AppColors.brand,
+                                          ),
+                                          onPressed: () =>
+                                              _showForm(house: house),
+                                          tooltip: 'Edit',
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete_rounded,
+                                            color: AppColors.error,
+                                          ),
+                                          onPressed: () => _deleteHouse(house),
+                                          tooltip: 'Delete',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
                         ),
                       ),
-                    ),
-                      );
-                    },
-                  );
-                },
-              ),
+                    );
+                  },
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -490,57 +655,83 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
   // Compact card used for the narrow-phone houses layout.
   Widget _buildHouseCard(House house) {
     final isOccupied = house.status == 'occupied';
-    final statusColor = isOccupied ? const Color(0xFF05CD99) : const Color(0xFFFFB547);
-    return Container(
+    return PremiumCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE0E5F2)),
-      ),
+      radius: 18,
+      onTap: () => _showDetails(house),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
+              const GradientIconBadge(
+                icon: Icons.house_rounded,
+                gradient: AppColors.skyGradient,
+                size: 42,
+                iconSize: 20,
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   house.houseNumber,
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2B3674), fontSize: 15),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                  ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  isOccupied ? 'Occupied' : 'Vacant',
-                  style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 11),
-                ),
+              StatusPill(
+                label: isOccupied ? 'Occupied' : 'Vacant',
+                color: isOccupied ? AppColors.success : AppColors.warning,
+                dense: true,
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text('Type: ${house.houseType}', style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13)),
-          Text('Owner: ${_occupantName(house)}', style: const TextStyle(color: Color(0xFFA3AED0), fontSize: 13)),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
+          Text(
+            'Type: ${house.houseType}',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Owner: ${_occupantName(house)}',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               IconButton(
-                icon: const Icon(Icons.visibility, color: Color(0xFFA3AED0), size: 20),
+                icon: const Icon(
+                  Icons.visibility_rounded,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
                 onPressed: () => _showDetails(house),
                 tooltip: 'View Details',
               ),
               IconButton(
-                icon: const Icon(Icons.edit, color: Color(0xFF4318FF), size: 20),
+                icon: const Icon(
+                  Icons.edit_rounded,
+                  color: AppColors.brand,
+                  size: 20,
+                ),
                 onPressed: () => _showForm(house: house),
                 tooltip: 'Edit',
               ),
               IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                icon: const Icon(
+                  Icons.delete_rounded,
+                  color: AppColors.error,
+                  size: 20,
+                ),
                 onPressed: () => _deleteHouse(house),
                 tooltip: 'Delete',
               ),

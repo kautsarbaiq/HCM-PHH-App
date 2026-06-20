@@ -10,16 +10,21 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/repositories/storage_repository.dart';
 import '../../../../core/repositories/visitor_repository.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/section_header.dart';
+import '../../../../theme/app_colors.dart';
 import 'guard_visitors_page.dart';
 
 class GuardRegisterVisitorPage extends ConsumerStatefulWidget {
   const GuardRegisterVisitorPage({super.key});
 
   @override
-  ConsumerState<GuardRegisterVisitorPage> createState() => _GuardRegisterVisitorPageState();
+  ConsumerState<GuardRegisterVisitorPage> createState() =>
+      _GuardRegisterVisitorPageState();
 }
 
-class _GuardRegisterVisitorPageState extends ConsumerState<GuardRegisterVisitorPage> {
+class _GuardRegisterVisitorPageState
+    extends ConsumerState<GuardRegisterVisitorPage> {
   final _nameController = TextEditingController();
   final _houseController = TextEditingController();
   final _plateController = TextEditingController();
@@ -44,7 +49,10 @@ class _GuardRegisterVisitorPageState extends ConsumerState<GuardRegisterVisitorP
     if (!status.isGranted) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Camera permission is required to capture photos.'), backgroundColor: Colors.red),
+          const SnackBar(
+            content: Text('Camera permission is required to capture photos.'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
       return;
@@ -66,7 +74,10 @@ class _GuardRegisterVisitorPageState extends ConsumerState<GuardRegisterVisitorP
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Camera unavailable: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Camera unavailable: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -78,13 +89,21 @@ class _GuardRegisterVisitorPageState extends ConsumerState<GuardRegisterVisitorP
     final messenger = ScaffoldMessenger.of(context);
     if (name.isEmpty || houseNo.isEmpty) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Visitor name and destination house number are required.')),
+        const SnackBar(
+          content: Text(
+            'Visitor name and destination house number are required.',
+          ),
+        ),
       );
       return;
     }
     if (_vehicleFile == null || _visitorFile == null || _licenseFile == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Please capture all three photos (vehicle, face, license).')),
+        const SnackBar(
+          content: Text(
+            'Please capture all three photos (vehicle, face, license).',
+          ),
+        ),
       );
       return;
     }
@@ -99,7 +118,10 @@ class _GuardRegisterVisitorPageState extends ConsumerState<GuardRegisterVisitorP
       if (!mounted) return;
       setState(() => _submitting = false);
       messenger.showSnackBar(
-        const SnackBar(content: Text('Your session expired. Please log in again.'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('Your session expired. Please log in again.'),
+          backgroundColor: Colors.red,
+        ),
       );
       context.go('/guard');
       return;
@@ -115,23 +137,34 @@ class _GuardRegisterVisitorPageState extends ConsumerState<GuardRegisterVisitorP
           .limit(1);
       if ((houseRows as List).isEmpty) {
         if (!mounted) return;
-        messenger.showSnackBar(SnackBar(content: Text('House "$houseNo" not found.'), backgroundColor: Colors.red));
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('House "$houseNo" not found.'),
+            backgroundColor: Colors.red,
+          ),
+        );
         setState(() => _submitting = false);
         return;
       }
       final houseId = houseRows[0]['id'] as String;
 
       // Create the walk-in visitor, already checked in.
-      final visitor = await ref.read(visitorRepositoryProvider).createVisitor(Visitor(
-            id: '',
-            visitorName: name,
-            purpose: 'Walk-in',
-            vehiclePlate: _plateController.text.trim().isEmpty ? null : _plateController.text.trim(),
-            houseId: houseId,
-            status: 'checked_in',
-            registrationType: 'walk-in',
-            createdBy: guardId,
-          ));
+      final visitor = await ref
+          .read(visitorRepositoryProvider)
+          .createVisitor(
+            Visitor(
+              id: '',
+              visitorName: name,
+              purpose: 'Walk-in',
+              vehiclePlate: _plateController.text.trim().isEmpty
+                  ? null
+                  : _plateController.text.trim(),
+              houseId: houseId,
+              status: 'checked_in',
+              registrationType: 'walk-in',
+              createdBy: guardId,
+            ),
+          );
 
       // Upload the 3 evidence photos (best-effort — needs the 'guard_evidence'
       // storage bucket). If the upload fails, the visitor is still registered
@@ -146,25 +179,34 @@ class _GuardRegisterVisitorPageState extends ConsumerState<GuardRegisterVisitorP
           storage.uploadGuardEvidence(_vehicleFile!, visitor.id),
           storage.uploadGuardEvidence(_licenseFile!, visitor.id),
         ]);
-        await supabase.from('visitors').update({
-          'visitor_photo_url': urls[0],
-          'vehicle_photo_url': urls[1],
-          'license_photo_url': urls[2],
-          'checked_in_by': guardId,
-          'checked_in_at': DateTime.now().toUtc().toIso8601String(),
-        }).eq('id', visitor.id);
+        await supabase
+            .from('visitors')
+            .update({
+              'visitor_photo_url': urls[0],
+              'vehicle_photo_url': urls[1],
+              'license_photo_url': urls[2],
+              'checked_in_by': guardId,
+              'checked_in_at': DateTime.now().toUtc().toIso8601String(),
+            })
+            .eq('id', visitor.id);
       } catch (uploadError) {
         photosNote = ' (photos not uploaded: $uploadError)';
-        await supabase.from('visitors').update({
-          'checked_in_by': guardId,
-          'checked_in_at': DateTime.now().toUtc().toIso8601String(),
-        }).eq('id', visitor.id);
+        await supabase
+            .from('visitors')
+            .update({
+              'checked_in_by': guardId,
+              'checked_in_at': DateTime.now().toUtc().toIso8601String(),
+            })
+            .eq('id', visitor.id);
       }
 
       ref.invalidate(guardVisitorsProvider);
       if (!mounted) return;
       messenger.showSnackBar(
-        SnackBar(content: Text('$name registered & checked in${photosNote ?? ''}.'), backgroundColor: const Color(0xFF10B981)),
+        SnackBar(
+          content: Text('$name registered & checked in${photosNote ?? ''}.'),
+          backgroundColor: const Color(0xFF10B981),
+        ),
       );
       setState(() {
         _nameController.clear();
@@ -176,7 +218,12 @@ class _GuardRegisterVisitorPageState extends ConsumerState<GuardRegisterVisitorP
       });
     } catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text('Registration failed: $e'), backgroundColor: Colors.red));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Registration failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -184,122 +231,273 @@ class _GuardRegisterVisitorPageState extends ConsumerState<GuardRegisterVisitorP
 
   @override
   Widget build(BuildContext context) {
-    final allCaptured = _vehicleFile != null && _visitorFile != null && _licenseFile != null;
+    final allCaptured =
+        _vehicleFile != null && _visitorFile != null && _licenseFile != null;
     final isNarrow = MediaQuery.of(context).size.width < 600;
     final cardPadding = isNarrow ? 16.w : 32.w;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16.w),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 640),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Walk-in Registration',
-                style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold, color: const Color(0xFF2B3674)),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                'Manually register walk-in visitors by capturing required proofs.',
-                style: TextStyle(color: const Color(0xFFA3AED0), fontSize: 14.sp),
-              ),
-              SizedBox(height: 24.h),
-              Container(
-                padding: EdgeInsets.all(cardPadding),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      decoration: const BoxDecoration(gradient: AppColors.canvasGradient),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(16.w),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    _label('Visitor Name'),
-                    _field(_nameController, 'e.g. John Tan'),
-                    const SizedBox(height: 16),
-                    _label('Destination House Number'),
-                    _field(_houseController, 'e.g. 10'),
-                    const SizedBox(height: 16),
-                    _label('Vehicle Plate (optional)'),
-                    _field(_plateController, 'e.g. WXY 1234'),
-                    const SizedBox(height: 24),
-                    _label('Required Captures'),
-                    const SizedBox(height: 16),
-                    _buildCaptureItem('Vehicle Plate', PhosphorIconsRegular.car, _vehicleFile != null, () => _capture('vehicle')),
-                    _buildCaptureItem('Visitor Face', PhosphorIconsRegular.userFocus, _visitorFile != null, () => _capture('visitor')),
-                    _buildCaptureItem('Driving License / ID', PhosphorIconsRegular.identificationCard, _licenseFile != null, () => _capture('license')),
-                    const SizedBox(height: 40),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: (allCaptured && !_submitting) ? _submit : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF10B981),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          disabledBackgroundColor: const Color(0xFFE0E5F2),
-                        ),
-                        child: _submitting
-                            ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : const Text('Complete Registration', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    const GradientIconBadge(
+                      icon: PhosphorIconsFill.userPlus,
+                      gradient: AppColors.mintGradient,
+                      size: 50,
+                      iconSize: 25,
+                      radius: 16,
+                    ),
+                    SizedBox(width: 14.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Walk-in Registration',
+                            style: TextStyle(
+                              fontSize: 23.sp,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.4,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            'Register walk-in visitors by capturing required proofs.',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13.sp,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                SizedBox(height: 22.h),
+                PremiumCard(
+                  padding: EdgeInsets.all(cardPadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SectionHeader(
+                        title: 'Visitor Details',
+                        subtitle: 'Who is visiting and where',
+                      ),
+                      const SizedBox(height: 18),
+                      _label('Visitor Name'),
+                      _field(_nameController, 'e.g. John Tan'),
+                      const SizedBox(height: 16),
+                      _label('Destination House Number'),
+                      _field(_houseController, 'e.g. 10'),
+                      const SizedBox(height: 16),
+                      _label('Vehicle Plate (optional)'),
+                      _field(_plateController, 'e.g. WXY 1234'),
+                      const SizedBox(height: 26),
+                      const SectionHeader(
+                        title: 'Required Captures',
+                        subtitle: 'Capture all three photos to continue',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildCaptureItem(
+                        'Vehicle Plate',
+                        PhosphorIconsRegular.car,
+                        _vehicleFile != null,
+                        () => _capture('vehicle'),
+                      ),
+                      _buildCaptureItem(
+                        'Visitor Face',
+                        PhosphorIconsRegular.userFocus,
+                        _visitorFile != null,
+                        () => _capture('visitor'),
+                      ),
+                      _buildCaptureItem(
+                        'Driving License / ID',
+                        PhosphorIconsRegular.identificationCard,
+                        _licenseFile != null,
+                        () => _capture('license'),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: (allCaptured && !_submitting)
+                                ? AppColors.mintGradient
+                                : null,
+                            color: (allCaptured && !_submitting)
+                                ? null
+                                : AppColors.textSecondary.withOpacity(0.25),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: (allCaptured && !_submitting)
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.accentMint.withOpacity(
+                                        0.35,
+                                      ),
+                                      blurRadius: 16,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: ElevatedButton(
+                            onPressed: (allCaptured && !_submitting)
+                                ? _submit
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              disabledBackgroundColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: _submitting
+                                ? const SizedBox(
+                                    height: 22,
+                                    width: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Complete Registration',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _label(String text) => Text(text, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF2B3674)));
+  Widget _label(String text) => Text(
+    text,
+    style: const TextStyle(
+      fontWeight: FontWeight.w700,
+      color: AppColors.textPrimary,
+      fontSize: 13.5,
+    ),
+  );
 
   Widget _field(TextEditingController controller, String hint) {
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: TextField(
         controller: controller,
+        style: const TextStyle(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w600,
+        ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: Color(0xFFA3AED0)),
+          hintStyle: const TextStyle(color: AppColors.textSecondary),
           filled: true,
-          fillColor: const Color(0xFFF4F7FE),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          fillColor: AppColors.surfaceTint,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: AppColors.brand, width: 1.6),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildCaptureItem(String label, IconData icon, bool isCaptured, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(color: isCaptured ? const Color(0xFF10B981) : const Color(0xFFE0E5F2), width: 2),
-          borderRadius: BorderRadius.circular(12),
-          color: isCaptured ? const Color(0xFF10B981).withOpacity(0.05) : Colors.transparent,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: isCaptured ? const Color(0xFF10B981) : const Color(0xFFA3AED0)),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                isCaptured ? '$label ✓ captured' : label,
-                style: TextStyle(fontWeight: FontWeight.w600, color: isCaptured ? const Color(0xFF10B981) : const Color(0xFF2B3674)),
+  Widget _buildCaptureItem(
+    String label,
+    IconData icon,
+    bool isCaptured,
+    VoidCallback onTap,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: isCaptured
+                    ? AppColors.accentMint
+                    : const Color(0xFFE5E9F5),
+                width: 1.8,
               ),
+              borderRadius: BorderRadius.circular(16),
+              color: isCaptured
+                  ? AppColors.accentMint.withOpacity(0.08)
+                  : AppColors.surfaceTint,
             ),
-            Icon(
-              isCaptured ? PhosphorIconsFill.checkCircle : PhosphorIconsRegular.camera,
-              color: isCaptured ? const Color(0xFF10B981) : const Color(0xFF4318FF),
+            child: Row(
+              children: [
+                GradientIconBadge(
+                  icon: icon,
+                  gradient: isCaptured
+                      ? AppColors.mintGradient
+                      : AppColors.brandGradient,
+                  size: 42,
+                  iconSize: 20,
+                  radius: 13,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    isCaptured ? '$label  •  captured' : label,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: isCaptured
+                          ? AppColors.success
+                          : AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                Icon(
+                  isCaptured
+                      ? PhosphorIconsFill.checkCircle
+                      : PhosphorIconsRegular.camera,
+                  color: isCaptured ? AppColors.success : AppColors.brand,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

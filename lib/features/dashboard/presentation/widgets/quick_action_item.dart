@@ -19,7 +19,8 @@ class QuickActionItem extends StatefulWidget {
   State<QuickActionItem> createState() => _QuickActionItemState();
 }
 
-class _QuickActionItemState extends State<QuickActionItem> with SingleTickerProviderStateMixin {
+class _QuickActionItemState extends State<QuickActionItem>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -30,9 +31,10 @@ class _QuickActionItemState extends State<QuickActionItem> with SingleTickerProv
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.92).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.92,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -97,11 +99,7 @@ class _QuickActionItemState extends State<QuickActionItem> with SingleTickerProv
                     ],
                   ),
                   child: Center(
-                    child: Icon(
-                      widget.icon,
-                      size: 22,
-                      color: widget.color,
-                    ),
+                    child: Icon(widget.icon, size: 22, color: widget.color),
                   ),
                 ),
               ),

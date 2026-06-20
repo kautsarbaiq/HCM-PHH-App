@@ -6,6 +6,8 @@ import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/user_role.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/glass_text_field.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/gradient_background.dart';
 
 class ResidentLoginPage extends ConsumerStatefulWidget {
   const ResidentLoginPage({super.key});
@@ -22,10 +24,10 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
 
   void _handleAuth() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final authService = ref.read(authServiceProvider);
-      
+
       if (_isSignUp) {
         await authService.signUpWithEmailPassword(
           _emailController.text.trim(),
@@ -57,7 +59,10 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unexpected error occurred'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('Unexpected error occurred'),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) {
@@ -76,86 +81,169 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFE2E8F0), Color(0xFFF8FAFC)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+      body: GradientBackground(
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.home_work_rounded, size: 80, color: AppColors.primaryBlue),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'PHH Residency',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _isSignUp ? 'Create your account' : 'Sign in (resident / guard / admin)',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  GlassTextField(
-                    hintText: 'Email Address',
-                    prefixIcon: Icons.email_outlined,
-                    controller: _emailController,
-                  ),
-                  const SizedBox(height: 16),
-                  GlassTextField(
-                    hintText: 'Password',
-                    prefixIcon: Icons.lock_outline,
-                    isPassword: true,
-                    controller: _passwordController,
-                  ),
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleAuth,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Gradient brand logo badge
+                    Container(
+                      width: 84,
+                      height: 84,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.brandGradient,
+                        borderRadius: BorderRadius.circular(26),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.brand.withOpacity(0.35),
+                            blurRadius: 26,
+                            offset: const Offset(0, 14),
+                          ),
+                        ],
                       ),
-                      child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : Text(
-                              _isSignUp ? 'Sign Up' : 'Log In',
+                      child: const Icon(
+                        Icons.holiday_village_rounded,
+                        color: Colors.white,
+                        size: 44,
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    const Text(
+                      'PHH Residency',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _isSignUp
+                          ? 'Create your account'
+                          : 'Sign in (resident / guard / admin)',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    // White card holding the form
+                    PremiumCard(
+                      padding: const EdgeInsets.all(22),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          GlassTextField(
+                            hintText: 'Email Address',
+                            prefixIcon: Icons.email_outlined,
+                            controller: _emailController,
+                          ),
+                          const SizedBox(height: 16),
+                          GlassTextField(
+                            hintText: 'Password',
+                            prefixIcon: Icons.lock_outline,
+                            isPassword: true,
+                            controller: _passwordController,
+                          ),
+                          const SizedBox(height: 24),
+                          // Bold gradient primary button
+                          _GradientButton(
+                            label: _isSignUp ? 'Sign Up' : 'Log In',
+                            isLoading: _isLoading,
+                            onPressed: _isLoading ? null : _handleAuth,
+                          ),
+                          const SizedBox(height: 6),
+                          TextButton(
+                            onPressed: () =>
+                                setState(() => _isSignUp = !_isSignUp),
+                            child: Text(
+                              _isSignUp
+                                  ? 'Already have an account? Log In'
+                                  : 'Need an account? Sign Up',
                               style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                color: AppColors.brand,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () => setState(() => _isSignUp = !_isSignUp),
-                    child: Text(
-                      _isSignUp ? 'Already have an account? Log In' : 'Need an account? Sign Up',
-                      style: const TextStyle(color: AppColors.primaryBlue),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bold, brand-gradient primary action button with a built-in loading state.
+class _GradientButton extends StatelessWidget {
+  final String label;
+  final bool isLoading;
+  final VoidCallback? onPressed;
+
+  const _GradientButton({
+    required this.label,
+    required this.isLoading,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: onPressed == null ? 0.7 : 1,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: AppColors.brandGradient,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.brand.withOpacity(0.32),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(16),
+            child: SizedBox(
+              height: 56,
+              child: Center(
+                child: isLoading
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.4,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                    : Text(
+                        label,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ),
           ),

@@ -36,11 +36,7 @@ class FacilityCard extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Icon(
-                icon,
-                size: 32,
-                color: AppColors.deepSlate,
-              ),
+              child: Icon(icon, size: 32, color: AppColors.deepSlate),
             ),
             const SizedBox(height: 16),
             Text(

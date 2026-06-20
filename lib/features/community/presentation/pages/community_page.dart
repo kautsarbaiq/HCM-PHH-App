@@ -40,14 +40,17 @@ final noticesProvider = FutureProvider<List<Announcement>>((ref) async {
   return repo.getAllAnnouncements();
 });
 
-final myTicketsProvider = AsyncNotifierProvider<MyTicketsNotifier, List<Ticket>>(() => MyTicketsNotifier());
+final myTicketsProvider =
+    AsyncNotifierProvider<MyTicketsNotifier, List<Ticket>>(
+      () => MyTicketsNotifier(),
+    );
 
 class MyTicketsNotifier extends AsyncNotifier<List<Ticket>> {
   @override
   Future<List<Ticket>> build() async {
     final profile = await ref.watch(currentProfileProvider.future);
     if (profile == null) return [];
-    
+
     final repo = ref.read(ticketRepositoryProvider);
     return repo.getMyTickets(profile.id);
   }
@@ -79,9 +82,19 @@ class CommunityPage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
                 children: [
-                  _buildFilterChip(context, icon: PhosphorIconsRegular.calendarCheck, label: 'Events', route: '/events'),
+                  _buildFilterChip(
+                    context,
+                    icon: PhosphorIconsRegular.calendarCheck,
+                    label: 'Events',
+                    route: '/events',
+                  ),
                   const SizedBox(width: 10),
-                  _buildFilterChip(context, icon: PhosphorIconsRegular.chartBar, label: 'E-Polling', route: '/epolling'),
+                  _buildFilterChip(
+                    context,
+                    icon: PhosphorIconsRegular.chartBar,
+                    label: 'E-Polling',
+                    route: '/epolling',
+                  ),
                 ],
               ),
             ),
@@ -95,8 +108,14 @@ class CommunityPage extends ConsumerWidget {
               child: IndexedStack(
                 index: tabIndex,
                 children: [
-                  _buildNoticeBoard(ref).animate(target: tabIndex == 0 ? 1 : 0).fade(duration: 300.ms).slideY(begin: 0.1, end: 0),
-                  _buildFeedbackTickets(ref, context).animate(target: tabIndex == 1 ? 1 : 0).fade(duration: 300.ms).slideY(begin: 0.1, end: 0),
+                  _buildNoticeBoard(ref)
+                      .animate(target: tabIndex == 0 ? 1 : 0)
+                      .fade(duration: 300.ms)
+                      .slideY(begin: 0.1, end: 0),
+                  _buildFeedbackTickets(ref, context)
+                      .animate(target: tabIndex == 1 ? 1 : 0)
+                      .fade(duration: 300.ms)
+                      .slideY(begin: 0.1, end: 0),
                 ],
               ),
             ),
@@ -126,13 +145,16 @@ class CommunityPage extends ConsumerWidget {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
+              border: Border.all(
+                color: AppColors.primaryBlue.withOpacity(0.3),
+                width: 1.5,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
-                )
+                ),
               ],
             ),
             child: ClipOval(
@@ -141,10 +163,15 @@ class CommunityPage extends ConsumerWidget {
                     ? Image.network(
                         profile!.avatarUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
+                        errorBuilder: (_, __, ___) => const Icon(
+                          PhosphorIconsRegular.user,
+                          color: AppColors.primaryBlue,
+                        ),
                       )
-                    : const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
+                    : const Icon(
+                        PhosphorIconsRegular.user,
+                        color: AppColors.primaryBlue,
+                      ),
                 loading: () => const Center(
                   child: SizedBox(
                     width: 18,
@@ -152,7 +179,10 @@ class CommunityPage extends ConsumerWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 ),
-                error: (_, __) => const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
+                error: (_, __) => const Icon(
+                  PhosphorIconsRegular.user,
+                  color: AppColors.primaryBlue,
+                ),
               ),
             ),
           ),
@@ -182,7 +212,12 @@ class CommunityPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildSegmentButton(WidgetRef ref, int index, String label, int currentIndex) {
+  Widget _buildSegmentButton(
+    WidgetRef ref,
+    int index,
+    String label,
+    int currentIndex,
+  ) {
     final isSelected = index == currentIndex;
     return GestureDetector(
       onTap: () => ref.read(communityTabIndexProvider.notifier).state = index,
@@ -194,7 +229,13 @@ class CommunityPage extends ConsumerWidget {
           color: isSelected ? AppColors.primaryWhite : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           boxShadow: isSelected
-              ? [BoxShadow(color: AppColors.shadowColor, blurRadius: 8, offset: const Offset(0, 2))]
+              ? [
+                  BoxShadow(
+                    color: AppColors.shadowColor,
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
               : [],
         ),
         child: Center(
@@ -203,7 +244,9 @@ class CommunityPage extends ConsumerWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+              color: isSelected
+                  ? AppColors.textPrimary
+                  : AppColors.textSecondary,
             ),
           ),
         ),
@@ -221,7 +264,10 @@ class CommunityPage extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
           children: [
-            const NoticeSlider().animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0),
+            const NoticeSlider()
+                .animate()
+                .fade(duration: 400.ms)
+                .slideY(begin: 0.1, end: 0),
             const SizedBox(height: 24),
             const Text(
               'All Announcements',
@@ -235,7 +281,12 @@ class CommunityPage extends ConsumerWidget {
             if (notices.isEmpty)
               const Padding(
                 padding: EdgeInsets.only(top: 24),
-                child: Center(child: Text('No announcements yet.', style: TextStyle(color: AppColors.textSecondary))),
+                child: Center(
+                  child: Text(
+                    'No announcements yet.',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
               ),
             ...notices.map((notice) {
               final dateStr = _formatNoticeDate(notice.publishedAt);
@@ -283,12 +334,18 @@ class CommunityPage extends ConsumerWidget {
             error: (err, stack) => Center(child: Text('Error: $err')),
             data: (tickets) {
               if (tickets.isEmpty) {
-                return const Center(child: Text('No feedback tickets found.', style: TextStyle(color: AppColors.textSecondary)));
+                return const Center(
+                  child: Text(
+                    'No feedback tickets found.',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                );
               }
               return ListView.separated(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
                 itemCount: tickets.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 16),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 16),
                 itemBuilder: (context, index) {
                   final ticket = tickets[index];
                   final dateStr = _formatNoticeDate(ticket.createdAt);
@@ -307,7 +364,12 @@ class CommunityPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildFilterChip(BuildContext context, {required IconData icon, required String label, required String route}) {
+  Widget _buildFilterChip(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String route,
+  }) {
     return GestureDetector(
       onTap: () => context.push(route),
       child: Container(
@@ -322,9 +384,20 @@ class CommunityPage extends ConsumerWidget {
           children: [
             Icon(icon, size: 16, color: AppColors.primaryBlue),
             const SizedBox(width: 6),
-            Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
             const SizedBox(width: 4),
-            Icon(PhosphorIconsRegular.caretRight, size: 14, color: AppColors.textSecondary.withOpacity(0.5)),
+            Icon(
+              PhosphorIconsRegular.caretRight,
+              size: 14,
+              color: AppColors.textSecondary.withOpacity(0.5),
+            ),
           ],
         ),
       ),

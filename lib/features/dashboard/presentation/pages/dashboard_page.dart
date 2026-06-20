@@ -25,7 +25,11 @@ final dashboardBookingsProvider = FutureProvider<List<Booking>>((ref) async {
   return ref.read(facilityRepositoryProvider).getMyBookings(uid);
 });
 
-final _currency = NumberFormat.currency(locale: 'id_ID', symbol: 'RM ', decimalDigits: 0);
+final _currency = NumberFormat.currency(
+  locale: 'id_ID',
+  symbol: 'RM ',
+  decimalDigits: 0,
+);
 
 String _bookingDateLabel(String iso) {
   try {
@@ -92,12 +96,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             const SizedBox(
               width: 18,
               height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.deepSlate),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.deepSlate,
+              ),
             ),
             const SizedBox(width: 12),
             Text(
               'Loading…',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.deepSlate.withOpacity(0.6)),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.deepSlate.withOpacity(0.6),
+              ),
             ),
           ],
         ),
@@ -107,13 +118,21 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         context,
         amountChild: const Text(
           'Unavailable',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepSlate),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: AppColors.deepSlate,
+          ),
         ),
         secondaryChild: Padding(
           padding: const EdgeInsets.only(top: 4),
           child: Text(
             'Could not load your bills. Pull to refresh.',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.error.withOpacity(0.9)),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.error.withOpacity(0.9),
+            ),
           ),
         ),
       ),
@@ -136,21 +155,41 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                           colors: [Color(0xFF10B981), Color(0xFF059669)],
                         ),
                         boxShadow: [
-                          BoxShadow(color: const Color(0xFF10B981).withOpacity(0.35), blurRadius: 8, offset: const Offset(0, 3)),
+                          BoxShadow(
+                            color: const Color(0xFF10B981).withOpacity(0.35),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
                         ],
                       ),
-                      child: const Center(child: Icon(PhosphorIconsBold.check, color: Colors.white, size: 14)),
+                      child: const Center(
+                        child: Icon(
+                          PhosphorIconsBold.check,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 10),
                     const Text(
                       'All Cleared!',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepSlate, letterSpacing: -0.5),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.deepSlate,
+                        letterSpacing: -0.5,
+                      ),
                     ),
                   ],
                 )
               : Text(
                   _currency.format(total),
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.deepSlate, letterSpacing: -0.5),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.deepSlate,
+                    letterSpacing: -0.5,
+                  ),
                 ),
           secondaryChild: unpaid.isEmpty
               ? null
@@ -158,7 +197,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     '${unpaid.length} unpaid bill${unpaid.length > 1 ? 's' : ''}',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.error.withOpacity(0.9)),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.error.withOpacity(0.9),
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -186,10 +229,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.black.withOpacity(0.04),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.black.withOpacity(0.04), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -296,16 +336,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                         child: (avatarUrl != null && avatarUrl.isNotEmpty)
                             ? Image.network(
                                 avatarUrl,
-                                errorBuilder: (context, error, stackTrace) => const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(
+                                      PhosphorIconsRegular.user,
+                                      color: AppColors.primaryBlue,
+                                    ),
                                 fit: BoxFit.cover,
                               )
-                            : const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
+                            : const Icon(
+                                PhosphorIconsRegular.user,
+                                color: AppColors.primaryBlue,
+                              ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        (profile?.fullName.isNotEmpty ?? false) ? profile!.fullName : 'Resident',
+                        (profile?.fullName.isNotEmpty ?? false)
+                            ? profile!.fullName
+                            : 'Resident',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -320,7 +369,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                         color: Colors.transparent,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(PhosphorIconsRegular.houseLine, size: 20, color: AppColors.deepSlate),
+                      child: const Icon(
+                        PhosphorIconsRegular.houseLine,
+                        size: 20,
+                        color: AppColors.deepSlate,
+                      ),
                     ),
                   ],
                 ),
@@ -358,7 +411,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Quick Actions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.textPrimary)).animate().fade(duration: 400.ms),
+        Text(
+          'Quick Actions',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ).animate().fade(duration: 400.ms),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -369,8 +429,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 label: 'Emergency',
                 color: AppColors.error,
                 onTap: () {
-                  showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
-                    builder: (context) => const EmergencyBottomSheet());
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => const EmergencyBottomSheet(),
+                  );
                 },
               ),
             ),
@@ -394,40 +458,53 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         ).animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0),
         const SizedBox(height: 16),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: QuickActionItem(
-                icon: PhosphorIconsFill.phoneCall,
-                label: 'Intercom',
-                color: const Color(0xFF3B82F6),
-                onTap: () {
-                  showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
-                    builder: (context) => const SmartAccessModal(initialView: 1));
-                },
-              ),
-            ),
-            Expanded(
-              child: QuickActionItem(
-                icon: PhosphorIconsFill.shieldCheck,
-                label: 'Smart Lock',
-                color: const Color(0xFF8B5CF6),
-                onTap: () {
-                  showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
-                    builder: (context) => const SmartAccessModal(initialView: 2));
-                },
-              ),
-            ),
-            Expanded(
-              child: QuickActionItem(
-                icon: PhosphorIconsFill.calendarCheck,
-                label: 'Bookings',
-                color: const Color(0xFFF59E0B),
-                onTap: () => context.push('/facility'),
-              ),
-            ),
-          ],
-        ).animate().fade(duration: 400.ms, delay: 100.ms).slideY(begin: 0.1, end: 0),
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: QuickActionItem(
+                    icon: PhosphorIconsFill.phoneCall,
+                    label: 'Intercom',
+                    color: const Color(0xFF3B82F6),
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) =>
+                            const SmartAccessModal(initialView: 1),
+                      );
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: QuickActionItem(
+                    icon: PhosphorIconsFill.shieldCheck,
+                    label: 'Smart Lock',
+                    color: const Color(0xFF8B5CF6),
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) =>
+                            const SmartAccessModal(initialView: 2),
+                      );
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: QuickActionItem(
+                    icon: PhosphorIconsFill.calendarCheck,
+                    label: 'Bookings',
+                    color: const Color(0xFFF59E0B),
+                    onTap: () => context.push('/facility'),
+                  ),
+                ),
+              ],
+            )
+            .animate()
+            .fade(duration: 400.ms, delay: 100.ms)
+            .slideY(begin: 0.1, end: 0),
       ],
     );
   }
@@ -436,7 +513,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final topPadding = MediaQuery.of(context).padding.top;
     final bookingsAsync = ref.watch(dashboardBookingsProvider);
     final bookings = bookingsAsync.valueOrNull ?? <Booking>[];
-    final isLoadingBookings = bookingsAsync.isLoading && !bookingsAsync.hasValue;
+    final isLoadingBookings =
+        bookingsAsync.isLoading && !bookingsAsync.hasValue;
 
     return Container(
       decoration: BoxDecoration(
@@ -481,7 +559,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ),
                 ),
               ),
-              
+
               // 🌳 Tree 2 (Medium) positioned in the middle-left, sitting perfectly on the wave curve
               Positioned(
                 bottom: 4,
@@ -495,7 +573,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ),
                 ),
               ),
-              
+
               // 🏢 Buildings (Apartment) positioned further down on the far right dipping part of the wave
               Positioned(
                 bottom: -20,
@@ -509,14 +587,14 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   ),
                 ),
               ),
-              
+
               // Main content
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeader(context),
                   const SizedBox(height: 24),
-                  
+
                   // Slider container — upcoming facility bookings
                   SizedBox(
                     height: 140,
@@ -525,11 +603,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(DateFormat('EEE, MMM dd').format(DateTime.now()),
-                                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.deepSlate.withOpacity(0.7))),
-                                  const Icon(PhosphorIconsFill.calendar, size: 20, color: Color(0xFF005682)),
+                                  Text(
+                                    DateFormat(
+                                      'EEE, MMM dd',
+                                    ).format(DateTime.now()),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.deepSlate.withOpacity(
+                                        0.7,
+                                      ),
+                                    ),
+                                  ),
+                                  const Icon(
+                                    PhosphorIconsFill.calendar,
+                                    size: 20,
+                                    color: Color(0xFF005682),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 24),
@@ -551,18 +644,38 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(DateFormat('EEE, MMM dd').format(DateTime.now()),
-                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.deepSlate.withOpacity(0.7))),
-                                    const Icon(PhosphorIconsFill.calendar, size: 20, color: Color(0xFF005682)),
+                                    Text(
+                                      DateFormat(
+                                        'EEE, MMM dd',
+                                      ).format(DateTime.now()),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.deepSlate.withOpacity(
+                                          0.7,
+                                        ),
+                                      ),
+                                    ),
+                                    const Icon(
+                                      PhosphorIconsFill.calendar,
+                                      size: 20,
+                                      color: Color(0xFF005682),
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 16),
                                 const Expanded(
                                   child: Text(
                                     'No upcoming bookings. Tap to book a facility 📅',
-                                    style: TextStyle(fontSize: 18, color: AppColors.deepSlate, height: 1.4, fontWeight: FontWeight.w500),
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: AppColors.deepSlate,
+                                      height: 1.4,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -570,7 +683,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                           )
                         : PageView.builder(
                             controller: _pageController,
-                            onPageChanged: (index) => setState(() => _activePage = index),
+                            onPageChanged: (index) =>
+                                setState(() => _activePage = index),
                             itemCount: bookings.length,
                             itemBuilder: (context, index) {
                               final b = bookings[index];
@@ -581,24 +695,57 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(_bookingDateLabel(b.date),
-                                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.deepSlate.withOpacity(0.7))),
-                                        const Icon(PhosphorIconsFill.calendarCheck, size: 20, color: Color(0xFF005682)),
+                                        Text(
+                                          _bookingDateLabel(b.date),
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.deepSlate
+                                                .withOpacity(0.7),
+                                          ),
+                                        ),
+                                        const Icon(
+                                          PhosphorIconsFill.calendarCheck,
+                                          size: 20,
+                                          color: Color(0xFF005682),
+                                        ),
                                       ],
                                     ),
                                     const SizedBox(height: 16),
                                     Expanded(
                                       child: RichText(
                                         text: TextSpan(
-                                          style: const TextStyle(fontSize: 18, color: AppColors.deepSlate, height: 1.4, fontWeight: FontWeight.w500),
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            color: AppColors.deepSlate,
+                                            height: 1.4,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                           children: [
                                             const TextSpan(text: 'Your '),
-                                            TextSpan(text: b.facilityName, style: const TextStyle(color: Color(0xFF005682), fontWeight: FontWeight.bold)),
-                                            const TextSpan(text: ' booking is at '),
-                                            TextSpan(text: b.time, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.deepSlate)),
-                                            const TextSpan(text: '. See you there! 🎉'),
+                                            TextSpan(
+                                              text: b.facilityName,
+                                              style: const TextStyle(
+                                                color: Color(0xFF005682),
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const TextSpan(
+                                              text: ' booking is at ',
+                                            ),
+                                            TextSpan(
+                                              text: b.time,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.deepSlate,
+                                              ),
+                                            ),
+                                            const TextSpan(
+                                              text: '. See you there! 🎉',
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -620,7 +767,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                           width: isActive ? 24 : 4,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: AppColors.deepSlate.withOpacity(isActive ? 0.3 : 0.15),
+                            color: AppColors.deepSlate.withOpacity(
+                              isActive ? 0.3 : 0.15,
+                            ),
                             borderRadius: BorderRadius.circular(2),
                           ),
                         );
@@ -641,7 +790,7 @@ class TopHeaderWaveClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     final path = Path();
     path.lineTo(0, size.height - 32);
-    
+
     // Wave dipping down on the left
     final firstControlPoint = Offset(size.width * 0.25, size.height - 8);
     final firstEndPoint = Offset(size.width * 0.48, size.height - 32);
@@ -651,7 +800,7 @@ class TopHeaderWaveClipper extends CustomClipper<Path> {
       firstEndPoint.dx,
       firstEndPoint.dy,
     );
-    
+
     // Wave rising up towards the right and dipping down at the right edge
     final secondControlPoint = Offset(size.width * 0.73, size.height - 72);
     final secondEndPoint = Offset(size.width, size.height - 16);
@@ -661,7 +810,7 @@ class TopHeaderWaveClipper extends CustomClipper<Path> {
       secondEndPoint.dx,
       secondEndPoint.dy,
     );
-    
+
     path.lineTo(size.width, 0);
     path.close();
     return path;

@@ -55,7 +55,7 @@ class TicketRepository {
           .select()
           .eq('created_by', userId)
           .order('created_at', ascending: false);
-      
+
       return (response as List).map((json) => Ticket.fromJson(json)).toList();
     } catch (e) {
       print('Error fetching tickets: $e');
@@ -70,7 +70,7 @@ class TicketRepository {
         .insert(ticket.toJson())
         .select()
         .single();
-        
+
     return Ticket.fromJson(response);
   }
 }

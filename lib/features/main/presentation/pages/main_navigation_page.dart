@@ -24,10 +24,18 @@ class MainNavigationPage extends StatelessWidget {
 
   void _onItemTapped(int index, BuildContext context) {
     switch (index) {
-      case 0: context.go('/home'); break;
-      case 1: context.go('/access'); break;
-      case 2: context.go('/bills'); break;
-      case 3: context.go('/community'); break;
+      case 0:
+        context.go('/home');
+        break;
+      case 1:
+        context.go('/access');
+        break;
+      case 2:
+        context.go('/bills');
+        break;
+      case 3:
+        context.go('/community');
+        break;
     }
   }
 
@@ -60,13 +68,24 @@ class MainNavigationPage extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFEF4444).withOpacity(0.12),
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.25), width: 1.5),
+                  border: Border.all(
+                    color: const Color(0xFFEF4444).withOpacity(0.25),
+                    width: 1.5,
+                  ),
                   boxShadow: [
-                    BoxShadow(color: const Color(0xFFEF4444).withOpacity(0.15), blurRadius: 20, spreadRadius: 2),
+                    BoxShadow(
+                      color: const Color(0xFFEF4444).withOpacity(0.15),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                    ),
                   ],
                 ),
                 child: const Center(
-                  child: Icon(PhosphorIconsFill.warning, color: Color(0xFFEF4444), size: 24),
+                  child: Icon(
+                    PhosphorIconsFill.warning,
+                    color: Color(0xFFEF4444),
+                    size: 24,
+                  ),
                 ),
               ),
             ),
@@ -103,23 +122,51 @@ class MainNavigationPage extends StatelessWidget {
                 color: Colors.black.withOpacity(0.1),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
-              )
+              ),
             ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Expanded(
-                child: _buildNavItem(context, index: 0, currentIndex: currentIndex, icon: PhosphorIconsRegular.house, activeIcon: PhosphorIconsFill.house, label: 'Home'),
+                child: _buildNavItem(
+                  context,
+                  index: 0,
+                  currentIndex: currentIndex,
+                  icon: PhosphorIconsRegular.house,
+                  activeIcon: PhosphorIconsFill.house,
+                  label: 'Home',
+                ),
               ),
               Expanded(
-                child: _buildNavItem(context, index: 1, currentIndex: currentIndex, icon: PhosphorIconsRegular.qrCode, activeIcon: PhosphorIconsFill.qrCode, label: 'Access'),
+                child: _buildNavItem(
+                  context,
+                  index: 1,
+                  currentIndex: currentIndex,
+                  icon: PhosphorIconsRegular.qrCode,
+                  activeIcon: PhosphorIconsFill.qrCode,
+                  label: 'Access',
+                ),
               ),
               Expanded(
-                child: _buildNavItem(context, index: 2, currentIndex: currentIndex, icon: PhosphorIconsRegular.receipt, activeIcon: PhosphorIconsFill.receipt, label: 'Bills'),
+                child: _buildNavItem(
+                  context,
+                  index: 2,
+                  currentIndex: currentIndex,
+                  icon: PhosphorIconsRegular.receipt,
+                  activeIcon: PhosphorIconsFill.receipt,
+                  label: 'Bills',
+                ),
               ),
               Expanded(
-                child: _buildNavItem(context, index: 3, currentIndex: currentIndex, icon: PhosphorIconsRegular.users, activeIcon: PhosphorIconsFill.users, label: 'Community'),
+                child: _buildNavItem(
+                  context,
+                  index: 3,
+                  currentIndex: currentIndex,
+                  icon: PhosphorIconsRegular.users,
+                  activeIcon: PhosphorIconsFill.users,
+                  label: 'Community',
+                ),
               ),
             ],
           ),
@@ -128,7 +175,14 @@ class MainNavigationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(BuildContext context, {required int index, required int currentIndex, required IconData icon, required IconData activeIcon, required String label}) {
+  Widget _buildNavItem(
+    BuildContext context, {
+    required int index,
+    required int currentIndex,
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+  }) {
     final isSelected = index == currentIndex;
     return GestureDetector(
       onTap: () => _onItemTapped(index, context),
@@ -151,7 +205,9 @@ class MainNavigationPage extends StatelessWidget {
                 : null,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: isSelected ? AppColors.primaryBlue.withOpacity(0.24) : Colors.transparent,
+              color: isSelected
+                  ? AppColors.primaryBlue.withOpacity(0.24)
+                  : Colors.transparent,
               width: 1,
             ),
             boxShadow: isSelected
@@ -160,7 +216,7 @@ class MainNavigationPage extends StatelessWidget {
                       color: AppColors.primaryBlue.withOpacity(0.08),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
-                    )
+                    ),
                   ]
                 : null,
           ),
@@ -173,7 +229,9 @@ class MainNavigationPage extends StatelessWidget {
                 duration: const Duration(milliseconds: 250),
                 child: Icon(
                   isSelected ? activeIcon : icon,
-                  color: isSelected ? AppColors.primaryBlue : AppColors.textSecondary,
+                  color: isSelected
+                      ? AppColors.primaryBlue
+                      : AppColors.textSecondary,
                   size: 22,
                 ),
               ),
@@ -187,7 +245,9 @@ class MainNavigationPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    color: isSelected ? AppColors.primaryBlue : AppColors.textSecondary,
+                    color: isSelected
+                        ? AppColors.primaryBlue
+                        : AppColors.textSecondary,
                     letterSpacing: -0.2,
                   ),
                 ),

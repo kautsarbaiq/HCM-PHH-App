@@ -118,7 +118,9 @@ class AppDrawer extends ConsumerWidget {
 
   Widget _buildProfileHeader(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(currentProfileProvider).valueOrNull;
-    final name = (profile?.fullName.isNotEmpty ?? false) ? profile!.fullName : 'Guest';
+    final name = (profile?.fullName.isNotEmpty ?? false)
+        ? profile!.fullName
+        : 'Guest';
     final role = profile?.role;
     final subtitle = (role == null || role.isEmpty)
         ? 'Tap to view profile'
@@ -140,7 +142,10 @@ class AppDrawer extends ConsumerWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.primaryBlue.withOpacity(0.1),
-                border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 2),
+                border: Border.all(
+                  color: AppColors.primaryBlue.withOpacity(0.3),
+                  width: 2,
+                ),
               ),
               child: ClipOval(
                 child: (avatarUrl != null && avatarUrl.isNotEmpty)
@@ -149,10 +154,15 @@ class AppDrawer extends ConsumerWidget {
                         fit: BoxFit.cover,
                         width: 52,
                         height: 52,
-                        errorBuilder: (_, __, ___) =>
-                            const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
+                        errorBuilder: (_, __, ___) => const Icon(
+                          PhosphorIconsRegular.user,
+                          color: AppColors.primaryBlue,
+                        ),
                       )
-                    : const Icon(PhosphorIconsRegular.user, color: AppColors.primaryBlue),
+                    : const Icon(
+                        PhosphorIconsRegular.user,
+                        color: AppColors.primaryBlue,
+                      ),
               ),
             ),
             const SizedBox(width: 16),
@@ -181,7 +191,11 @@ class AppDrawer extends ConsumerWidget {
                 ],
               ),
             ),
-            Icon(PhosphorIconsRegular.caretRight, size: 18, color: AppColors.textSecondary.withOpacity(0.5)),
+            Icon(
+              PhosphorIconsRegular.caretRight,
+              size: 18,
+              color: AppColors.textSecondary.withOpacity(0.5),
+            ),
           ],
         ),
       ),
@@ -256,7 +270,11 @@ class AppDrawer extends ConsumerWidget {
                     ],
                   ),
                 ),
-                Icon(PhosphorIconsRegular.caretRight, size: 16, color: AppColors.textSecondary.withOpacity(0.5)),
+                Icon(
+                  PhosphorIconsRegular.caretRight,
+                  size: 16,
+                  color: AppColors.textSecondary.withOpacity(0.5),
+                ),
               ],
             ),
           ),

@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../theme/app_colors.dart';
+
 class GuardLayout extends StatelessWidget {
   final Widget child;
 
@@ -13,14 +15,19 @@ class GuardLayout extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Sign out?'),
-        content: const Text('You will need to sign in again to access the security portal.'),
+        content: const Text(
+          'You will need to sign in again to access the security portal.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text('Sign out'),
           ),
@@ -33,39 +40,56 @@ class GuardLayout extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     try {
       await Supabase.instance.client.auth.signOut();
-      // The router's auth-state redirect moves to /guard once signed out.
+      // The router's auth-state redirect moves to /login once signed out.
     } catch (e) {
       messenger.showSnackBar(
-        SnackBar(content: Text('Could not sign out: $e'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Could not sign out: $e'),
+          backgroundColor: AppColors.error,
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Wide (tablet/desktop) → fixed sidebar. Narrow (phone) → hamburger drawer,
-    // so the content isn't crushed by a fixed sidebar. Raised the breakpoint to
-    // 700 so small tablets / landscape phones don't get a cramped split.
     final width = MediaQuery.of(context).size.width;
     final isWide = width >= 700;
-    // Proportional sidebar (clamped) instead of a hard 250px so it doesn't
-    // starve the content tables on smaller wide layouts.
-    final sidebarWidth = (width * 0.26).clamp(220.0, 300.0);
+    final sidebarWidth = (width * 0.26).clamp(230.0, 300.0);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE),
-      drawer: isWide ? null : Drawer(backgroundColor: Colors.white, child: _sidebar(context, isWide: false)),
+      backgroundColor: AppColors.backgroundGrey,
+      drawer: isWide
+          ? null
+          : Drawer(
+              backgroundColor: Colors.white,
+              child: _sidebar(context, isWide: false),
+            ),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF2B3674)),
-        title: const Text(
-          'Security Portal',
-          style: TextStyle(color: Color(0xFF2B3674), fontWeight: FontWeight.bold, fontSize: 18),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _logoBadge(28),
+            const SizedBox(width: 10),
+            const Text(
+              'Security Portal',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(PhosphorIconsRegular.signOut, color: Colors.redAccent),
+            icon: const Icon(
+              PhosphorIconsRegular.signOut,
+              color: AppColors.error,
+            ),
             onPressed: () => _handleLogout(context),
             tooltip: 'Logout',
           ),
@@ -74,9 +98,36 @@ class GuardLayout extends StatelessWidget {
       ),
       body: Row(
         children: [
-          if (isWide) SizedBox(width: sidebarWidth, child: _sidebar(context, isWide: true)),
+          if (isWide)
+            SizedBox(
+              width: sidebarWidth,
+              child: _sidebar(context, isWide: true),
+            ),
           Expanded(child: child),
         ],
+      ),
+    );
+  }
+
+  Widget _logoBadge(double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: AppColors.brandGradient,
+        borderRadius: BorderRadius.circular(size * 0.3),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.brand.withOpacity(0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Icon(
+        PhosphorIconsFill.shieldCheck,
+        color: Colors.white,
+        size: size * 0.6,
       ),
     );
   }
@@ -86,7 +137,7 @@ class GuardLayout extends StatelessWidget {
 
     void go(String path) {
       context.go(path);
-      if (!isWide) Navigator.pop(context); // close the drawer on phones
+      if (!isWide) Navigator.pop(context);
     }
 
     return Container(
@@ -97,33 +148,65 @@ class GuardLayout extends StatelessWidget {
             const SizedBox(height: 16),
             _SidebarItem(
               icon: PhosphorIconsRegular.users,
+              activeIcon: PhosphorIconsFill.users,
               label: 'Visitor Logs',
               isSelected: location == '/guard/visitors',
               onTap: () => go('/guard/visitors'),
             ),
             _SidebarItem(
               icon: PhosphorIconsRegular.house,
+              activeIcon: PhosphorIconsFill.house,
               label: 'House Directory',
               isSelected: location == '/guard/houses',
               onTap: () => go('/guard/houses'),
             ),
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Divider(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Row(
+                children: [
+                  const Text(
+                    'QUICK ACTIONS',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textSecondary,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Container(height: 1, color: const Color(0xFFEEF1FA)),
+                  ),
+                ],
+              ),
             ),
             _SidebarItem(
               icon: PhosphorIconsRegular.qrCode,
+              activeIcon: PhosphorIconsFill.qrCode,
               label: 'Scan QR',
               isSelected: location == '/guard/scan',
               onTap: () => go('/guard/scan'),
-              isPrimary: true,
+              accent: AppColors.mintGradient,
             ),
             _SidebarItem(
               icon: PhosphorIconsRegular.userPlus,
+              activeIcon: PhosphorIconsFill.userPlus,
               label: 'Manual Registration',
               isSelected: location == '/guard/register',
               onTap: () => go('/guard/register'),
-              isPrimary: true,
+              accent: AppColors.mintGradient,
+            ),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: _SidebarItem(
+                icon: PhosphorIconsRegular.signOut,
+                activeIcon: PhosphorIconsRegular.signOut,
+                label: 'Logout',
+                isSelected: false,
+                onTap: () => _handleLogout(context),
+                isLogout: true,
+              ),
             ),
           ],
         ),
@@ -134,55 +217,86 @@ class GuardLayout extends StatelessWidget {
 
 class _SidebarItem extends StatelessWidget {
   final IconData icon;
+  final IconData activeIcon;
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
-  final bool isPrimary;
+  final Gradient? accent;
+  final bool isLogout;
 
   const _SidebarItem({
     required this.icon,
+    required this.activeIcon,
     required this.label,
     required this.isSelected,
     required this.onTap,
-    this.isPrimary = false,
+    this.accent,
+    this.isLogout = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? (isPrimary ? const Color(0xFF10B981) : const Color(0xFF4318FF))
-              : (isPrimary ? const Color(0xFF10B981).withOpacity(0.08) : Colors.transparent),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected
-                  ? Colors.white
-                  : (isPrimary ? const Color(0xFF10B981) : const Color(0xFFA3AED0)),
+    final gradient = accent ?? AppColors.brandGradient;
+    final tint = (accent?.colors.first) ?? AppColors.brand;
+    final restColor = isLogout ? AppColors.error : AppColors.textSecondary;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            decoration: BoxDecoration(
+              gradient: isSelected ? gradient : null,
+              color: !isSelected && accent != null
+                  ? tint.withOpacity(0.08)
+                  : null,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: tint.withOpacity(0.30),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ]
+                  : null,
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
+            child: Row(
+              children: [
+                Icon(
+                  isSelected ? activeIcon : icon,
                   color: isSelected
                       ? Colors.white
-                      : (isPrimary ? const Color(0xFF10B981) : const Color(0xFFA3AED0)),
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      : (accent != null ? tint : restColor),
+                  size: 22,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: isSelected
+                          ? Colors.white
+                          : (accent != null
+                                ? tint
+                                : (isLogout
+                                      ? AppColors.error
+                                      : AppColors.textPrimary)),
+                      fontWeight: isSelected
+                          ? FontWeight.w800
+                          : FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
