@@ -13,7 +13,6 @@ import '../../../../core/repositories/profile_repository.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../main/presentation/pages/main_navigation_page.dart';
-import '../../../access/presentation/widgets/smart_access_modal.dart';
 import '../../../emergency/presentation/widgets/emergency_bottom_sheet.dart';
 import '../widgets/quick_action_item.dart';
 
@@ -578,15 +577,6 @@ class DashboardPage extends ConsumerWidget {
                 onTap: () => context.go('/access'),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: QuickActionItem(
-                icon: PhosphorIconsFill.wallet,
-                label: 'Bills & Pay',
-                color: AppColors.accentSky,
-                onTap: () => context.go('/bills'),
-              ),
-            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -594,29 +584,10 @@ class DashboardPage extends ConsumerWidget {
           children: [
             Expanded(
               child: QuickActionItem(
-                icon: PhosphorIconsFill.phoneCall,
-                label: 'Intercom',
-                color: AppColors.accentCyan,
-                onTap: () => showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => const SmartAccessModal(initialView: 1),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: QuickActionItem(
-                icon: PhosphorIconsFill.shieldCheck,
-                label: 'Smart Lock',
-                color: AppColors.brandViolet,
-                onTap: () => showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => const SmartAccessModal(initialView: 2),
-                ),
+                icon: PhosphorIconsFill.wallet,
+                label: 'Bills & Pay',
+                color: AppColors.accentSky,
+                onTap: () => context.go('/bills'),
               ),
             ),
             const SizedBox(width: 12),

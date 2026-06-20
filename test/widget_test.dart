@@ -1,30 +1,17 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+// Smoke test: the splash screen is pure UI (no Supabase/dotenv), so it builds
+// without backend initialisation and is a safe, meaningful sanity check that
+// the theme + core widgets render.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:hcm_app/main.dart';
+import 'package:hcm_app/features/splash/presentation/pages/splash_page.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('SplashPage renders the HCM brand', (WidgetTester tester) async {
+    await tester.pumpWidget(const MaterialApp(home: SplashPage()));
+    await tester.pump(const Duration(milliseconds: 600));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('HCM'), findsOneWidget);
+    expect(find.text('Housing Community Management'), findsOneWidget);
   });
 }
