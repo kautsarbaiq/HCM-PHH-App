@@ -5,7 +5,10 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/repositories/document_repository.dart';
-import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/app_states.dart';
+import '../../../../core/widgets/gradient_background.dart';
 import '../../../../theme/app_colors.dart';
 
 final eDocumentsProvider = FutureProvider<List<AppDocument>>((ref) {
@@ -19,7 +22,7 @@ Future<void> _openDocument(BuildContext context, AppDocument doc) async {
     messenger.showSnackBar(
       SnackBar(
         content: Text('No file uploaded for "${doc.title}" yet.'),
-        backgroundColor: AppColors.primaryBlue,
+        backgroundColor: AppColors.brand,
       ),
     );
     return;
@@ -66,77 +69,80 @@ class EDocumentPage extends ConsumerWidget {
     final docsAsync = ref.watch(eDocumentsProvider);
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            backgroundColor: AppColors.backgroundGrey,
-            pinned: true,
-            leading: IconButton(
-              icon: const Icon(PhosphorIconsRegular.caretLeft),
-              onPressed: () => context.pop(),
-            ),
-            title: const Text(
-              'E-Document',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+      backgroundColor: AppColors.backgroundGrey,
+      body: GradientBackground(
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              pinned: true,
+              leading: IconButton(
+                icon: const Icon(
+                  PhosphorIconsRegular.caretLeft,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: () => context.pop(),
               ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(24),
-            sliver: docsAsync.when(
-              loading: () => const SliverToBoxAdapter(
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(40),
-                    child: CircularProgressIndicator(),
-                  ),
+              title: const Text(
+                'E-Document',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              error: (e, _) => SliverToBoxAdapter(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: Text(
-                      'Error: $e',
-                      style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+              sliver: docsAsync.when(
+                loading: () => const SliverToBoxAdapter(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(40),
+                      child: CircularProgressIndicator(),
                     ),
                   ),
                 ),
-              ),
-              data: (docs) {
-                if (docs.isEmpty) {
-                  return const SliverToBoxAdapter(
-                    child: Center(
+                error: (e, _) => SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 40),
+                    child: AppErrorState(
+                      message: '$e',
+                      onRetry: () => ref.invalidate(eDocumentsProvider),
+                    ),
+                  ),
+                ),
+                data: (docs) {
+                  if (docs.isEmpty) {
+                    return const SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.all(40),
-                        child: Text(
-                          'No documents available.',
-                          style: TextStyle(color: AppColors.textSecondary),
+                        padding: EdgeInsets.only(top: 40),
+                        child: AppEmptyState(
+                          icon: Icons.description_rounded,
+                          title: 'No documents available',
+                          message:
+                              'Community documents and files will appear here.',
                         ),
                       ),
-                    ),
-                  );
-                }
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final doc = docs[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: GlassCard(
-                        padding: const EdgeInsets.all(20),
+                    );
+                  }
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final doc = docs[index];
+                      return PremiumCard(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(18),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: AppColors.error.withOpacity(0.08),
+                                color: AppColors.error.withOpacity(0.10),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: const Icon(
                                 PhosphorIconsFill.filePdf,
-                                color: Color(0xFFEF4444),
+                                color: AppColors.error,
                                 size: 24,
                               ),
                             ),
@@ -151,34 +157,18 @@ class EDocumentPage extends ConsumerWidget {
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       fontSize: 15,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w700,
                                       color: AppColors.textPrimary,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 8),
                                   Row(
                                     children: [
                                       if (doc.category != null)
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primaryBlue
-                                                .withOpacity(0.12),
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            doc.category!,
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.primaryBlue,
-                                            ),
-                                          ),
+                                        StatusPill(
+                                          label: doc.category!,
+                                          color: AppColors.brand,
+                                          dense: true,
                                         ),
                                       if (doc.fileSize != null) ...[
                                         const SizedBox(width: 8),
@@ -186,6 +176,7 @@ class EDocumentPage extends ConsumerWidget {
                                           doc.fileSize!,
                                           style: const TextStyle(
                                             fontSize: 12,
+                                            fontWeight: FontWeight.w500,
                                             color: AppColors.textSecondary,
                                           ),
                                         ),
@@ -199,28 +190,35 @@ class EDocumentPage extends ConsumerWidget {
                             GestureDetector(
                               onTap: () => _openDocument(context, doc),
                               child: Container(
-                                padding: const EdgeInsets.all(10),
+                                padding: const EdgeInsets.all(11),
                                 decoration: BoxDecoration(
-                                  color: AppColors.deepSlate.withOpacity(0.08),
-                                  borderRadius: BorderRadius.circular(12),
+                                  gradient: AppColors.brandGradient,
+                                  borderRadius: BorderRadius.circular(14),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.brand.withOpacity(0.30),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
                                 ),
                                 child: const Icon(
                                   PhosphorIconsRegular.downloadSimple,
-                                  color: AppColors.deepSlate,
+                                  color: Colors.white,
                                   size: 20,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  }, childCount: docs.length),
-                );
-              },
+                      );
+                    }, childCount: docs.length),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

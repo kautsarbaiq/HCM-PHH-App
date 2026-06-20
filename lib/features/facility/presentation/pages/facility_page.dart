@@ -5,6 +5,9 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/repositories/facility_repository.dart';
+import '../../../../core/widgets/app_states.dart';
+import '../../../../core/widgets/gradient_background.dart';
+import '../../../../core/widgets/section_header.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/booking_bottom_sheet.dart';
 import '../widgets/facility_card.dart';
@@ -48,87 +51,96 @@ class FacilityPage extends ConsumerWidget {
     final facilitiesAsync = ref.watch(facilitiesProvider);
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            backgroundColor: AppColors.backgroundGrey,
-            pinned: true,
-            leading: IconButton(
-              icon: const Icon(PhosphorIconsRegular.caretLeft),
-              onPressed: () => context.pop(),
-            ),
-            title: const Text(
-              'Book Facilities',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+      backgroundColor: AppColors.backgroundGrey,
+      body: GradientBackground(
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              pinned: true,
+              leading: IconButton(
+                icon: const Icon(
+                  PhosphorIconsRegular.caretLeft,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: () => context.pop(),
               ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(24),
-            sliver: facilitiesAsync.when(
-              loading: () => const SliverToBoxAdapter(
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(40),
-                    child: CircularProgressIndicator(),
-                  ),
+              title: const Text(
+                'Book Facilities',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              error: (err, _) => SliverToBoxAdapter(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: Text(
-                      'Could not load facilities: $err',
-                      style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(24, 8, 24, 0),
+                child: SectionHeader(
+                  title: 'Community amenities',
+                  subtitle: 'Reserve a slot for shared facilities',
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.all(24),
+              sliver: facilitiesAsync.when(
+                loading: () => const SliverToBoxAdapter(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(40),
+                      child: CircularProgressIndicator(),
                     ),
                   ),
                 ),
-              ),
-              data: (facilities) {
-                if (facilities.isEmpty) {
-                  return const SliverToBoxAdapter(
-                    child: Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(40),
-                        child: Text(
-                          'No facilities available.',
-                          style: TextStyle(color: AppColors.textSecondary),
-                        ),
+                error: (err, _) => SliverToBoxAdapter(
+                  child: AppErrorState(
+                    message: 'Could not load facilities: $err',
+                    onRetry: () => ref.invalidate(facilitiesProvider),
+                  ),
+                ),
+                data: (facilities) {
+                  if (facilities.isEmpty) {
+                    return const SliverToBoxAdapter(
+                      child: AppEmptyState(
+                        icon: PhosphorIconsRegular.buildings,
+                        title: 'No facilities available',
+                        message: 'Bookable amenities will appear here.',
+                        gradient: AppColors.skyGradient,
                       ),
-                    ),
-                  );
-                }
-                return SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 0.85,
-                  ),
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final facility = facilities[index];
-                    return FacilityCard(
-                      icon: _facilityIcon(facility.iconName),
-                      name: facility.name,
-                      onBook: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (context) =>
-                              BookingBottomSheet(facilityName: facility.name),
-                        );
-                      },
                     );
-                  }, childCount: facilities.length),
-                );
-              },
+                  }
+                  return SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 0.85,
+                        ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final facility = facilities[index];
+                      return FacilityCard(
+                        icon: _facilityIcon(facility.iconName),
+                        name: facility.name,
+                        onBook: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) =>
+                                BookingBottomSheet(facilityName: facility.name),
+                          );
+                        },
+                      );
+                    }, childCount: facilities.length),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

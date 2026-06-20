@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/repositories/form_repository.dart';
-import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/app_states.dart';
+import '../../../../core/widgets/gradient_background.dart';
 import '../../../../theme/app_colors.dart';
 
 final eFormsProvider = FutureProvider<List<AppForm>>((ref) {
@@ -30,6 +33,21 @@ IconData _formIcon(String? category) {
   }
 }
 
+LinearGradient _formGradient(String? category) {
+  switch (category) {
+    case 'renovation':
+      return AppColors.sunsetGradient;
+    case 'moving':
+      return AppColors.skyGradient;
+    case 'vehicle':
+      return AppColors.brandGradient;
+    case 'pet':
+      return AppColors.mintGradient;
+    default:
+      return AppColors.brandGradient;
+  }
+}
+
 class EFormPage extends ConsumerWidget {
   const EFormPage({super.key});
 
@@ -40,80 +58,78 @@ class EFormPage extends ConsumerWidget {
         ref.watch(mySubmittedFormsProvider).valueOrNull ?? <String>{};
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            backgroundColor: AppColors.backgroundGrey,
-            pinned: true,
-            leading: IconButton(
-              icon: const Icon(PhosphorIconsRegular.caretLeft),
-              onPressed: () => context.pop(),
-            ),
-            title: const Text(
-              'E-Form',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+      backgroundColor: AppColors.backgroundGrey,
+      body: GradientBackground(
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              pinned: true,
+              leading: IconButton(
+                icon: const Icon(
+                  PhosphorIconsRegular.caretLeft,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: () => context.pop(),
               ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(24),
-            sliver: formsAsync.when(
-              loading: () => const SliverToBoxAdapter(
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(40),
-                    child: CircularProgressIndicator(),
-                  ),
+              title: const Text(
+                'E-Form',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              error: (e, _) => SliverToBoxAdapter(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: Text(
-                      'Error: $e',
-                      style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+              sliver: formsAsync.when(
+                loading: () => const SliverToBoxAdapter(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(40),
+                      child: CircularProgressIndicator(),
                     ),
                   ),
                 ),
-              ),
-              data: (forms) {
-                if (forms.isEmpty) {
-                  return const SliverToBoxAdapter(
-                    child: Center(
+                error: (e, _) => SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 40),
+                    child: AppErrorState(
+                      message: '$e',
+                      onRetry: () => ref.invalidate(eFormsProvider),
+                    ),
+                  ),
+                ),
+                data: (forms) {
+                  if (forms.isEmpty) {
+                    return const SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.all(40),
-                        child: Text(
-                          'No forms available.',
-                          style: TextStyle(color: AppColors.textSecondary),
+                        padding: EdgeInsets.only(top: 40),
+                        child: AppEmptyState(
+                          icon: Icons.assignment_rounded,
+                          title: 'No forms available',
+                          message:
+                              'Application and request forms will appear here.',
                         ),
                       ),
-                    ),
-                  );
-                }
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final form = forms[index];
-                    final isSubmitted = submitted.contains(form.id);
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: GlassCard(
-                        padding: const EdgeInsets.all(20),
+                    );
+                  }
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final form = forms[index];
+                      final isSubmitted = submitted.contains(form.id);
+                      return PremiumCard(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(18),
                         child: Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: AppColors.backgroundGrey,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Icon(
-                                _formIcon(form.category),
-                                color: AppColors.deepSlate,
-                                size: 24,
-                              ),
+                            GradientIconBadge(
+                              icon: _formIcon(form.category),
+                              gradient: _formGradient(form.category),
+                              size: 50,
+                              iconSize: 24,
+                              radius: 16,
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -124,7 +140,7 @@ class EFormPage extends ConsumerWidget {
                                     form.title,
                                     style: const TextStyle(
                                       fontSize: 16,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w700,
                                       color: AppColors.textPrimary,
                                     ),
                                   ),
@@ -143,28 +159,13 @@ class EFormPage extends ConsumerWidget {
                             ),
                             const SizedBox(width: 12),
                             if (isSubmitted)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryBlue.withOpacity(
-                                    0.15,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Text(
-                                  'Submitted',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primaryBlue,
-                                  ),
-                                ),
+                              const StatusPill(
+                                label: 'Submitted',
+                                color: AppColors.success,
+                                dense: true,
                               )
                             else
-                              ElevatedButton(
+                              _ApplyButton(
                                 onPressed: () async {
                                   final messenger = ScaffoldMessenger.of(
                                     context,
@@ -191,26 +192,57 @@ class EFormPage extends ConsumerWidget {
                                     );
                                   }
                                 },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primaryBlue,
-                                  foregroundColor: Colors.white,
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                child: const Text('Apply'),
                               ),
                           ],
                         ),
-                      ),
-                    );
-                  }, childCount: forms.length),
-                );
-              },
+                      );
+                    }, childCount: forms.length),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A vivid brand-gradient "Apply" pill used to start a form submission.
+class _ApplyButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _ApplyButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: AppColors.brandGradient,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.brand.withOpacity(0.30),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: const Text(
+            'Apply',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
             ),
           ),
-        ],
+        ),
       ),
     );
   }

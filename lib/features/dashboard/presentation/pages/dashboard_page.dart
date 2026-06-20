@@ -10,6 +10,8 @@ import 'package:hcm_app/theme/app_colors.dart';
 import '../../../../core/repositories/billing_repository.dart';
 import '../../../../core/repositories/facility_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/section_header.dart';
 import '../../../main/presentation/pages/main_navigation_page.dart';
 import '../../../access/presentation/widgets/smart_access_modal.dart';
 import '../../../emergency/presentation/widgets/emergency_bottom_sheet.dart';
@@ -216,28 +218,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     required Widget amountChild,
     Widget? secondaryChild,
   }) {
-    return Container(
-      width: double.infinity,
+    return PremiumCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFE3F3FD), // Soft baby sky blue
-            Color(0xFFFEF9C3), // Soft pale golden yellow
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withOpacity(0.04), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+      radius: 24,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -250,7 +233,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary.withOpacity(0.8),
+                    color: AppColors.textSecondary.withOpacity(0.9),
                     letterSpacing: 0.2,
                   ),
                 ),
@@ -264,18 +247,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               ],
             ),
           ),
+          const SizedBox(width: 12),
           GestureDetector(
             onTap: () => context.go('/bills'),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFF0284C7),
+                gradient: AppColors.brandGradient,
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF0284C7).withOpacity(0.25),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: AppColors.brand.withOpacity(0.30),
+                    blurRadius: 12,
+                    offset: const Offset(0, 5),
                   ),
                 ],
               ),
@@ -389,15 +373,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               height: 48,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.backgroundGrey.withOpacity(0.5),
+                color: AppColors.surfaceTint,
                 border: Border.all(
-                  color: Colors.black.withOpacity(0.03),
+                  color: AppColors.brand.withOpacity(0.10),
                   width: 1,
                 ),
               ),
               child: const Icon(
                 PhosphorIconsRegular.list,
-                color: AppColors.deepSlate,
+                color: AppColors.brand,
                 size: 24,
               ),
             ),
@@ -411,13 +395,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Quick Actions',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
+        const SectionHeader(
+          title: 'Quick Actions',
         ).animate().fade(duration: 400.ms),
         const SizedBox(height: 16),
         Row(
@@ -427,7 +406,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               child: QuickActionItem(
                 icon: PhosphorIconsFill.bellSimpleRinging,
                 label: 'Emergency',
-                color: AppColors.error,
+                color: AppColors.accentCoral,
                 onTap: () {
                   showModalBottomSheet(
                     context: context,
@@ -442,7 +421,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               child: QuickActionItem(
                 icon: PhosphorIconsFill.identificationCard,
                 label: 'Visitor Pass',
-                color: AppColors.primaryBlue,
+                color: AppColors.brand,
                 onTap: () => context.go('/access'),
               ),
             ),
@@ -450,7 +429,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               child: QuickActionItem(
                 icon: PhosphorIconsFill.wallet,
                 label: 'Bills & Pay',
-                color: AppColors.deepSlate,
+                color: AppColors.accentSky,
                 onTap: () => context.go('/bills'),
               ),
             ),
@@ -464,7 +443,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   child: QuickActionItem(
                     icon: PhosphorIconsFill.phoneCall,
                     label: 'Intercom',
-                    color: const Color(0xFF3B82F6),
+                    color: AppColors.accentSky,
                     onTap: () {
                       showModalBottomSheet(
                         context: context,
@@ -480,7 +459,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   child: QuickActionItem(
                     icon: PhosphorIconsFill.shieldCheck,
                     label: 'Smart Lock',
-                    color: const Color(0xFF8B5CF6),
+                    color: AppColors.brandViolet,
                     onTap: () {
                       showModalBottomSheet(
                         context: context,
@@ -496,7 +475,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   child: QuickActionItem(
                     icon: PhosphorIconsFill.calendarCheck,
                     label: 'Bookings',
-                    color: const Color(0xFFF59E0B),
+                    color: AppColors.accentAmber,
                     onTap: () => context.push('/facility'),
                   ),
                 ),
@@ -530,18 +509,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         clipper: TopHeaderWaveClipper(),
         child: Container(
           padding: EdgeInsets.fromLTRB(24, topPadding + 12, 24, 24),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFFE3F3FD), // Very light soft sky blue
-                Color(0xFFCBE7FC), // Soft pastel blue
-                Color(0xFFAFDDFC), // Slightly deeper soft blue at bottom right
-              ],
-              stops: [0.0, 0.5, 1.0],
-            ),
-          ),
+          decoration: const BoxDecoration(gradient: AppColors.brandGradient),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -551,11 +519,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 bottom: -8,
                 right: 160,
                 child: Opacity(
-                  opacity: 0.08,
+                  opacity: 0.16,
                   child: const Icon(
                     PhosphorIconsFill.tree,
                     size: 48,
-                    color: AppColors.deepSlate,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -565,11 +533,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 bottom: 4,
                 right: 110,
                 child: Opacity(
-                  opacity: 0.08,
+                  opacity: 0.16,
                   child: const Icon(
                     PhosphorIconsFill.tree,
                     size: 38,
-                    color: AppColors.deepSlate,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -579,11 +547,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 bottom: -20,
                 right: -4,
                 child: Opacity(
-                  opacity: 0.08,
+                  opacity: 0.16,
                   child: const Icon(
                     PhosphorIconsFill.building,
                     size: 92,
-                    color: AppColors.deepSlate,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -613,15 +581,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.deepSlate.withOpacity(
-                                        0.7,
-                                      ),
+                                      color: Colors.white.withOpacity(0.85),
                                     ),
                                   ),
-                                  const Icon(
+                                  Icon(
                                     PhosphorIconsFill.calendar,
                                     size: 20,
-                                    color: Color(0xFF005682),
+                                    color: Colors.white.withOpacity(0.9),
                                   ),
                                 ],
                               ),
@@ -631,7 +597,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                 height: 22,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2.5,
-                                  color: AppColors.deepSlate.withOpacity(0.5),
+                                  color: Colors.white.withOpacity(0.8),
                                 ),
                               ),
                             ],
@@ -654,15 +620,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: AppColors.deepSlate.withOpacity(
-                                          0.7,
-                                        ),
+                                        color: Colors.white.withOpacity(0.85),
                                       ),
                                     ),
-                                    const Icon(
+                                    Icon(
                                       PhosphorIconsFill.calendar,
                                       size: 20,
-                                      color: Color(0xFF005682),
+                                      color: Colors.white.withOpacity(0.9),
                                     ),
                                   ],
                                 ),
@@ -672,7 +636,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                     'No upcoming bookings. Tap to book a facility 📅',
                                     style: TextStyle(
                                       fontSize: 18,
-                                      color: AppColors.deepSlate,
+                                      color: Colors.white,
                                       height: 1.4,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -703,14 +667,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w600,
-                                            color: AppColors.deepSlate
-                                                .withOpacity(0.7),
+                                            color: Colors.white.withOpacity(
+                                              0.85,
+                                            ),
                                           ),
                                         ),
-                                        const Icon(
+                                        Icon(
                                           PhosphorIconsFill.calendarCheck,
                                           size: 20,
-                                          color: Color(0xFF005682),
+                                          color: Colors.white.withOpacity(0.9),
                                         ),
                                       ],
                                     ),
@@ -720,7 +685,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                         text: TextSpan(
                                           style: const TextStyle(
                                             fontSize: 18,
-                                            color: AppColors.deepSlate,
+                                            color: Colors.white,
                                             height: 1.4,
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -729,7 +694,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                             TextSpan(
                                               text: b.facilityName,
                                               style: const TextStyle(
-                                                color: Color(0xFF005682),
+                                                color: Colors.white,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
@@ -740,7 +705,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                                               text: b.time,
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
-                                                color: AppColors.deepSlate,
+                                                color: Colors.white,
                                               ),
                                             ),
                                             const TextSpan(
@@ -767,8 +732,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                           width: isActive ? 24 : 4,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: AppColors.deepSlate.withOpacity(
-                              isActive ? 0.3 : 0.15,
+                            color: Colors.white.withOpacity(
+                              isActive ? 0.9 : 0.4,
                             ),
                             borderRadius: BorderRadius.circular(2),
                           ),

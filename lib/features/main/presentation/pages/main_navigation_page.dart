@@ -114,7 +114,7 @@ class MainNavigationPage extends StatelessWidget {
             color: AppColors.primaryWhite.withOpacity(0.9),
             borderRadius: BorderRadius.circular(35),
             border: Border.all(
-              color: AppColors.primaryBlue.withOpacity(0.3),
+              color: AppColors.brand.withOpacity(0.3),
               width: 1.5,
             ),
             boxShadow: [
@@ -196,8 +196,8 @@ class MainNavigationPage extends StatelessWidget {
             gradient: isSelected
                 ? LinearGradient(
                     colors: [
-                      AppColors.primaryBlue.withOpacity(0.14),
-                      AppColors.primaryBlue.withOpacity(0.03),
+                      AppColors.brand.withOpacity(0.14),
+                      AppColors.brand.withOpacity(0.03),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -206,14 +206,14 @@ class MainNavigationPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: isSelected
-                  ? AppColors.primaryBlue.withOpacity(0.24)
+                  ? AppColors.brand.withOpacity(0.24)
                   : Colors.transparent,
               width: 1,
             ),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: AppColors.primaryBlue.withOpacity(0.08),
+                      color: AppColors.brand.withOpacity(0.08),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -229,9 +229,7 @@ class MainNavigationPage extends StatelessWidget {
                 duration: const Duration(milliseconds: 250),
                 child: Icon(
                   isSelected ? activeIcon : icon,
-                  color: isSelected
-                      ? AppColors.primaryBlue
-                      : AppColors.textSecondary,
+                  color: isSelected ? AppColors.brand : AppColors.textSecondary,
                   size: 22,
                 ),
               ),
@@ -246,7 +244,7 @@ class MainNavigationPage extends StatelessWidget {
                     fontSize: 10.5,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                     color: isSelected
-                        ? AppColors.primaryBlue
+                        ? AppColors.brand
                         : AppColors.textSecondary,
                     letterSpacing: -0.2,
                   ),
@@ -258,7 +256,7 @@ class MainNavigationPage extends StatelessWidget {
                   width: 4,
                   height: 4,
                   decoration: const BoxDecoration(
-                    color: AppColors.primaryBlue,
+                    color: AppColors.brand,
                     shape: BoxShape.circle,
                   ),
                 ),

@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/app_states.dart';
+import '../../../../core/widgets/gradient_background.dart';
 import '../../../../theme/app_colors.dart';
 
 import 'package:intl/intl.dart';
@@ -73,106 +76,117 @@ class _EventsPageState extends ConsumerState<EventsPage> {
     final profileAsync = ref.watch(currentProfileProvider);
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            backgroundColor: AppColors.backgroundGrey,
-            pinned: true,
-            leading: IconButton(
-              icon: const Icon(PhosphorIconsRegular.caretLeft),
-              onPressed: () => context.pop(),
-            ),
-            title: const Text(
-              'Events (RSVP)',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+      backgroundColor: AppColors.backgroundGrey,
+      body: GradientBackground(
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              pinned: true,
+              leading: IconButton(
+                icon: const Icon(
+                  PhosphorIconsRegular.caretLeft,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: () => context.pop(),
+              ),
+              title: const Text(
+                'Events (RSVP)',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(24),
-            sliver: eventsAsync.when(
-              loading: () => const SliverToBoxAdapter(
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (err, stack) =>
-                  SliverToBoxAdapter(child: Center(child: Text('Error: $err'))),
-              data: (events) {
-                if (events.isEmpty) {
-                  return const SliverToBoxAdapter(
-                    child: Center(
-                      child: Text(
-                        'No upcoming events.',
-                        style: TextStyle(color: AppColors.textSecondary),
-                      ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+              sliver: eventsAsync.when(
+                loading: () => const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 80),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+                error: (err, stack) => SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 40),
+                    child: AppErrorState(
+                      message: '$err',
+                      onRetry: () => ref.invalidate(eventsProvider),
                     ),
-                  );
-                }
-                final userId = profileAsync.value?.id ?? '';
+                  ),
+                ),
+                data: (events) {
+                  if (events.isEmpty) {
+                    return const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 40),
+                        child: AppEmptyState(
+                          icon: Icons.event_rounded,
+                          title: 'No upcoming events',
+                          message:
+                              'Community events will appear here once they are scheduled.',
+                          gradient: AppColors.sunsetGradient,
+                        ),
+                      ),
+                    );
+                  }
+                  final userId = profileAsync.value?.id ?? '';
 
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final event = events[index];
-                    final bool isRsvpd = event.attendees.contains(userId);
-                    final bool isPending = _pendingRsvp.contains(event.id);
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: GlassCard(
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final event = events[index];
+                      final bool isRsvpd = event.attendees.contains(userId);
+                      final bool isPending = _pendingRsvp.contains(event.id);
+                      return PremiumCard(
+                        margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                const GradientIconBadge(
+                                  icon: Icons.celebration_rounded,
+                                  gradient: AppColors.sunsetGradient,
+                                ),
+                                const SizedBox(width: 14),
                                 Expanded(
                                   child: Text(
                                     event.title,
                                     style: const TextStyle(
                                       fontSize: 18,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w800,
                                       color: AppColors.textPrimary,
                                     ),
                                   ),
                                 ),
-                                if (isRsvpd)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primaryBlue.withOpacity(
-                                        0.15,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Text(
-                                      'GOING',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.primaryBlue,
-                                        letterSpacing: 1,
-                                      ),
-                                    ),
+                                if (isRsvpd) ...[
+                                  const SizedBox(width: 8),
+                                  const StatusPill(
+                                    label: 'GOING',
+                                    color: AppColors.success,
+                                    dense: true,
                                   ),
+                                ],
                               ],
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 14),
                             Row(
                               children: [
                                 const Icon(
                                   PhosphorIconsRegular.calendarBlank,
                                   size: 16,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.brand,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
                                   _fmtDate(event.date),
                                   style: const TextStyle(
                                     fontSize: 13,
+                                    fontWeight: FontWeight.w500,
                                     color: AppColors.textSecondary,
                                   ),
                                 ),
@@ -184,7 +198,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                 const Icon(
                                   PhosphorIconsRegular.mapPin,
                                   size: 16,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.accentCoral,
                                 ),
                                 const SizedBox(width: 6),
                                 Expanded(
@@ -194,6 +208,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       fontSize: 13,
+                                      fontWeight: FontWeight.w500,
                                       color: AppColors.textSecondary,
                                     ),
                                   ),
@@ -205,74 +220,116 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Flexible(
-                                  child: Text(
-                                    '${event.attending}/${event.capacity} attending',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.textSecondary,
-                                    ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        PhosphorIconsRegular.users,
+                                        size: 16,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: Text(
+                                          '${event.attending}/${event.capacity} attending',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                SizedBox(
-                                  width: 120,
-                                  height: 40,
-                                  child: ElevatedButton(
-                                    onPressed: isPending
-                                        ? null
-                                        : () => _toggleRsvp(event.id),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: isRsvpd
-                                          ? AppColors.backgroundGrey
-                                          : AppColors.primaryBlue,
-                                      foregroundColor: isRsvpd
-                                          ? AppColors.textSecondary
-                                          : Colors.white,
-                                      disabledBackgroundColor: isRsvpd
-                                          ? AppColors.backgroundGrey
-                                          : AppColors.primaryBlue.withOpacity(
-                                              0.6,
-                                            ),
-                                      elevation: 0,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    child: isPending
-                                        ? SizedBox(
-                                            width: 16,
-                                            height: 16,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: isRsvpd
-                                                  ? AppColors.textSecondary
-                                                  : Colors.white,
-                                            ),
-                                          )
-                                        : Text(
-                                            isRsvpd ? 'Cancel' : 'RSVP',
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                  ),
+                                _RsvpButton(
+                                  isRsvpd: isRsvpd,
+                                  isPending: isPending,
+                                  onPressed: () => _toggleRsvp(event.id),
                                 ),
                               ],
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  }, childCount: events.length),
-                );
-              },
+                      );
+                    }, childCount: events.length),
+                  );
+                },
+              ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// RSVP action: a vivid brand-gradient pill when not yet attending, and a soft
+/// neutral "Cancel" button once the user is going.
+class _RsvpButton extends StatelessWidget {
+  final bool isRsvpd;
+  final bool isPending;
+  final VoidCallback onPressed;
+
+  const _RsvpButton({
+    required this.isRsvpd,
+    required this.isPending,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color contentColor = isRsvpd ? AppColors.textSecondary : Colors.white;
+
+    final child = Center(
+      child: isPending
+          ? SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: contentColor,
+              ),
+            )
+          : Text(
+              isRsvpd ? 'Cancel' : 'RSVP',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: contentColor,
+              ),
+            ),
+    );
+
+    return Opacity(
+      opacity: isPending ? 0.7 : 1,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isPending ? null : onPressed,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            width: 120,
+            height: 42,
+            decoration: BoxDecoration(
+              gradient: isRsvpd ? null : AppColors.brandGradient,
+              color: isRsvpd ? AppColors.surfaceTint : null,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: isRsvpd
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: AppColors.brand.withOpacity(0.30),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+            ),
+            child: child,
           ),
-        ],
+        ),
       ),
     );
   }

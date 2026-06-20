@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/repositories/contact_repository.dart';
-import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/app_states.dart';
+import '../../../../core/widgets/gradient_background.dart';
 import '../../../../theme/app_colors.dart';
 
 final contactsProvider = FutureProvider<List<EmergencyContact>>((ref) {
@@ -52,6 +54,21 @@ IconData _contactIcon(String? category) {
   }
 }
 
+LinearGradient _contactGradient(String? category) {
+  switch (category) {
+    case 'management':
+      return AppColors.brandGradient;
+    case 'security':
+      return AppColors.skyGradient;
+    case 'maintenance':
+      return AppColors.sunsetGradient;
+    case 'utility':
+      return AppColors.mintGradient;
+    default:
+      return AppColors.brandGradient;
+  }
+}
+
 class EContactPage extends ConsumerWidget {
   const EContactPage({super.key});
 
@@ -59,79 +76,77 @@ class EContactPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final contactsAsync = ref.watch(contactsProvider);
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            backgroundColor: AppColors.backgroundGrey,
-            pinned: true,
-            leading: IconButton(
-              icon: const Icon(PhosphorIconsRegular.caretLeft),
-              onPressed: () => context.pop(),
-            ),
-            title: const Text(
-              'E-Contact',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+      backgroundColor: AppColors.backgroundGrey,
+      body: GradientBackground(
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              pinned: true,
+              leading: IconButton(
+                icon: const Icon(
+                  PhosphorIconsRegular.caretLeft,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: () => context.pop(),
               ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(24),
-            sliver: contactsAsync.when(
-              loading: () => const SliverToBoxAdapter(
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(40),
-                    child: CircularProgressIndicator(),
-                  ),
+              title: const Text(
+                'E-Contact',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              error: (e, _) => SliverToBoxAdapter(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: Text(
-                      'Error: $e',
-                      style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+              sliver: contactsAsync.when(
+                loading: () => const SliverToBoxAdapter(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(40),
+                      child: CircularProgressIndicator(),
                     ),
                   ),
                 ),
-              ),
-              data: (contacts) {
-                if (contacts.isEmpty) {
-                  return const SliverToBoxAdapter(
-                    child: Center(
+                error: (e, _) => SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 40),
+                    child: AppErrorState(
+                      message: '$e',
+                      onRetry: () => ref.invalidate(contactsProvider),
+                    ),
+                  ),
+                ),
+                data: (contacts) {
+                  if (contacts.isEmpty) {
+                    return const SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.all(40),
-                        child: Text(
-                          'No contacts listed.',
-                          style: TextStyle(color: AppColors.textSecondary),
+                        padding: EdgeInsets.only(top: 40),
+                        child: AppEmptyState(
+                          icon: Icons.contact_phone_rounded,
+                          title: 'No contacts listed',
+                          message:
+                              'Important community and emergency contacts will appear here.',
                         ),
                       ),
-                    ),
-                  );
-                }
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final c = contacts[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: GlassCard(
-                        padding: const EdgeInsets.all(20),
+                    );
+                  }
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final c = contacts[index];
+                      return PremiumCard(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(18),
                         child: Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: AppColors.backgroundGrey,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Icon(
-                                _contactIcon(c.category),
-                                color: AppColors.deepSlate,
-                                size: 24,
-                              ),
+                            GradientIconBadge(
+                              icon: _contactIcon(c.category),
+                              gradient: _contactGradient(c.category),
+                              size: 50,
+                              iconSize: 24,
+                              radius: 16,
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -144,7 +159,7 @@ class EContactPage extends ConsumerWidget {
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       fontSize: 15,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w700,
                                       color: AppColors.textPrimary,
                                     ),
                                   ),
@@ -155,18 +170,21 @@ class EContactPage extends ConsumerWidget {
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.primaryBlue,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.brand,
                                     ),
                                   ),
                                   if (c.hours != null && c.hours!.isNotEmpty)
-                                    Text(
-                                      c.hours!,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textSecondary,
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(
+                                        c.hours!,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.textSecondary,
+                                        ),
                                       ),
                                     ),
                                 ],
@@ -176,28 +194,28 @@ class EContactPage extends ConsumerWidget {
                             GestureDetector(
                               onTap: () => _dialPhone(context, c.name, c.phone),
                               child: Container(
-                                padding: const EdgeInsets.all(10),
+                                padding: const EdgeInsets.all(11),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryBlue.withOpacity(0.1),
+                                  color: AppColors.success.withOpacity(0.12),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
                                   PhosphorIconsRegular.phone,
-                                  color: AppColors.primaryBlue,
+                                  color: AppColors.success,
                                   size: 20,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  }, childCount: contacts.length),
-                );
-              },
+                      );
+                    }, childCount: contacts.length),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

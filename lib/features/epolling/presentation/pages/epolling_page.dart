@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/app_states.dart';
+import '../../../../core/widgets/gradient_background.dart';
 import '../../../../theme/app_colors.dart';
 
 import 'package:intl/intl.dart';
@@ -46,57 +49,75 @@ class EPollingPage extends ConsumerWidget {
     final profileAsync = ref.watch(currentProfileProvider);
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            backgroundColor: AppColors.backgroundGrey,
-            pinned: true,
-            leading: IconButton(
-              icon: const Icon(PhosphorIconsRegular.caretLeft),
-              onPressed: () => context.pop(),
-            ),
-            title: const Text(
-              'E-Polling',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+      backgroundColor: AppColors.backgroundGrey,
+      body: GradientBackground(
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              pinned: true,
+              leading: IconButton(
+                icon: const Icon(
+                  PhosphorIconsRegular.caretLeft,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: () => context.pop(),
+              ),
+              title: const Text(
+                'E-Polling',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(24),
-            sliver: pollsAsync.when(
-              loading: () => const SliverToBoxAdapter(
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (err, stack) =>
-                  SliverToBoxAdapter(child: Center(child: Text('Error: $err'))),
-              data: (polls) {
-                if (polls.isEmpty) {
-                  return const SliverToBoxAdapter(
-                    child: Center(
-                      child: Text(
-                        'No active polls.',
-                        style: TextStyle(color: AppColors.textSecondary),
-                      ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+              sliver: pollsAsync.when(
+                loading: () => const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 80),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+                error: (err, stack) => SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 40),
+                    child: AppErrorState(
+                      message: '$err',
+                      onRetry: () => ref.invalidate(pollsProvider),
                     ),
-                  );
-                }
-                final userId = profileAsync.value?.id ?? '';
-                // Only allow voting once we actually know who the user is.
-                // While the profile is loading, userId is empty and the vote
-                // UI must stay disabled to avoid duplicate/erroneous votes.
-                final bool userReady = userId.isNotEmpty;
+                  ),
+                ),
+                data: (polls) {
+                  if (polls.isEmpty) {
+                    return const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 40),
+                        child: AppEmptyState(
+                          icon: Icons.how_to_vote_rounded,
+                          title: 'No active polls',
+                          message:
+                              'Community polls will appear here when they open for voting.',
+                        ),
+                      ),
+                    );
+                  }
+                  final userId = profileAsync.value?.id ?? '';
+                  // Only allow voting once we actually know who the user is.
+                  // While the profile is loading, userId is empty and the vote
+                  // UI must stay disabled to avoid duplicate/erroneous votes.
+                  final bool userReady = userId.isNotEmpty;
 
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final poll = polls[index];
-                    final bool hasVoted = poll.voters.contains(userId);
-                    final totalVotes = poll.totalVotes;
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final poll = polls[index];
+                      final bool hasVoted = poll.voters.contains(userId);
+                      final totalVotes = poll.totalVotes;
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: GlassCard(
+                      return PremiumCard(
+                        margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,35 +125,18 @@ class EPollingPage extends ConsumerWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: hasVoted
-                                        ? AppColors.primaryBlue.withOpacity(
-                                            0.15,
-                                          )
-                                        : AppColors.warning.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    hasVoted ? 'VOTED' : 'ACTIVE',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 1,
-                                      color: hasVoted
-                                          ? AppColors.primaryBlue
-                                          : AppColors.warning,
-                                    ),
-                                  ),
+                                StatusPill(
+                                  label: hasVoted ? 'VOTED' : 'ACTIVE',
+                                  color: hasVoted
+                                      ? AppColors.success
+                                      : AppColors.warning,
+                                  dense: true,
                                 ),
                                 Text(
                                   _fmtDate(poll.endDate),
                                   style: const TextStyle(
                                     fontSize: 12,
+                                    fontWeight: FontWeight.w500,
                                     color: AppColors.textSecondary,
                                   ),
                                 ),
@@ -142,8 +146,8 @@ class EPollingPage extends ConsumerWidget {
                             Text(
                               poll.title,
                               style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
                                 color: AppColors.textPrimary,
                               ),
                             ),
@@ -154,11 +158,18 @@ class EPollingPage extends ConsumerWidget {
                               final percent = totalVotes > 0
                                   ? (votes / totalVotes)
                                   : 0.0;
+                              final bool isLeading =
+                                  totalVotes > 0 &&
+                                  votes ==
+                                      poll.options.fold<int>(0, (max, o) {
+                                        final v = o['votes'] as int? ?? 0;
+                                        return v > max ? v : max;
+                                      });
 
                               return Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
+                                padding: const EdgeInsets.only(bottom: 12),
                                 child: InkWell(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(12),
                                   onTap: (hasVoted || !userReady)
                                       ? null
                                       : () async {
@@ -172,7 +183,7 @@ class EPollingPage extends ConsumerWidget {
                                               const SnackBar(
                                                 content: Text('Vote recorded!'),
                                                 backgroundColor:
-                                                    AppColors.primaryBlue,
+                                                    AppColors.brand,
                                               ),
                                             );
                                           } catch (e) {
@@ -200,51 +211,78 @@ class EPollingPage extends ConsumerWidget {
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Row(
-                                            children: [
-                                              if (!hasVoted && userReady) ...[
-                                                const Icon(
-                                                  PhosphorIconsRegular.circle,
-                                                  size: 16,
-                                                  color: AppColors.primaryBlue,
+                                          Expanded(
+                                            child: Row(
+                                              children: [
+                                                if (!hasVoted && userReady) ...[
+                                                  const Icon(
+                                                    PhosphorIconsRegular.circle,
+                                                    size: 16,
+                                                    color: AppColors.brand,
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                ],
+                                                Expanded(
+                                                  child: Text(
+                                                    option['label'] as String,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color:
+                                                          AppColors.textPrimary,
+                                                    ),
+                                                  ),
                                                 ),
-                                                const SizedBox(width: 8),
                                               ],
-                                              Text(
-                                                option['label'] as String,
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: AppColors.textPrimary,
-                                                ),
-                                              ),
-                                            ],
+                                            ),
                                           ),
+                                          const SizedBox(width: 8),
                                           Text(
                                             '${(percent * 100).toInt()}%',
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.primaryBlue,
+                                              fontWeight: FontWeight.w800,
+                                              color: isLeading
+                                                  ? AppColors.brand
+                                                  : AppColors.textSecondary,
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 6),
+                                      const SizedBox(height: 8),
                                       ClipRRect(
-                                        borderRadius: BorderRadius.circular(6),
-                                        child: LinearProgressIndicator(
-                                          value: percent,
-                                          minHeight: 8,
-                                          backgroundColor:
-                                              AppColors.backgroundGrey,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                i == 0
-                                                    ? AppColors.primaryBlue
-                                                    : AppColors.deepSlate
-                                                          .withOpacity(0.4),
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Stack(
+                                          children: [
+                                            Container(
+                                              height: 10,
+                                              decoration: BoxDecoration(
+                                                color: AppColors.surfaceTint,
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                               ),
+                                            ),
+                                            FractionallySizedBox(
+                                              widthFactor: percent.clamp(
+                                                0.0,
+                                                1.0,
+                                              ),
+                                              child: Container(
+                                                height: 10,
+                                                decoration: BoxDecoration(
+                                                  gradient: isLeading
+                                                      ? AppColors.brandGradient
+                                                      : AppColors.skyGradient,
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
@@ -252,24 +290,35 @@ class EPollingPage extends ConsumerWidget {
                                 ),
                               );
                             }),
-                            const SizedBox(height: 8),
-                            Text(
-                              '$totalVotes total votes',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                              ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(
+                                  PhosphorIconsRegular.chartBar,
+                                  size: 15,
+                                  color: AppColors.textSecondary,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '$totalVotes total votes',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  }, childCount: polls.length),
-                );
-              },
+                      );
+                    }, childCount: polls.length),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

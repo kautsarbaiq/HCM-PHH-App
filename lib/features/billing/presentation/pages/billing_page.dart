@@ -6,6 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/repositories/billing_repository.dart';
+import '../../../../core/widgets/app_states.dart';
+import '../../../../core/widgets/gradient_background.dart';
+import '../../../../core/widgets/premium_card.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/bill_card.dart';
 import '../widgets/transaction_history_item.dart';
@@ -62,34 +65,37 @@ class BillingPage extends ConsumerWidget {
     final tabIndex = ref.watch(billingTabIndexProvider);
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-              child: _buildHeader(context),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: _buildSegmentedControl(ref, tabIndex),
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: IndexedStack(
-                index: tabIndex,
-                children: [
-                  _buildActiveBills(context, ref)
-                      .animate(target: tabIndex == 0 ? 1 : 0)
-                      .fade(duration: 300.ms)
-                      .slideY(begin: 0.1, end: 0),
-                  _buildTransactionHistory(ref)
-                      .animate(target: tabIndex == 1 ? 1 : 0)
-                      .fade(duration: 300.ms)
-                      .slideY(begin: 0.1, end: 0),
-                ],
+      backgroundColor: AppColors.backgroundGrey,
+      body: GradientBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                child: _buildHeader(context),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: _buildSegmentedControl(ref, tabIndex),
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: IndexedStack(
+                  index: tabIndex,
+                  children: [
+                    _buildActiveBills(context, ref)
+                        .animate(target: tabIndex == 0 ? 1 : 0)
+                        .fade(duration: 300.ms)
+                        .slideY(begin: 0.1, end: 0),
+                    _buildTransactionHistory(ref)
+                        .animate(target: tabIndex == 1 ? 1 : 0)
+                        .fade(duration: 300.ms)
+                        .slideY(begin: 0.1, end: 0),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -98,32 +104,39 @@ class BillingPage extends ConsumerWidget {
   Widget _buildHeader(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Billing',
-          style: TextStyle(
-            fontSize: 28,
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'Billing',
+              style: TextStyle(
+                fontSize: 28,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+              ),
+            ),
+            SizedBox(height: 2),
+            Text(
+              'Bills, dues & payment history',
+              style: TextStyle(
+                fontSize: 13.5,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
         GestureDetector(
           onTap: () => context.push('/profile'),
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.primaryWhite,
-              border: Border.all(
-                color: AppColors.primaryBlue.withOpacity(0.3),
-                width: 1.5,
-              ),
-            ),
-            child: const Icon(
-              PhosphorIconsRegular.user,
-              color: AppColors.primaryBlue,
-            ),
+          child: const GradientIconBadge(
+            icon: PhosphorIconsRegular.user,
+            gradient: AppColors.brandGradient,
+            size: 44,
+            iconSize: 22,
+            radius: 14,
           ),
         ),
       ],
@@ -132,11 +145,17 @@ class BillingPage extends ConsumerWidget {
 
   Widget _buildSegmentedControl(WidgetRef ref, int currentIndex) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: AppColors.primaryWhite.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.glassBorder),
+        color: AppColors.primaryWhite,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6A7BA8).withOpacity(0.10),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -163,14 +182,14 @@ class BillingPage extends ConsumerWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryWhite : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          gradient: isSelected ? AppColors.brandGradient : null,
+          borderRadius: BorderRadius.circular(14),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.shadowColor,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    color: AppColors.brand.withOpacity(0.30),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
                   ),
                 ]
               : [],
@@ -180,10 +199,8 @@ class BillingPage extends ConsumerWidget {
             label,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              color: isSelected
-                  ? AppColors.textPrimary
-                  : AppColors.textSecondary,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
           ),
         ),
@@ -196,7 +213,7 @@ class BillingPage extends ConsumerWidget {
 
     return billingsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => _buildError(error),
+      error: (error, _) => _buildError(ref, error),
       data: (all) {
         final active = all.where((b) => b.status != 'paid').toList();
         if (active.isEmpty) {
@@ -204,6 +221,7 @@ class BillingPage extends ConsumerWidget {
             PhosphorIconsRegular.checkCircle,
             'All cleared!',
             'You have no outstanding bills.',
+            AppColors.mintGradient,
           );
         }
         return RefreshIndicator(
@@ -247,7 +265,7 @@ class BillingPage extends ConsumerWidget {
 
     return billingsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => _buildError(error),
+      error: (error, _) => _buildError(ref, error),
       data: (all) {
         final paid = all.where((b) => b.status == 'paid').toList();
         if (paid.isEmpty) {
@@ -255,6 +273,7 @@ class BillingPage extends ConsumerWidget {
             PhosphorIconsRegular.receipt,
             'No history yet',
             'Your paid bills will appear here.',
+            AppColors.skyGradient,
           );
         }
         return RefreshIndicator(
@@ -277,40 +296,24 @@ class BillingPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildError(Object error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Text(
-          'Could not load bills: $error',
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
-      ),
+  Widget _buildError(WidgetRef ref, Object error) {
+    return AppErrorState(
+      message: 'Could not load bills: $error',
+      onRetry: () => ref.read(myBillingsProvider.notifier).refresh(),
     );
   }
 
-  Widget _buildEmpty(IconData icon, String title, String subtitle) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 56, color: AppColors.success.withOpacity(0.6)),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
-        ],
-      ),
+  Widget _buildEmpty(
+    IconData icon,
+    String title,
+    String subtitle,
+    Gradient gradient,
+  ) {
+    return AppEmptyState(
+      icon: icon,
+      title: title,
+      message: subtitle,
+      gradient: gradient,
     );
   }
 }

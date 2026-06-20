@@ -6,9 +6,14 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/widgets/action_button.dart';
+import '../../../../core/widgets/app_states.dart';
+import '../../../../core/widgets/gradient_background.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/section_header.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/notice_card.dart';
 import '../widgets/ticket_card.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hcm_app/features/dashboard/presentation/widgets/notice_slider.dart';
 import '../../../../core/repositories/announcement_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
@@ -69,57 +74,62 @@ class CommunityPage extends ConsumerWidget {
     final tabIndex = ref.watch(communityTabIndexProvider);
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
-              child: _buildHeader(context, ref),
-            ),
-            // Category Filter Chips
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: [
-                  _buildFilterChip(
-                    context,
-                    icon: PhosphorIconsRegular.calendarCheck,
-                    label: 'Events',
-                    route: '/events',
-                  ),
-                  const SizedBox(width: 10),
-                  _buildFilterChip(
-                    context,
-                    icon: PhosphorIconsRegular.chartBar,
-                    label: 'E-Polling',
-                    route: '/epolling',
-                  ),
-                ],
+      backgroundColor: AppColors.backgroundGrey,
+      body: GradientBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
+                child: _buildHeader(context, ref),
               ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: _buildSegmentedControl(ref, tabIndex),
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: IndexedStack(
-                index: tabIndex,
-                children: [
-                  _buildNoticeBoard(ref)
-                      .animate(target: tabIndex == 0 ? 1 : 0)
-                      .fade(duration: 300.ms)
-                      .slideY(begin: 0.1, end: 0),
-                  _buildFeedbackTickets(ref, context)
-                      .animate(target: tabIndex == 1 ? 1 : 0)
-                      .fade(duration: 300.ms)
-                      .slideY(begin: 0.1, end: 0),
-                ],
+              // Category Filter Chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    _buildFilterChip(
+                      context,
+                      icon: PhosphorIconsRegular.calendarCheck,
+                      label: 'Events',
+                      route: '/events',
+                      gradient: AppColors.sunsetGradient,
+                    ),
+                    const SizedBox(width: 10),
+                    _buildFilterChip(
+                      context,
+                      icon: PhosphorIconsRegular.chartBar,
+                      label: 'E-Polling',
+                      route: '/epolling',
+                      gradient: AppColors.skyGradient,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: _buildSegmentedControl(ref, tabIndex),
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: IndexedStack(
+                  index: tabIndex,
+                  children: [
+                    _buildNoticeBoard(ref)
+                        .animate(target: tabIndex == 0 ? 1 : 0)
+                        .fade(duration: 300.ms)
+                        .slideY(begin: 0.1, end: 0),
+                    _buildFeedbackTickets(ref, context)
+                        .animate(target: tabIndex == 1 ? 1 : 0)
+                        .fade(duration: 300.ms)
+                        .slideY(begin: 0.1, end: 0),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -129,59 +139,76 @@ class CommunityPage extends ConsumerWidget {
     final profileAsync = ref.watch(currentProfileProvider);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Community',
-          style: TextStyle(
-            fontSize: 28,
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'Community',
+              style: TextStyle(
+                fontSize: 28,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+              ),
+            ),
+            SizedBox(height: 2),
+            Text(
+              'News, events & your feedback',
+              style: TextStyle(
+                fontSize: 13.5,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
         GestureDetector(
           onTap: () => context.push('/profile'),
           child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
+            width: 46,
+            height: 46,
+            padding: const EdgeInsets.all(2.5),
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.primaryBlue.withOpacity(0.3),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              gradient: AppColors.brandGradient,
             ),
             child: ClipOval(
-              child: profileAsync.when(
-                data: (profile) => profile?.avatarUrl != null
-                    ? Image.network(
-                        profile!.avatarUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(
+              child: Container(
+                color: AppColors.primaryWhite,
+                child: profileAsync.when(
+                  data: (profile) => profile?.avatarUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: profile!.avatarUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => const Center(
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                          errorWidget: (_, __, ___) => const Icon(
+                            PhosphorIconsRegular.user,
+                            color: AppColors.brand,
+                          ),
+                        )
+                      : const Icon(
                           PhosphorIconsRegular.user,
-                          color: AppColors.primaryBlue,
+                          color: AppColors.brand,
                         ),
-                      )
-                    : const Icon(
-                        PhosphorIconsRegular.user,
-                        color: AppColors.primaryBlue,
-                      ),
-                loading: () => const Center(
-                  child: SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                  loading: () => const Center(
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
-                ),
-                error: (_, __) => const Icon(
-                  PhosphorIconsRegular.user,
-                  color: AppColors.primaryBlue,
+                  error: (_, __) => const Icon(
+                    PhosphorIconsRegular.user,
+                    color: AppColors.brand,
+                  ),
                 ),
               ),
             ),
@@ -193,11 +220,17 @@ class CommunityPage extends ConsumerWidget {
 
   Widget _buildSegmentedControl(WidgetRef ref, int currentIndex) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: AppColors.primaryWhite.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.glassBorder),
+        color: AppColors.primaryWhite,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6A7BA8).withOpacity(0.10),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -226,14 +259,14 @@ class CommunityPage extends ConsumerWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryWhite : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          gradient: isSelected ? AppColors.brandGradient : null,
+          borderRadius: BorderRadius.circular(14),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.shadowColor,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    color: AppColors.brand.withOpacity(0.30),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
                   ),
                 ]
               : [],
@@ -243,10 +276,8 @@ class CommunityPage extends ConsumerWidget {
             label,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              color: isSelected
-                  ? AppColors.textPrimary
-                  : AppColors.textSecondary,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
           ),
         ),
@@ -259,7 +290,10 @@ class CommunityPage extends ConsumerWidget {
 
     return noticesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, stack) => Center(child: Text('Error: $err')),
+      error: (err, stack) => AppErrorState(
+        message: 'Error: $err',
+        onRetry: () => ref.invalidate(noticesProvider),
+      ),
       data: (notices) {
         return ListView(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
@@ -269,23 +303,16 @@ class CommunityPage extends ConsumerWidget {
                 .fade(duration: 400.ms)
                 .slideY(begin: 0.1, end: 0),
             const SizedBox(height: 24),
-            const Text(
-              'All Announcements',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
+            const SectionHeader(title: 'All Announcements'),
             const SizedBox(height: 16),
             if (notices.isEmpty)
               const Padding(
                 padding: EdgeInsets.only(top: 24),
-                child: Center(
-                  child: Text(
-                    'No announcements yet.',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
+                child: AppEmptyState(
+                  icon: PhosphorIconsRegular.megaphone,
+                  title: 'No announcements yet',
+                  message: 'Community updates will appear here.',
+                  gradient: AppColors.sunsetGradient,
                 ),
               ),
             ...notices.map((notice) {
@@ -323,22 +350,26 @@ class CommunityPage extends ConsumerWidget {
                 builder: (context) => const CreateTicketModal(),
               );
             },
-            backgroundColor: AppColors.primaryBlue,
-            height: 48,
+            backgroundColor: AppColors.brand,
+            height: 50,
           ),
         ),
         const SizedBox(height: 16),
         Expanded(
           child: ticketsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('Error: $err')),
+            error: (err, stack) => AppErrorState(
+              message: 'Error: $err',
+              onRetry: () => ref.read(myTicketsProvider.notifier).refresh(),
+            ),
             data: (tickets) {
               if (tickets.isEmpty) {
-                return const Center(
-                  child: Text(
-                    'No feedback tickets found.',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
+                return const AppEmptyState(
+                  icon: PhosphorIconsRegular.chatCircleText,
+                  title: 'No tickets yet',
+                  message:
+                      'Raise a request or report an issue and track it here.',
+                  gradient: AppColors.brandGradient,
                 );
               }
               return ListView.separated(
@@ -369,34 +400,47 @@ class CommunityPage extends ConsumerWidget {
     required IconData icon,
     required String label,
     required String route,
+    required Gradient gradient,
   }) {
     return GestureDetector(
       onTap: () => context.push(route),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.fromLTRB(8, 8, 14, 8),
         decoration: BoxDecoration(
-          color: AppColors.primaryWhite.withOpacity(0.6),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.glassBorder),
+          color: AppColors.primaryWhite,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6A7BA8).withOpacity(0.10),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: AppColors.primaryBlue),
-            const SizedBox(width: 6),
+            GradientIconBadge(
+              icon: icon,
+              gradient: gradient,
+              size: 32,
+              iconSize: 16,
+              radius: 10,
+            ),
+            const SizedBox(width: 10),
             Text(
               label,
               style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 6),
             Icon(
               PhosphorIconsRegular.caretRight,
               size: 14,
-              color: AppColors.textSecondary.withOpacity(0.5),
+              color: AppColors.textSecondary.withOpacity(0.6),
             ),
           ],
         ),

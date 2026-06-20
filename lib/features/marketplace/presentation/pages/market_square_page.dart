@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/repositories/marketplace_repository.dart';
-import '../../../../core/widgets/glass_card.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/app_states.dart';
+import '../../../../core/widgets/gradient_background.dart';
 import '../../../../theme/app_colors.dart';
 
 final servicesProvider = FutureProvider<List<MarketService>>((ref) {
@@ -46,6 +49,13 @@ void _showServiceSheet(BuildContext context, MarketService s) {
           decoration: BoxDecoration(
             color: AppColors.primaryWhite,
             borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6A7BA8).withOpacity(0.18),
+                blurRadius: 30,
+                offset: const Offset(0, -4),
+              ),
+            ],
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -57,7 +67,7 @@ void _showServiceSheet(BuildContext context, MarketService s) {
                     width: 48,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.glassBorder,
+                      color: AppColors.textSecondary.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -65,17 +75,12 @@ void _showServiceSheet(BuildContext context, MarketService s) {
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: const BoxDecoration(
-                        color: AppColors.backgroundGrey,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        _serviceIcon(s.category),
-                        size: 28,
-                        color: AppColors.deepSlate,
-                      ),
+                    GradientIconBadge(
+                      icon: _serviceIcon(s.category),
+                      gradient: AppColors.brandGradient,
+                      size: 56,
+                      iconSize: 28,
+                      radius: 18,
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -88,19 +93,16 @@ void _showServiceSheet(BuildContext context, MarketService s) {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w800,
                               color: AppColors.textPrimary,
                             ),
                           ),
                           if (s.category != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              s.category!,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primaryBlue,
-                              ),
+                            const SizedBox(height: 6),
+                            StatusPill(
+                              label: s.category!,
+                              color: AppColors.brand,
+                              dense: true,
                             ),
                           ],
                         ],
@@ -114,14 +116,14 @@ void _showServiceSheet(BuildContext context, MarketService s) {
                     const Icon(
                       PhosphorIconsFill.star,
                       size: 16,
-                      color: Color(0xFFF59E0B),
+                      color: AppColors.accentAmber,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       s.rating.toStringAsFixed(1),
                       style: const TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
@@ -153,7 +155,7 @@ void _showServiceSheet(BuildContext context, MarketService s) {
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryBlue,
+                            backgroundColor: AppColors.brand,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -167,7 +169,7 @@ void _showServiceSheet(BuildContext context, MarketService s) {
                           ),
                           label: const Text(
                             'Call',
-                            style: TextStyle(fontWeight: FontWeight.w600),
+                            style: TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ),
                       ),
@@ -184,10 +186,8 @@ void _showServiceSheet(BuildContext context, MarketService s) {
                             );
                           },
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.primaryBlue,
-                            side: const BorderSide(
-                              color: AppColors.primaryBlue,
-                            ),
+                            foregroundColor: AppColors.accentMint,
+                            side: const BorderSide(color: AppColors.accentMint),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -199,7 +199,7 @@ void _showServiceSheet(BuildContext context, MarketService s) {
                           ),
                           label: const Text(
                             'WhatsApp',
-                            style: TextStyle(fontWeight: FontWeight.w600),
+                            style: TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ),
                       ),
@@ -241,6 +241,15 @@ IconData _serviceIcon(String? category) {
   }
 }
 
+/// A small palette of vivid gradients cycled across service tiles so the grid
+/// reads bright and lively rather than monotone.
+const List<LinearGradient> _tileGradients = [
+  AppColors.brandGradient,
+  AppColors.skyGradient,
+  AppColors.mintGradient,
+  AppColors.sunsetGradient,
+];
+
 class MarketSquarePage extends ConsumerWidget {
   const MarketSquarePage({super.key});
 
@@ -248,155 +257,143 @@ class MarketSquarePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final servicesAsync = ref.watch(servicesProvider);
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            backgroundColor: AppColors.backgroundGrey,
-            pinned: true,
-            leading: IconButton(
-              icon: const Icon(PhosphorIconsRegular.caretLeft),
-              onPressed: () => context.pop(),
-            ),
-            title: const Text(
-              'Market Square',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
+      backgroundColor: AppColors.backgroundGrey,
+      body: GradientBackground(
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              pinned: true,
+              leading: IconButton(
+                icon: const Icon(
+                  PhosphorIconsRegular.caretLeft,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: () => context.pop(),
               ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(24),
-            sliver: servicesAsync.when(
-              loading: () => const SliverToBoxAdapter(
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(40),
-                    child: CircularProgressIndicator(),
-                  ),
+              title: const Text(
+                'Market Square',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              error: (e, _) => SliverToBoxAdapter(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: Text(
-                      'Error: $e',
-                      style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+              sliver: servicesAsync.when(
+                loading: () => const SliverToBoxAdapter(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(40),
+                      child: CircularProgressIndicator(),
                     ),
                   ),
                 ),
-              ),
-              data: (services) {
-                if (services.isEmpty) {
-                  return const SliverToBoxAdapter(
-                    child: Center(
+                error: (e, _) => SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 40),
+                    child: AppErrorState(
+                      message: '$e',
+                      onRetry: () => ref.invalidate(servicesProvider),
+                    ),
+                  ),
+                ),
+                data: (services) {
+                  if (services.isEmpty) {
+                    return const SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.all(40),
-                        child: Text(
-                          'No services listed.',
-                          style: TextStyle(color: AppColors.textSecondary),
+                        padding: EdgeInsets.only(top: 40),
+                        child: AppEmptyState(
+                          icon: Icons.storefront_rounded,
+                          title: 'No services listed',
+                          message:
+                              'Neighbourhood services and businesses will show up here.',
+                          gradient: AppColors.mintGradient,
                         ),
                       ),
-                    ),
-                  );
-                }
-                final width = MediaQuery.of(context).size.width;
-                final crossAxisCount = width >= 900
-                    ? 4
-                    : (width >= 600 ? 3 : 2);
-                return SliverGrid(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    // Use a fixed extent so the cell grows with large text scale
-                    // instead of overflowing a fixed aspect ratio.
-                    mainAxisExtent: 200,
-                  ),
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final s = services[index];
-                    return GlassCard(
-                      padding: const EdgeInsets.all(16),
-                      onTap: () => _showServiceSheet(context, s),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: const BoxDecoration(
-                              color: AppColors.backgroundGrey,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              _serviceIcon(s.category),
-                              size: 28,
-                              color: AppColors.deepSlate,
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          Text(
-                            s.businessName,
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          if (s.category != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryBlue.withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                s.category!,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primaryBlue,
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                PhosphorIconsFill.star,
-                                size: 14,
-                                color: Color(0xFFF59E0B),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                s.rating.toStringAsFixed(1),
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
                     );
-                  }, childCount: services.length),
-                );
-              },
+                  }
+                  final width = MediaQuery.of(context).size.width;
+                  final crossAxisCount = width >= 900
+                      ? 4
+                      : (width >= 600 ? 3 : 2);
+                  return SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
+                      // Use a fixed extent so the cell grows with large text scale
+                      // instead of overflowing a fixed aspect ratio.
+                      mainAxisExtent: 210,
+                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final s = services[index];
+                      final gradient =
+                          _tileGradients[index % _tileGradients.length];
+                      return PremiumCard(
+                        padding: const EdgeInsets.all(16),
+                        onTap: () => _showServiceSheet(context, s),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            GradientIconBadge(
+                              icon: _serviceIcon(s.category),
+                              gradient: gradient,
+                              size: 54,
+                              iconSize: 26,
+                              radius: 18,
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              s.businessName,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            if (s.category != null)
+                              StatusPill(
+                                label: s.category!,
+                                color: AppColors.brand,
+                                dense: true,
+                              ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  PhosphorIconsFill.star,
+                                  size: 14,
+                                  color: AppColors.accentAmber,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  s.rating.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }, childCount: services.length),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

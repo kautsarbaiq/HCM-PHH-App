@@ -6,9 +6,14 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/widgets/action_button.dart';
+import '../../../../core/widgets/app_states.dart';
 import '../../../../core/widgets/glass_text_field.dart';
+import '../../../../core/widgets/gradient_background.dart';
+import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/section_header.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/visitor_pass_card.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/repositories/visitor_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
 
@@ -156,34 +161,37 @@ class _AccessPageState extends ConsumerState<AccessPage> {
     final tabIndex = ref.watch(accessTabIndexProvider);
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-              child: _buildHeader(context),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: _buildSegmentedControl(tabIndex),
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: IndexedStack(
-                index: tabIndex,
-                children: [
-                  _buildPreRegisterForm()
-                      .animate(target: tabIndex == 0 ? 1 : 0)
-                      .fade(duration: 300.ms)
-                      .slideY(begin: 0.1, end: 0),
-                  _buildActivePasses()
-                      .animate(target: tabIndex == 1 ? 1 : 0)
-                      .fade(duration: 300.ms)
-                      .slideY(begin: 0.1, end: 0),
-                ],
+      backgroundColor: AppColors.backgroundGrey,
+      body: GradientBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                child: _buildHeader(context),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: _buildSegmentedControl(tabIndex),
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: IndexedStack(
+                  index: tabIndex,
+                  children: [
+                    _buildPreRegisterForm()
+                        .animate(target: tabIndex == 0 ? 1 : 0)
+                        .fade(duration: 300.ms)
+                        .slideY(begin: 0.1, end: 0),
+                    _buildActivePasses()
+                        .animate(target: tabIndex == 1 ? 1 : 0)
+                        .fade(duration: 300.ms)
+                        .slideY(begin: 0.1, end: 0),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -193,59 +201,76 @@ class _AccessPageState extends ConsumerState<AccessPage> {
     final profileAsync = ref.watch(currentProfileProvider);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Visitor Access',
-          style: TextStyle(
-            fontSize: 28,
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'Visitor Access',
+              style: TextStyle(
+                fontSize: 28,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+              ),
+            ),
+            SizedBox(height: 2),
+            Text(
+              'Pre-register guests & manage passes',
+              style: TextStyle(
+                fontSize: 13.5,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
         GestureDetector(
           onTap: () => context.push('/profile'),
           child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
+            width: 46,
+            height: 46,
+            padding: const EdgeInsets.all(2.5),
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.primaryBlue.withOpacity(0.3),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              gradient: AppColors.brandGradient,
             ),
             child: ClipOval(
-              child: profileAsync.when(
-                data: (profile) => profile?.avatarUrl != null
-                    ? Image.network(
-                        profile!.avatarUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(
+              child: Container(
+                color: AppColors.primaryWhite,
+                child: profileAsync.when(
+                  data: (profile) => profile?.avatarUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: profile!.avatarUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => const Center(
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                          errorWidget: (_, __, ___) => const Icon(
+                            PhosphorIconsRegular.user,
+                            color: AppColors.brand,
+                          ),
+                        )
+                      : const Icon(
                           PhosphorIconsRegular.user,
-                          color: AppColors.primaryBlue,
+                          color: AppColors.brand,
                         ),
-                      )
-                    : const Icon(
-                        PhosphorIconsRegular.user,
-                        color: AppColors.primaryBlue,
-                      ),
-                loading: () => const Center(
-                  child: SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                  loading: () => const Center(
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
-                ),
-                error: (_, __) => const Icon(
-                  PhosphorIconsRegular.user,
-                  color: AppColors.primaryBlue,
+                  error: (_, __) => const Icon(
+                    PhosphorIconsRegular.user,
+                    color: AppColors.brand,
+                  ),
                 ),
               ),
             ),
@@ -257,11 +282,17 @@ class _AccessPageState extends ConsumerState<AccessPage> {
 
   Widget _buildSegmentedControl(int currentIndex) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: AppColors.primaryWhite.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.glassBorder),
+        color: AppColors.primaryWhite,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6A7BA8).withOpacity(0.10),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -283,14 +314,14 @@ class _AccessPageState extends ConsumerState<AccessPage> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryWhite : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          gradient: isSelected ? AppColors.brandGradient : null,
+          borderRadius: BorderRadius.circular(14),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.shadowColor,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    color: AppColors.brand.withOpacity(0.30),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
                   ),
                 ]
               : [],
@@ -300,10 +331,8 @@ class _AccessPageState extends ConsumerState<AccessPage> {
             label,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              color: isSelected
-                  ? AppColors.textPrimary
-                  : AppColors.textSecondary,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
           ),
         ),
@@ -317,46 +346,56 @@ class _AccessPageState extends ConsumerState<AccessPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GlassTextField(
-            controller: _nameController,
-            hintText: 'Visitor Name',
-            prefixIcon: PhosphorIconsRegular.user,
-          ),
-          const SizedBox(height: 16),
-          GlassTextField(
-            controller: _typeController,
-            hintText: 'Purpose (e.g. Guest, Delivery)',
-            prefixIcon: PhosphorIconsRegular.tag,
-          ),
-          const SizedBox(height: 16),
-          GestureDetector(
-            onTap: _pickDateTime,
-            behavior: HitTestBehavior.opaque,
-            child: AbsorbPointer(
-              child: GlassTextField(
-                controller: _dateController,
-                hintText: 'Date & Time (Optional)',
-                prefixIcon: PhosphorIconsRegular.calendar,
-              ),
+          PremiumCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SectionHeader(
+                  title: 'Guest details',
+                  subtitle: 'We will generate a QR pass for entry',
+                ),
+                const SizedBox(height: 18),
+                GlassTextField(
+                  controller: _nameController,
+                  hintText: 'Visitor Name',
+                  prefixIcon: PhosphorIconsRegular.user,
+                ),
+                const SizedBox(height: 16),
+                GlassTextField(
+                  controller: _typeController,
+                  hintText: 'Purpose (e.g. Guest, Delivery)',
+                  prefixIcon: PhosphorIconsRegular.tag,
+                ),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: _pickDateTime,
+                  behavior: HitTestBehavior.opaque,
+                  child: AbsorbPointer(
+                    child: GlassTextField(
+                      controller: _dateController,
+                      hintText: 'Date & Time (Optional)',
+                      prefixIcon: PhosphorIconsRegular.calendar,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                GlassTextField(
+                  controller: _plateController,
+                  hintText: 'Vehicle Plate (Optional)',
+                  prefixIcon: PhosphorIconsRegular.carProfile,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
-          GlassTextField(
-            controller: _plateController,
-            hintText: 'Vehicle Plate (Optional)',
-            prefixIcon: PhosphorIconsRegular.carProfile,
-          ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           _isSubmitting
               ? const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.primaryBlue,
-                  ),
+                  child: CircularProgressIndicator(color: AppColors.brand),
                 )
               : ActionButton(
                   label: 'Generate Pass',
                   onPressed: _submitForm,
-                  backgroundColor: AppColors.primaryBlue,
+                  backgroundColor: AppColors.brand,
                   icon: PhosphorIconsRegular.qrCode,
                 ),
         ],
@@ -369,7 +408,10 @@ class _AccessPageState extends ConsumerState<AccessPage> {
 
     return visitorsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Error: $error')),
+      error: (error, stack) => AppErrorState(
+        message: 'Error: $error',
+        onRetry: () => ref.read(myVisitorsProvider.notifier).refresh(),
+      ),
       data: (visitors) {
         // Show only active passes (not yet checked-out)
         final activeVisitors = visitors
@@ -377,11 +419,13 @@ class _AccessPageState extends ConsumerState<AccessPage> {
             .toList();
 
         if (activeVisitors.isEmpty) {
-          return const Center(
-            child: Text(
-              'No active visitor passes.',
-              style: TextStyle(color: Color(0xFFA3AED0)),
-            ),
+          return AppEmptyState(
+            icon: PhosphorIconsRegular.qrCode,
+            title: 'No active passes',
+            message: 'Pre-register a guest to generate a visitor QR pass.',
+            gradient: AppColors.skyGradient,
+            actionLabel: 'Pre-register a guest',
+            onAction: () => ref.read(accessTabIndexProvider.notifier).state = 0,
           );
         }
 
