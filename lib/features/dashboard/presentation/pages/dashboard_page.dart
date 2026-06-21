@@ -15,6 +15,7 @@ import '../../../../core/widgets/section_header.dart';
 import '../../../main/presentation/pages/main_navigation_page.dart';
 import '../../../emergency/presentation/widgets/emergency_bottom_sheet.dart';
 import '../widgets/quick_action_item.dart';
+import '../widgets/home_banner_carousel.dart';
 
 final dashboardOutstandingProvider = FutureProvider<List<Billing>>((ref) {
   return ref.read(billingRepositoryProvider).getMyBillings();
@@ -65,6 +66,7 @@ class DashboardPage extends ConsumerWidget {
                     .fadeIn(duration: 350.ms)
                     .slideY(begin: -0.12, end: 0),
                 const SizedBox(height: 22),
+                const HomeBannerCarousel(),
                 _hero(context, ref)
                     .animate()
                     .fadeIn(duration: 400.ms)
