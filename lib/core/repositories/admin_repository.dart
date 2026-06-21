@@ -91,10 +91,19 @@ class AdminRepository {
 
   Future<void> assignHouseToResident(String residentId, String houseId) async {
     try {
+      // Link the resident to the house.
       await _supabase
           .from('profiles')
           .update({'house_id': houseId})
           .eq('id', residentId);
+      // …and record them as the house's owner. This is REQUIRED: the visitors
+      // INSERT RLS policy and the house-based billing form both key off
+      // houses.owner_id, so without this the resident can't pre-register a
+      // visitor (RLS denies it) and can't be billed for that house.
+      await _supabase
+          .from('houses')
+          .update({'owner_id': residentId})
+          .eq('id', houseId);
     } catch (e) {
       throw Exception('Failed to assign house');
     }
