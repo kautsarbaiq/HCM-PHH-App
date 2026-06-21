@@ -70,4 +70,33 @@ class StorageRepository {
       throw Exception('Failed to upload evidence image');
     }
   }
+
+  /// Returns a short-lived signed URL for an evidence object in the PRIVATE
+  /// `guard_evidence` bucket. Stored values may be public URLs (which return
+  /// 403 on a private bucket) or bare object paths — this derives the object
+  /// key and signs it. Returns null (never throws) on empty input or any error.
+  Future<String?> signedEvidenceUrl(String stored) async {
+    if (stored.isEmpty) return null;
+    try {
+      String key;
+      const marker = '/guard_evidence/';
+      final markerIndex = stored.lastIndexOf(marker);
+      if (markerIndex != -1) {
+        // Everything after the last `/guard_evidence/`, minus any `?query`.
+        key = stored.substring(markerIndex + marker.length);
+        final queryIndex = key.indexOf('?');
+        if (queryIndex != -1) key = key.substring(0, queryIndex);
+      } else {
+        // Already an object path.
+        key = stored;
+      }
+      final url = await _supabase.storage
+          .from('guard_evidence')
+          .createSignedUrl(key, 3600);
+      return url;
+    } catch (e) {
+      print('Error signing evidence url: $e');
+      return null;
+    }
+  }
 }

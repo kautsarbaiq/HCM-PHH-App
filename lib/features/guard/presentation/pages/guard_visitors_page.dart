@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/repositories/visitor_repository.dart';
 import '../../../../core/widgets/app_states.dart';
+import '../../../../core/widgets/evidence_image.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/status_pill.dart';
 import '../../../../theme/app_colors.dart';
@@ -585,40 +585,18 @@ class _Thumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget placeholder(Widget child) => Container(
-      width: size,
-      height: size,
-      color: AppColors.surfaceTint,
-      child: Center(child: child),
-    );
     return GestureDetector(
       onTap: () => _showPhotoViewer(context, photo),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          ClipRRect(
+          EvidenceImage(
+            storedUrl: photo.url,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
             borderRadius: BorderRadius.circular(12),
-            child: CachedNetworkImage(
-              imageUrl: photo.url,
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              placeholder: (c, u) => placeholder(
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-              errorWidget: (c, u, e) => placeholder(
-                const Icon(
-                  PhosphorIconsRegular.imageBroken,
-                  color: AppColors.textSecondary,
-                  size: 18,
-                ),
-              ),
-            ),
           ),
           SizedBox(height: 5.h),
           Text(
@@ -648,33 +626,10 @@ void _showPhotoViewer(BuildContext context, _LabeledPhoto photo) {
             minScale: 0.5,
             maxScale: 4,
             child: Center(
-              child: ClipRRect(
+              child: EvidenceImage(
+                storedUrl: photo.url,
+                fit: BoxFit.contain,
                 borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(
-                  imageUrl: photo.url,
-                  fit: BoxFit.contain,
-                  placeholder: (c, u) => const Padding(
-                    padding: EdgeInsets.all(40),
-                    child: SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white70,
-                        ),
-                      ),
-                    ),
-                  ),
-                  errorWidget: (c, u, e) => const Padding(
-                    padding: EdgeInsets.all(40),
-                    child: Icon(
-                      PhosphorIconsRegular.imageBroken,
-                      color: Colors.white54,
-                      size: 48,
-                    ),
-                  ),
-                ),
               ),
             ),
           ),

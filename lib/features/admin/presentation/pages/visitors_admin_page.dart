@@ -1,9 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/repositories/visitor_repository.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../core/widgets/evidence_image.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
@@ -88,31 +88,10 @@ void _showPhotoViewer(BuildContext context, _AdminPhoto photo) {
             minScale: 0.5,
             maxScale: 4,
             child: Center(
-              child: ClipRRect(
+              child: EvidenceImage(
+                storedUrl: photo.url,
+                fit: BoxFit.contain,
                 borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(
-                  imageUrl: photo.url,
-                  fit: BoxFit.contain,
-                  placeholder: (_, __) => const Padding(
-                    padding: EdgeInsets.all(40),
-                    child: SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: CircularProgressIndicator(
-                        color: Colors.white54,
-                        strokeWidth: 2.5,
-                      ),
-                    ),
-                  ),
-                  errorWidget: (_, __, ___) => const Padding(
-                    padding: EdgeInsets.all(40),
-                    child: Icon(
-                      Icons.broken_image,
-                      color: Colors.white54,
-                      size: 48,
-                    ),
-                  ),
-                ),
               ),
             ),
           ),
@@ -434,40 +413,18 @@ class _Thumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget box(Widget child) => Container(
-      width: 64,
-      height: 64,
-      color: AppColors.surfaceTint,
-      child: Center(child: child),
-    );
     return GestureDetector(
       onTap: () => _showPhotoViewer(context, photo),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          ClipRRect(
+          EvidenceImage(
+            storedUrl: photo.url,
+            width: 64,
+            height: 64,
+            fit: BoxFit.cover,
             borderRadius: BorderRadius.circular(12),
-            child: CachedNetworkImage(
-              imageUrl: photo.url,
-              width: 64,
-              height: 64,
-              fit: BoxFit.cover,
-              placeholder: (c, u) => box(
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-              errorWidget: (c, u, e) => box(
-                const Icon(
-                  Icons.broken_image,
-                  color: AppColors.textSecondary,
-                  size: 18,
-                ),
-              ),
-            ),
           ),
           const SizedBox(height: 5),
           Text(
