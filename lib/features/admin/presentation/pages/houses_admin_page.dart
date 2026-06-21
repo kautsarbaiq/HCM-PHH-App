@@ -113,6 +113,10 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                 children: [
                   _buildDetailItem('ID', house.id),
                   _buildDetailItem('House No / Address', house.houseNumber),
+                  _buildDetailItem(
+                    'Address',
+                    house.address?.isNotEmpty == true ? house.address! : '-',
+                  ),
                   _buildDetailItem('Owner / Occupant', _occupantName(house)),
                   _buildDetailItem('Unit Type', house.houseType),
                   _buildDetailItem(
@@ -181,6 +185,7 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
     final typeController = TextEditingController(
       text: house?.houseType ?? 'Type A',
     );
+    final addressController = TextEditingController(text: house?.address ?? '');
     String status = house?.status ?? 'vacant';
     bool isSaving = false;
 
@@ -219,6 +224,11 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                         typeController,
                         'Unit Type (e.g. Type A)',
                         Icons.layers,
+                      ),
+                      _buildTextField(
+                        addressController,
+                        'Address (optional)',
+                        Icons.location_on_outlined,
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -304,6 +314,10 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                                     'house_number': houseNoController.text,
                                     'house_type': typeController.text,
                                     'status': status,
+                                    'address':
+                                        addressController.text.trim().isEmpty
+                                        ? null
+                                        : addressController.text.trim(),
                                   });
                             } else {
                               await ref
@@ -314,6 +328,10 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                                       houseNumber: houseNoController.text,
                                       houseType: typeController.text,
                                       status: status,
+                                      address:
+                                          addressController.text.trim().isEmpty
+                                          ? null
+                                          : addressController.text.trim(),
                                     ),
                                   );
                             }

@@ -8,6 +8,7 @@ class House {
   final String houseType;
   final String status;
   final String? ownerId;
+  final String? address; // Full street address (optional).
 
   // Joined fields
   final Profile? owner;
@@ -18,6 +19,7 @@ class House {
     required this.houseType,
     required this.status,
     this.ownerId,
+    this.address,
     this.owner,
   });
 
@@ -28,6 +30,7 @@ class House {
       houseType: json['house_type'] as String,
       status: json['status'] as String,
       ownerId: json['owner_id'] as String?,
+      address: json['address'] as String?,
       owner: json['profiles'] != null
           ? Profile.fromJson(json['profiles'] as Map<String, dynamic>)
           : null,
@@ -40,6 +43,7 @@ class House {
       'house_type': houseType,
       'status': status,
       'owner_id': ownerId,
+      'address': address,
     };
   }
 }
