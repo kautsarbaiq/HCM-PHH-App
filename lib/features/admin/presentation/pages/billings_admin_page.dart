@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/repositories/admin_repository.dart';
 import '../../../../core/repositories/billing_repository.dart';
+import 'houses_admin_page.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -79,6 +79,18 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
     );
   }
 
+  // Maps a billing to its house label by looking up the house in the
+  // adminHousesProvider. Returns 'House {houseNumber}' or '-'.
+  String _houseLabel(Billing b) {
+    final houses = ref.read(adminHousesProvider).valueOrNull;
+    if (houses != null) {
+      for (final h in houses) {
+        if (h.id == b.houseId) return 'House ${h.houseNumber}';
+      }
+    }
+    return '-';
+  }
+
   void _showDetails(Billing billing) {
     final status = _statusStyle(billing.status);
     showDialog(
@@ -110,7 +122,8 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildDetailItem('Title', billing.title),
-                _buildDetailItem('Resident', billing.resident?.fullName ?? '-'),
+                _buildDetailItem('House', _houseLabel(billing)),
+                _buildDetailItem('Owner', billing.resident?.fullName ?? '-'),
                 _buildDetailItem('Amount', _formatAmount(billing.amount)),
                 _buildDetailItem(
                   'Period',
@@ -171,27 +184,27 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
 
   void _showForm({Billing? billing}) {
     final isEdit = billing != null;
-    final residentsAsync = ref.read(adminResidentsProvider);
+    final housesAsync = ref.read(adminHousesProvider);
 
-    // If the residents list is still loading, don't misreport "none assigned".
-    if (residentsAsync.isLoading) {
+    // If the houses list is still loading, don't misreport "none assigned".
+    if (housesAsync.isLoading) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Loading residents… please try again in a moment.'),
+          content: Text('Loading houses… please try again in a moment.'),
         ),
       );
       return;
     }
 
-    final residents = (residentsAsync.valueOrNull ?? [])
-        .where((r) => r.houseId != null && r.houseId!.isNotEmpty)
+    final houses = (housesAsync.valueOrNull ?? [])
+        .where((h) => h.ownerId != null && h.ownerId!.isNotEmpty)
         .toList();
 
-    if (residents.isEmpty) {
+    if (houses.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'No residents with an assigned house. Assign a house to a resident first.',
+            'No houses with an owner assigned — assign an owner first.',
           ),
         ),
       );
@@ -218,9 +231,9 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
     );
     final periodController = TextEditingController(text: billing?.period ?? '');
 
-    String? selectedResidentId =
-        (billing != null && residents.any((r) => r.id == billing.residentId))
-        ? billing.residentId
+    String? selectedHouseId =
+        (billing != null && houses.any((h) => h.id == billing.houseId))
+        ? billing.houseId
         : null;
     String status = billing?.status ?? 'unpaid';
     bool isSaving = false;
@@ -241,8 +254,11 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
             return AlertDialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
               ),
+              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
               title: Text(
                 isEdit ? 'Edit Billing Invoice' : 'Create Billing Invoice',
                 style: const TextStyle(
@@ -250,116 +266,124 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                   color: AppColors.textPrimary,
                 ),
               ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildTextField(
-                      invoiceController,
-                      'Invoice Number',
-                      Icons.bookmark_outline,
-                    ),
-                    _buildTextField(
-                      titleController,
-                      'Title (e.g. Monthly Maintenance)',
-                      Icons.title,
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      value: selectedResidentId,
-                      isExpanded: true,
-                      decoration: _inputDecoration('Resident', Icons.person),
-                      items: residents
-                          .map(
-                            (r) => DropdownMenuItem(
-                              value: r.id,
-                              child: Text(
-                                r.fullName,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (val) =>
-                          setDialogState(() => selectedResidentId = val),
-                    ),
-                    _buildTextField(
-                      amountController,
-                      'Amount (numbers only)',
-                      Icons.attach_money,
-                      isNumeric: true,
-                    ),
-                    _buildTextField(
-                      periodController,
-                      'Period (e.g. June 2026) — optional',
-                      Icons.event_note,
-                    ),
-                    const SizedBox(height: 12),
-                    InkWell(
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: dueDate,
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime(2100),
-                        );
-                        if (picked != null) {
-                          setDialogState(() => dueDate = picked);
-                        }
-                      },
-                      child: InputDecorator(
+              content: SizedBox(
+                width: 460,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildTextField(
+                        invoiceController,
+                        'Invoice Number',
+                        Icons.bookmark_outline,
+                      ),
+                      _buildTextField(
+                        titleController,
+                        'Title (e.g. Monthly Maintenance)',
+                        Icons.title,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: selectedHouseId,
+                        isExpanded: true,
                         decoration: _inputDecoration(
-                          'Due Date',
-                          Icons.calendar_today,
+                          'Bill to House',
+                          Icons.house_rounded,
                         ),
-                        child: Text(
-                          DateFormat('MMM dd, yyyy').format(dueDate),
-                          style: const TextStyle(color: AppColors.textPrimary),
+                        items: houses.map((h) {
+                          final ownerName = h.owner?.fullName;
+                          final label =
+                              ownerName != null && ownerName.isNotEmpty
+                              ? 'House ${h.houseNumber} · $ownerName'
+                              : 'House ${h.houseNumber}';
+                          return DropdownMenuItem(
+                            value: h.id,
+                            child: Text(label, overflow: TextOverflow.ellipsis),
+                          );
+                        }).toList(),
+                        onChanged: (val) =>
+                            setDialogState(() => selectedHouseId = val),
+                      ),
+                      _buildTextField(
+                        amountController,
+                        'Amount (numbers only)',
+                        Icons.attach_money,
+                        isNumeric: true,
+                      ),
+                      _buildTextField(
+                        periodController,
+                        'Period (e.g. June 2026) — optional',
+                        Icons.event_note,
+                      ),
+                      const SizedBox(height: 16),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: dueDate,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2100),
+                          );
+                          if (picked != null) {
+                            setDialogState(() => dueDate = picked);
+                          }
+                        },
+                        child: InputDecorator(
+                          decoration: _inputDecoration(
+                            'Due Date',
+                            Icons.calendar_today,
+                          ),
+                          child: Text(
+                            DateFormat('MMM dd, yyyy').format(dueDate),
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        const Text(
-                          'Status: ',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Text(
+                            'Status: ',
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Wrap(
-                            spacing: 8,
-                            children: [
-                              _statusChip(
-                                'Unpaid',
-                                'unpaid',
-                                status,
-                                AppColors.error,
-                                (v) => setDialogState(() => status = v),
-                              ),
-                              _statusChip(
-                                'Paid',
-                                'paid',
-                                status,
-                                AppColors.success,
-                                (v) => setDialogState(() => status = v),
-                              ),
-                              _statusChip(
-                                'Overdue',
-                                'overdue',
-                                status,
-                                AppColors.warning,
-                                (v) => setDialogState(() => status = v),
-                              ),
-                            ],
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Wrap(
+                              spacing: 8,
+                              children: [
+                                _statusChip(
+                                  'Unpaid',
+                                  'unpaid',
+                                  status,
+                                  AppColors.error,
+                                  (v) => setDialogState(() => status = v),
+                                ),
+                                _statusChip(
+                                  'Paid',
+                                  'paid',
+                                  status,
+                                  AppColors.success,
+                                  (v) => setDialogState(() => status = v),
+                                ),
+                                _statusChip(
+                                  'Overdue',
+                                  'overdue',
+                                  status,
+                                  AppColors.warning,
+                                  (v) => setDialogState(() => status = v),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
               actions: [
@@ -381,20 +405,33 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                           );
                           if (invoiceController.text.isEmpty ||
                               titleController.text.isEmpty ||
-                              selectedResidentId == null ||
+                              selectedHouseId == null ||
                               amountVal == null) {
                             messenger.showSnackBar(
                               const SnackBar(
                                 content: Text(
-                                  'Please fill invoice, title, resident, and a valid amount.',
+                                  'Please fill invoice, title, house, and a valid amount.',
                                 ),
                               ),
                             );
                             return;
                           }
-                          final resident = residents.firstWhere(
-                            (r) => r.id == selectedResidentId,
+                          final house = houses.firstWhere(
+                            (h) => h.id == selectedHouseId,
                           );
+                          // The owner receives the invoice. Abort if the house
+                          // somehow has no owner assigned.
+                          if (house.ownerId == null || house.ownerId!.isEmpty) {
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Selected house has no owner assigned. Assign an owner first.',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          final ownerId = house.ownerId!;
                           final dueIso = DateFormat(
                             'yyyy-MM-dd',
                           ).format(dueDate);
@@ -406,8 +443,8 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                                   .updateBilling(billing.id, {
                                     'invoice_number': invoiceController.text,
                                     'title': titleController.text,
-                                    'resident_id': resident.id,
-                                    'house_id': resident.houseId,
+                                    'resident_id': ownerId,
+                                    'house_id': house.id,
                                     'amount': amountVal,
                                     'due_date': dueIso,
                                     'period': periodController.text.isEmpty
@@ -429,8 +466,8 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                                       period: periodController.text.isEmpty
                                           ? null
                                           : periodController.text,
-                                      residentId: resident.id,
-                                      houseId: resident.houseId!,
+                                      residentId: ownerId,
+                                      houseId: house.id,
                                     ),
                                   );
                             }
@@ -574,8 +611,9 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
   @override
   Widget build(BuildContext context) {
     final billingsAsync = ref.watch(adminBillingsProvider);
-    // Warm the residents list so the create/edit form has data ready.
-    ref.watch(adminResidentsProvider);
+    // Warm the houses list so the create/edit form and house labels have data
+    // ready.
+    ref.watch(adminHousesProvider);
 
     return PremiumCard(
       padding: const EdgeInsets.all(24.0),
@@ -677,7 +715,7 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                                       Expanded(
                                         flex: 3,
                                         child: Text(
-                                          'Resident',
+                                          'House',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w700,
                                             color: AppColors.textSecondary,
@@ -762,7 +800,7 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                                             Expanded(
                                               flex: 3,
                                               child: Text(
-                                                b.resident?.fullName ?? '-',
+                                                _houseLabel(b),
                                                 style: const TextStyle(
                                                   color: AppColors.textPrimary,
                                                 ),
@@ -895,7 +933,7 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Resident: ${b.resident?.fullName ?? '-'}',
+            'House: ${_houseLabel(b)}',
             style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 13,
