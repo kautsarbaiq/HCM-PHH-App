@@ -82,6 +82,36 @@ CREATE POLICY "res_doc admin read" ON storage.objects
     AND EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+-- 6) Resident self-service edits ------------------------------------------------
+-- Residents can EDIT and DELETE their own documents (table + storage object),
+-- and EDIT their own house's address (they are the house owner).
+DROP POLICY IF EXISTS "res_docs update own" ON resident_documents;
+CREATE POLICY "res_docs update own" ON resident_documents
+  FOR UPDATE TO authenticated
+  USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS "res_docs delete own" ON resident_documents;
+CREATE POLICY "res_docs delete own" ON resident_documents
+  FOR DELETE TO authenticated USING (user_id = auth.uid());
+
+DROP POLICY IF EXISTS "res_doc delete own" ON storage.objects;
+CREATE POLICY "res_doc delete own" ON storage.objects
+  FOR DELETE TO authenticated
+  USING (
+    bucket_id = 'resident_documents'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+DROP POLICY IF EXISTS "owner update own house" ON houses;
+CREATE POLICY "owner update own house" ON houses
+  FOR UPDATE TO authenticated
+  USING (owner_id = auth.uid()) WITH CHECK (owner_id = auth.uid());
+
+-- (profiles self-update — for editing one's own phone — is already in place,
+--  since residents already update their own avatar_url. If not, add:
+--  CREATE POLICY "profiles update own" ON profiles FOR UPDATE TO authenticated
+--    USING (id = auth.uid()) WITH CHECK (id = auth.uid());)
+
 -- ============================================================================
 -- Also verify (not SQL-fixable here):
 --   * admin@hcm.com still has profiles.role = 'admin'

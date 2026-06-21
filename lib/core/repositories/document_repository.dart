@@ -115,4 +115,25 @@ class DocumentRepository {
         .map((json) => ResidentDocument.fromJson(json))
         .toList();
   }
+
+  /// Edit a resident's own document metadata (RLS scopes the update to the
+  /// owner). Pass only the fields you want to change.
+  Future<void> updateResidentDocument(
+    String id, {
+    String? title,
+    String? documentType,
+    String? referenceCode,
+  }) async {
+    final updates = <String, dynamic>{};
+    if (title != null) updates['title'] = title;
+    if (documentType != null) updates['document_type'] = documentType;
+    if (referenceCode != null) updates['reference_code'] = referenceCode;
+    if (updates.isEmpty) return;
+    await _supabase.from('resident_documents').update(updates).eq('id', id);
+  }
+
+  /// Delete a resident's own document row (RLS scopes the delete to the owner).
+  Future<void> deleteResidentDocument(String id) async {
+    await _supabase.from('resident_documents').delete().eq('id', id);
+  }
 }

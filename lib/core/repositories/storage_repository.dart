@@ -141,4 +141,21 @@ class StorageRepository {
       return null;
     }
   }
+
+  /// Best-effort removal of a resident-document object from storage (called
+  /// when a resident deletes a document). Never throws.
+  Future<void> deleteResidentDocumentFile(String stored) async {
+    if (stored.isEmpty) return;
+    try {
+      var key = stored;
+      const marker = '/resident_documents/';
+      final idx = stored.lastIndexOf(marker);
+      if (idx != -1) key = stored.substring(idx + marker.length);
+      final q = key.indexOf('?');
+      if (q != -1) key = key.substring(0, q);
+      await _supabase.storage.from('resident_documents').remove([key]);
+    } catch (_) {
+      /* ignore — the DB row is the source of truth; a stray file is harmless */
+    }
+  }
 }

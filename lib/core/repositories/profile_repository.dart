@@ -80,4 +80,11 @@ class ProfileRepository {
       return null;
     }
   }
+
+  /// Update the signed-in user's own profile row (RLS allows self-update).
+  Future<void> updateMyProfile(Map<String, dynamic> fields) async {
+    final uid = _supabase.auth.currentUser?.id;
+    if (uid == null || fields.isEmpty) return;
+    await _supabase.from('profiles').update(fields).eq('id', uid);
+  }
 }

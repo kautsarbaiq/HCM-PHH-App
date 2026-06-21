@@ -507,6 +507,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             'Phone',
             profileAsync.value?.phone ?? '-',
             AppColors.skyGradient,
+            onEdit: () => _editPhone(profileAsync.value?.phone),
           ),
           const Divider(height: 32, thickness: 0.5),
           _buildInfoRow(
@@ -521,6 +522,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             'House Address',
             houseAddress,
             AppColors.mintGradient,
+            onEdit: () => _editHouseAddress(house?.address),
           ),
         ],
       ),
@@ -531,8 +533,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     IconData icon,
     String label,
     String value,
-    Gradient gradient,
-  ) {
+    Gradient gradient, {
+    VoidCallback? onEdit,
+  }) {
     return Row(
       children: [
         GradientIconBadge(
@@ -566,13 +569,147 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ],
           ),
         ),
-        const Icon(
-          PhosphorIconsRegular.caretRight,
-          size: 16,
-          color: AppColors.textSecondary,
-        ),
+        if (onEdit != null)
+          IconButton(
+            icon: const Icon(
+              PhosphorIconsRegular.pencilSimple,
+              size: 18,
+              color: AppColors.brand,
+            ),
+            tooltip: 'Edit',
+            visualDensity: VisualDensity.compact,
+            onPressed: onEdit,
+          )
+        else
+          const Icon(
+            PhosphorIconsRegular.caretRight,
+            size: 16,
+            color: AppColors.textSecondary,
+          ),
       ],
     );
+  }
+
+  /// Edits the signed-in resident's phone (profiles.phone). An empty value
+  /// clears it (stored as null).
+  Future<void> _editPhone(String? currentPhone) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final controller = TextEditingController(text: currentPhone ?? '');
+
+    final value = await showDialog<String?>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Edit Phone'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.phone,
+          decoration: const InputDecoration(
+            labelText: 'Phone',
+            hintText: 'e.g. +60 12-345 6789',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, null),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (value == null) return; // Cancelled.
+
+    try {
+      await ref.read(profileRepositoryProvider).updateMyProfile({
+        'phone': value.trim().isEmpty ? null : value.trim(),
+      });
+      ref.invalidate(currentProfileProvider);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Phone updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Could not update phone: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Edits the resident's house address (they are the house owner). An empty
+  /// value clears it (stored as null). Shows a SnackBar if no house is assigned.
+  Future<void> _editHouseAddress(String? currentAddress) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final profile = await ref.read(currentProfileProvider.future);
+    if (!mounted) return;
+
+    final houseId = profile?.houseId;
+    if (houseId == null || houseId.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('No house assigned')),
+      );
+      return;
+    }
+
+    final controller = TextEditingController(text: currentAddress ?? '');
+    final value = await showDialog<String?>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Edit House Address'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          minLines: 1,
+          maxLines: 3,
+          textInputAction: TextInputAction.done,
+          decoration: const InputDecoration(
+            labelText: 'Address',
+            hintText: 'e.g. 12 Jalan Mawar, Taman Indah',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, null),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (value == null) return; // Cancelled.
+
+    try {
+      await ref.read(houseRepositoryProvider).updateHouse(houseId, {
+        'address': value.trim().isEmpty ? null : value.trim(),
+      });
+      ref.invalidate(myHouseProvider);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Address updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Could not update address: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Widget _buildSectionHeader(String title, {VoidCallback? onTap}) {
@@ -682,14 +819,33 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            GradientIconBadge(
-              icon: icon,
-              gradient: AppColors.brandGradient,
-              size: 40,
-              iconSize: 19,
-              radius: 12,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GradientIconBadge(
+                  icon: icon,
+                  gradient: AppColors.brandGradient,
+                  size: 40,
+                  iconSize: 19,
+                  radius: 12,
+                ),
+                const Spacer(),
+                // Edit / Delete must NOT trigger the card's tap-to-open.
+                _DocCardIconButton(
+                  icon: PhosphorIconsRegular.pencilSimple,
+                  tooltip: 'Edit',
+                  onTap: () => _editResidentDocument(doc),
+                ),
+                const SizedBox(width: 2),
+                _DocCardIconButton(
+                  icon: PhosphorIconsRegular.trash,
+                  tooltip: 'Delete',
+                  color: AppColors.error,
+                  onTap: () => _deleteResidentDocument(doc),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Text(
               title,
               style: const TextStyle(
@@ -714,6 +870,142 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ),
       ),
     );
+  }
+
+  /// Opens an edit dialog pre-filled with the doc's title + type and saves the
+  /// changes via the repository, then refreshes the resident-docs list.
+  Future<void> _editResidentDocument(ResidentDocument doc) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final titleController = TextEditingController(text: doc.title);
+    final typeController = TextEditingController(text: doc.documentType ?? '');
+
+    final result = await showDialog<({String title, String? type})?>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final title = titleController.text.trim();
+            return AlertDialog(
+              title: const Text('Edit Document'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: titleController,
+                    autofocus: true,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Title *',
+                      hintText: 'e.g. Tenancy Agreement',
+                    ),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: typeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Document Type (optional)',
+                      hintText: 'e.g. tenancy, pet',
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, null),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: title.isEmpty
+                      ? null
+                      : () {
+                          final type = typeController.text.trim();
+                          Navigator.pop(dialogContext, (
+                            title: title,
+                            type: type.isEmpty ? null : type,
+                          ));
+                        },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == null) return; // Cancelled.
+
+    try {
+      await ref
+          .read(documentRepositoryProvider)
+          .updateResidentDocument(
+            doc.id,
+            title: result.title,
+            documentType: result.type,
+          );
+      ref.invalidate(myResidentDocsProvider);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Document updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Could not update document: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Confirms then deletes a resident's own document (DB row + storage file),
+  /// then refreshes the resident-docs list.
+  Future<void> _deleteResidentDocument(ResidentDocument doc) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Document'),
+        content: Text('Delete "${doc.title}"? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ref.read(documentRepositoryProvider).deleteResidentDocument(doc.id);
+      await ref
+          .read(storageRepositoryProvider)
+          .deleteResidentDocumentFile(doc.fileUrl ?? '');
+      ref.invalidate(myResidentDocsProvider);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Document deleted.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Could not delete document: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _openResidentDocument(ResidentDocument doc) async {
@@ -808,5 +1100,36 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ),
       ),
     );
+  }
+}
+
+/// A small tappable icon used on resident-document cards for Edit/Delete.
+/// Uses its own gesture handling so taps don't bubble up to the card's
+/// tap-to-open behaviour.
+class _DocCardIconButton extends StatelessWidget {
+  const _DocCardIconButton({
+    required this.icon,
+    required this.onTap,
+    this.tooltip,
+    this.color = AppColors.textSecondary,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final String? tooltip;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final button = GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Icon(icon, size: 16, color: color),
+      ),
+    );
+    if (tooltip == null) return button;
+    return Tooltip(message: tooltip!, child: button);
   }
 }
