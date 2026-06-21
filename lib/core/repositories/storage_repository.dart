@@ -99,4 +99,46 @@ class StorageRepository {
       return null;
     }
   }
+
+  /// Uploads a resident's personal document (PDF/image/etc.) to the private
+  /// `resident_documents` bucket under the owner's user-id folder, and returns
+  /// the stored OBJECT PATH (not a public URL — the bucket is private, so we
+  /// sign on read via [signedResidentDocUrl]).
+  Future<String> uploadResidentDocument(File file, String userId) async {
+    try {
+      final ext = path.extension(file.path);
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}$ext';
+      final objectPath = '$userId/$fileName';
+      await _supabase.storage
+          .from('resident_documents')
+          .upload(
+            objectPath,
+            file,
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+          );
+      return objectPath;
+    } catch (e) {
+      print('Error uploading document: $e');
+      throw Exception('Failed to upload document');
+    }
+  }
+
+  /// Short-lived signed URL for a stored resident-document object path (or a
+  /// stored public-style URL). Returns null on any failure (never throws).
+  Future<String?> signedResidentDocUrl(String stored) async {
+    if (stored.isEmpty) return null;
+    try {
+      var key = stored;
+      const marker = '/resident_documents/';
+      final idx = stored.lastIndexOf(marker);
+      if (idx != -1) key = stored.substring(idx + marker.length);
+      final q = key.indexOf('?');
+      if (q != -1) key = key.substring(0, q);
+      return await _supabase.storage
+          .from('resident_documents')
+          .createSignedUrl(key, 3600);
+    } catch (_) {
+      return null;
+    }
+  }
 }

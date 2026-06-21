@@ -13,9 +13,24 @@ import '../../../../theme/app_colors.dart';
 import '../../../../core/repositories/profile_repository.dart';
 import '../../../../core/repositories/storage_repository.dart';
 import '../../../../core/repositories/document_repository.dart';
+import '../../../../core/repositories/house_repository.dart';
+import 'package:file_picker/file_picker.dart';
 
 final myResidentDocsProvider = FutureProvider<List<ResidentDocument>>((ref) {
   return ref.read(documentRepositoryProvider).getMyResidentDocuments();
+});
+
+/// The current resident's House (resolved from their houseId). Guarded so it
+/// NEVER throws: returns null when there is no houseId or on any error.
+final myHouseProvider = FutureProvider.autoDispose<House?>((ref) async {
+  final profile = await ref.watch(currentProfileProvider.future);
+  final houseId = profile?.houseId;
+  if (houseId == null || houseId.isEmpty) return null;
+  try {
+    return await ref.read(houseRepositoryProvider).getHouseById(houseId);
+  } catch (_) {
+    return null;
+  }
 });
 
 class ProfilePage extends ConsumerStatefulWidget {
@@ -27,6 +42,7 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _isUploading = false;
+  bool _isUploadingDoc = false;
   bool _isSigningOut = false;
   bool _avatarFailed = false;
 
@@ -115,6 +131,121 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     }
   }
 
+  Future<void> _addResidentDocument() async {
+    if (_isUploadingDoc) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final picked = await FilePicker.platform.pickFiles();
+    final pickedPath = picked?.files.single.path;
+    if (picked == null || pickedPath == null) return;
+
+    if (!mounted) return;
+    final details = await _askDocumentDetails();
+    if (details == null) return; // Cancelled.
+
+    setState(() => _isUploadingDoc = true);
+    try {
+      final uid = Supabase.instance.client.auth.currentUser!.id;
+      final path = await ref
+          .read(storageRepositoryProvider)
+          .uploadResidentDocument(File(pickedPath), uid);
+      await ref
+          .read(documentRepositoryProvider)
+          .addResidentDocument(
+            title: details.title,
+            documentType: details.type,
+            referenceCode: null,
+            filePath: path,
+          );
+
+      ref.invalidate(myResidentDocsProvider);
+
+      if (mounted) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Document uploaded successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Could not upload document: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingDoc = false);
+      }
+    }
+  }
+
+  /// Prompts for a required Title and an optional Document Type. Returns null
+  /// if the user cancels or leaves the title blank.
+  Future<({String title, String? type})?> _askDocumentDetails() {
+    final titleController = TextEditingController();
+    final typeController = TextEditingController();
+
+    return showDialog<({String title, String? type})?>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final title = titleController.text.trim();
+            return AlertDialog(
+              title: const Text('Add Document'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: titleController,
+                    autofocus: true,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Title *',
+                      hintText: 'e.g. Tenancy Agreement',
+                    ),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: typeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Document Type (optional)',
+                      hintText: 'e.g. tenancy, pet',
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, null),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: title.isEmpty
+                      ? null
+                      : () {
+                          final type = typeController.text.trim();
+                          Navigator.pop(dialogContext, (
+                            title: title,
+                            type: type.isEmpty ? null : type,
+                          ));
+                        },
+                  child: const Text('Upload'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -167,7 +298,51 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     const SizedBox(height: 32),
                     _buildInfoCard(ref),
                     const SizedBox(height: 32),
-                    const SectionHeader(title: 'Resident Documents'),
+                    SectionHeader(
+                      title: 'Resident Documents',
+                      trailing: _isUploadingDoc
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.brand,
+                              ),
+                            )
+                          : GestureDetector(
+                              onTap: _addResidentDocument,
+                              behavior: HitTestBehavior.opaque,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.brand.withOpacity(0.10),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      PhosphorIconsRegular.plus,
+                                      size: 14,
+                                      color: AppColors.brand,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Add',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.brand,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                    ),
                     const SizedBox(height: 16),
                     _buildDocumentGrid(),
                     const SizedBox(height: 32),
@@ -312,7 +487,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final profileAsync = ref.watch(currentProfileProvider);
     final email =
         Supabase.instance.client.auth.currentUser?.email ?? 'No email';
-    final houseId = profileAsync.value?.houseId ?? 'Not Assigned';
+    final houseAsync = ref.watch(myHouseProvider);
+    final house = houseAsync.value;
+    String houseAddress;
+    if (house == null) {
+      houseAddress = 'Not assigned';
+    } else if (house.address != null && house.address!.isNotEmpty) {
+      houseAddress = house.address!;
+    } else {
+      houseAddress = 'House ${house.houseNumber} (${house.houseType})';
+    }
 
     return PremiumCard(
       padding: const EdgeInsets.all(20),
@@ -334,8 +518,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           const Divider(height: 32, thickness: 0.5),
           _buildInfoRow(
             PhosphorIconsRegular.mapPin,
-            'House ID',
-            houseId,
+            'House Address',
+            houseAddress,
             AppColors.mintGradient,
           ),
         ],
@@ -534,73 +718,28 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   Future<void> _openResidentDocument(ResidentDocument doc) async {
     final messenger = ScaffoldMessenger.of(context);
-    final hasFile = doc.fileUrl != null && doc.fileUrl!.isNotEmpty;
+    final signed = await ref
+        .read(storageRepositoryProvider)
+        .signedResidentDocUrl(doc.fileUrl ?? '');
 
-    if (hasFile) {
-      final uri = Uri.tryParse(doc.fileUrl!);
-      if (uri != null) {
-        try {
-          final launched = await launchUrl(
-            uri,
-            mode: LaunchMode.externalApplication,
-          );
-          if (launched) return;
-        } catch (_) {
-          // Fall through to the detail dialog below.
-        }
+    if (signed != null && signed.isNotEmpty) {
+      try {
+        await launchUrl(
+          Uri.parse(signed),
+          mode: LaunchMode.externalApplication,
+        );
+        return;
+      } catch (_) {
+        // Fall through to the unavailable message below.
       }
     }
 
-    if (!mounted) return;
-    // No file (or it failed to open): show the document details instead of doing nothing.
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(doc.title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (doc.documentType != null && doc.documentType!.isNotEmpty)
-              Text(
-                'Type: ${doc.documentType}',
-                style: const TextStyle(color: AppColors.textSecondary),
-              ),
-            if (doc.referenceCode != null && doc.referenceCode!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  'Reference: ${doc.referenceCode}',
-                  style: const TextStyle(color: AppColors.textSecondary),
-                ),
-              ),
-            if (!hasFile)
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: Text(
-                  'No file attached to this document yet.',
-                  style: TextStyle(color: AppColors.textSecondary),
-                ),
-              ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Close'),
-          ),
-        ],
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('File unavailable'),
+        backgroundColor: Colors.red,
       ),
     );
-
-    if (hasFile) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Could not open the document file.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 
   Widget _buildFinanceList() {

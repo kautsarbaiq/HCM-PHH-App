@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/repositories/admin_repository.dart';
+import '../../../../core/repositories/document_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
+import '../../../../core/repositories/storage_repository.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -90,6 +93,16 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
                     resident.status,
                     isStatus: true,
                   ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Documents',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildResidentDocuments(resident.id),
                 ],
               ),
             ),
@@ -139,6 +152,108 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
         ],
       ),
     );
+  }
+
+  // Loads and lists the given resident's personal documents inside the detail
+  // dialog. Admins can open/download each file via a short-lived signed URL.
+  Widget _buildResidentDocuments(String userId) {
+    return FutureBuilder<List<ResidentDocument>>(
+      future: ref
+          .read(documentRepositoryProvider)
+          .getResidentDocumentsForUser(userId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        }
+        if (snapshot.hasError) {
+          return const Text(
+            'Could not load documents',
+            style: TextStyle(color: AppColors.warning, fontSize: 13),
+          );
+        }
+        final docs = snapshot.data ?? const <ResidentDocument>[];
+        if (docs.isEmpty) {
+          return const Text(
+            'No documents uploaded',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: docs.map(_buildDocumentRow).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildDocumentRow(ResidentDocument doc) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceTint.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  doc.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                ),
+                if (doc.documentType != null &&
+                    doc.documentType!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    doc.documentType!,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(
+              Icons.open_in_new_rounded,
+              color: AppColors.brand,
+              size: 20,
+            ),
+            tooltip: 'Open document',
+            onPressed: () => _openDocument(doc),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openDocument(ResidentDocument doc) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final signed = await ref
+        .read(storageRepositoryProvider)
+        .signedResidentDocUrl(doc.fileUrl ?? '');
+    if (!mounted) return;
+    if (signed != null) {
+      await launchUrl(Uri.parse(signed), mode: LaunchMode.externalApplication);
+    } else {
+      messenger.showSnackBar(const SnackBar(content: Text('File unavailable')));
+    }
   }
 
   void _showForm(Profile resident) {

@@ -82,4 +82,37 @@ class DocumentRepository {
         .map((json) => ResidentDocument.fromJson(json))
         .toList();
   }
+
+  /// Adds a personal document for the signed-in resident. [filePath] is the
+  /// stored object path returned by StorageRepository.uploadResidentDocument.
+  Future<void> addResidentDocument({
+    required String title,
+    String? documentType,
+    String? referenceCode,
+    required String filePath,
+  }) async {
+    final uid = _supabase.auth.currentUser?.id;
+    await _supabase.from('resident_documents').insert({
+      'user_id': uid,
+      'title': title,
+      'document_type': documentType,
+      'reference_code': referenceCode,
+      'file_url': filePath,
+    });
+  }
+
+  /// All personal documents belonging to a specific resident — used by the
+  /// admin panel (RLS must allow admins to SELECT every resident's documents).
+  Future<List<ResidentDocument>> getResidentDocumentsForUser(
+    String userId,
+  ) async {
+    final response = await _supabase
+        .from('resident_documents')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: true);
+    return (response as List)
+        .map((json) => ResidentDocument.fromJson(json))
+        .toList();
+  }
 }
