@@ -123,18 +123,18 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                         letterSpacing: 0.2,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _isSignUp
-                          ? 'Create your account'
-                          : 'Sign in (resident / guard / admin)',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
+                    if (_isSignUp) ...[
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Create your account',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                    ),
+                    ],
                     const SizedBox(height: 28),
                     // White card holding the form
                     PremiumCard(

@@ -48,7 +48,7 @@ class SplashPage extends StatelessWidget {
                   .fadeIn(duration: 400.ms),
               const SizedBox(height: 26),
               const Text(
-                'HCM',
+                'PHH',
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
