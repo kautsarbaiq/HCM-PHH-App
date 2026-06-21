@@ -86,8 +86,11 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
         return AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
           ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           title: Row(
             children: [
               const Icon(Icons.house_rounded, color: AppColors.brand),
@@ -101,20 +104,25 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
               ),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildDetailItem('ID', house.id),
-              _buildDetailItem('House No / Address', house.houseNumber),
-              _buildDetailItem('Owner / Occupant', _occupantName(house)),
-              _buildDetailItem('Unit Type', house.houseType),
-              _buildDetailItem(
-                'Occupancy Status',
-                house.status == 'occupied' ? 'Occupied' : 'Vacant',
-                isStatus: true,
+          content: SizedBox(
+            width: 480,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDetailItem('ID', house.id),
+                  _buildDetailItem('House No / Address', house.houseNumber),
+                  _buildDetailItem('Owner / Occupant', _occupantName(house)),
+                  _buildDetailItem('Unit Type', house.houseType),
+                  _buildDetailItem(
+                    'Occupancy Status',
+                    house.status == 'occupied' ? 'Occupied' : 'Vacant',
+                    isStatus: true,
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
           actions: [
             TextButton(
@@ -184,8 +192,11 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
             return AlertDialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
               ),
+              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               title: Text(
                 isEdit ? 'Edit House' : 'Add New House',
                 style: const TextStyle(
@@ -193,70 +204,73 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                   color: AppColors.textPrimary,
                 ),
               ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildTextField(
-                      houseNoController,
-                      'House Number / Block',
-                      Icons.house,
-                    ),
-                    _buildTextField(
-                      typeController,
-                      'Unit Type (e.g. Type A)',
-                      Icons.layers,
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            'Status: ',
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
+              content: SizedBox(
+                width: 480,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildTextField(
+                        houseNoController,
+                        'House Number / Block',
+                        Icons.house,
+                      ),
+                      _buildTextField(
+                        typeController,
+                        'Unit Type (e.g. Type A)',
+                        Icons.layers,
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              'Status: ',
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Wrap(
-                            spacing: 8,
-                            runSpacing: 4,
-                            children: [
-                              ChoiceChip(
-                                label: const Text('Occupied'),
-                                selected: status == 'occupied',
-                                selectedColor: AppColors.success.withOpacity(
-                                  0.2,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              children: [
+                                ChoiceChip(
+                                  label: const Text('Occupied'),
+                                  selected: status == 'occupied',
+                                  selectedColor: AppColors.success.withOpacity(
+                                    0.2,
+                                  ),
+                                  checkmarkColor: AppColors.success,
+                                  onSelected: (val) {
+                                    if (val)
+                                      setDialogState(() => status = 'occupied');
+                                  },
                                 ),
-                                checkmarkColor: AppColors.success,
-                                onSelected: (val) {
-                                  if (val)
-                                    setDialogState(() => status = 'occupied');
-                                },
-                              ),
-                              ChoiceChip(
-                                label: const Text('Vacant'),
-                                selected: status == 'vacant',
-                                selectedColor: AppColors.warning.withOpacity(
-                                  0.2,
+                                ChoiceChip(
+                                  label: const Text('Vacant'),
+                                  selected: status == 'vacant',
+                                  selectedColor: AppColors.warning.withOpacity(
+                                    0.2,
+                                  ),
+                                  checkmarkColor: AppColors.warning,
+                                  onSelected: (val) {
+                                    if (val)
+                                      setDialogState(() => status = 'vacant');
+                                  },
                                 ),
-                                checkmarkColor: AppColors.warning,
-                                onSelected: (val) {
-                                  if (val)
-                                    setDialogState(() => status = 'vacant');
-                                },
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
               actions: [
@@ -371,8 +385,11 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
         return AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
           ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           title: const Text(
             'Delete House',
             style: TextStyle(
@@ -504,8 +521,29 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                             _buildHouseCard(filteredHouses[index]),
                       );
                     }
+                    // Distribute the table across the full viewport width so it
+                    // reaches the right edge instead of clustering on the left.
+                    // The horizontal margin/spacing/action column are fixed; the
+                    // three text columns share the remaining width evenly.
+                    const horizontalMargin = 20.0;
+                    const columnSpacing = 24.0;
+                    const actionsColWidth = 168.0;
+                    const statusColWidth = 120.0;
+                    final fullWidth = constraints.maxWidth;
+                    // Width consumed by fixed chrome: outer margins, the spacing
+                    // between the 5 columns, and the fixed status/actions columns.
+                    final fixed =
+                        horizontalMargin * 2 +
+                        columnSpacing * 4 +
+                        statusColWidth +
+                        actionsColWidth;
+                    final flexColWidth = ((fullWidth - fixed) / 3).clamp(
+                      120.0,
+                      double.infinity,
+                    );
                     return Container(
                       width: double.infinity,
+                      clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
                         border: Border.all(color: const Color(0xFFE0E5F2)),
                         borderRadius: BorderRadius.circular(16),
@@ -513,131 +551,159 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: SingleChildScrollView(
-                          child: DataTable(
-                            headingRowColor: MaterialStateProperty.all(
-                              AppColors.surfaceTint,
+                          // Let the table fill the available width on laptops so
+                          // it doesn't leave an empty gap, while still scrolling
+                          // horizontally when the viewport is too narrow.
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minWidth: constraints.maxWidth,
                             ),
-                            columns: const [
-                              DataColumn(
-                                label: Text(
-                                  'House No.',
-                                  style: TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.w700,
+                            child: DataTable(
+                              columnSpacing: columnSpacing,
+                              horizontalMargin: horizontalMargin,
+                              headingRowColor: MaterialStateProperty.all(
+                                AppColors.surfaceTint,
+                              ),
+                              columns: const [
+                                DataColumn(
+                                  label: Text(
+                                    'House No.',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Type',
-                                  style: TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.w700,
+                                DataColumn(
+                                  label: Text(
+                                    'Type',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Owner',
-                                  style: TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.w700,
+                                DataColumn(
+                                  label: Text(
+                                    'Owner',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Status',
-                                  style: TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.w700,
+                                DataColumn(
+                                  label: Text(
+                                    'Status',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'Actions',
-                                  style: TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.w700,
+                                DataColumn(
+                                  label: Text(
+                                    'Actions',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                            rows: filteredHouses.map((house) {
-                              return DataRow(
-                                cells: [
-                                  DataCell(
-                                    Text(
-                                      house.houseNumber,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
+                              ],
+                              rows: filteredHouses.map((house) {
+                                return DataRow(
+                                  cells: [
+                                    DataCell(
+                                      SizedBox(
+                                        width: flexColWidth,
+                                        child: Text(
+                                          house.houseNumber,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  DataCell(
-                                    Text(
-                                      house.houseType,
-                                      style: const TextStyle(
-                                        color: AppColors.textPrimary,
+                                    DataCell(
+                                      SizedBox(
+                                        width: flexColWidth,
+                                        child: Text(
+                                          house.houseType,
+                                          style: const TextStyle(
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  DataCell(
-                                    Text(
-                                      _occupantName(house),
-                                      style: const TextStyle(
-                                        color: AppColors.textPrimary,
+                                    DataCell(
+                                      SizedBox(
+                                        width: flexColWidth,
+                                        child: Text(
+                                          _occupantName(house),
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  DataCell(
-                                    StatusPill(
-                                      label: house.status == 'occupied'
-                                          ? 'Occupied'
-                                          : 'Vacant',
-                                      color: house.status == 'occupied'
-                                          ? AppColors.success
-                                          : AppColors.warning,
-                                      dense: true,
+                                    DataCell(
+                                      SizedBox(
+                                        width: statusColWidth,
+                                        child: StatusPill(
+                                          label: house.status == 'occupied'
+                                              ? 'Occupied'
+                                              : 'Vacant',
+                                          color: house.status == 'occupied'
+                                              ? AppColors.success
+                                              : AppColors.warning,
+                                          dense: true,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  DataCell(
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.visibility_rounded,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                          onPressed: () => _showDetails(house),
-                                          tooltip: 'View Details',
+                                    DataCell(
+                                      SizedBox(
+                                        width: actionsColWidth,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.visibility_rounded,
+                                                color: AppColors.textSecondary,
+                                              ),
+                                              onPressed: () =>
+                                                  _showDetails(house),
+                                              tooltip: 'View Details',
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.edit_rounded,
+                                                color: AppColors.brand,
+                                              ),
+                                              onPressed: () =>
+                                                  _showForm(house: house),
+                                              tooltip: 'Edit',
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.delete_rounded,
+                                                color: AppColors.error,
+                                              ),
+                                              onPressed: () =>
+                                                  _deleteHouse(house),
+                                              tooltip: 'Delete',
+                                            ),
+                                          ],
                                         ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.edit_rounded,
-                                            color: AppColors.brand,
-                                          ),
-                                          onPressed: () =>
-                                              _showForm(house: house),
-                                          tooltip: 'Edit',
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.delete_rounded,
-                                            color: AppColors.error,
-                                          ),
-                                          onPressed: () => _deleteHouse(house),
-                                          tooltip: 'Delete',
-                                        ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              );
-                            }).toList(),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
                           ),
                         ),
                       ),

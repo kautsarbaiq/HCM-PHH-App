@@ -74,8 +74,11 @@ class _AnnouncementsAdminPageState
         return AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
           ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           title: Row(
             children: [
               Icon(
@@ -98,28 +101,33 @@ class _AnnouncementsAdminPageState
               ),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _formatDate(announcement.publishedAt),
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
+          content: SizedBox(
+            width: 500,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _formatDate(announcement.publishedAt),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    announcement.content,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 15,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                announcement.content,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 15,
-                  height: 1.4,
-                ),
-              ),
-            ],
+            ),
           ),
           actions: [
             TextButton(
@@ -154,8 +162,11 @@ class _AnnouncementsAdminPageState
             return AlertDialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
               ),
+              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               title: Text(
                 isEdit ? 'Edit Announcement' : 'Create Announcement',
                 style: const TextStyle(
@@ -163,39 +174,44 @@ class _AnnouncementsAdminPageState
                   color: AppColors.textPrimary,
                 ),
               ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildTextField(titleController, 'Title', Icons.title),
-                    _buildTextField(
-                      contentController,
-                      'Content details',
-                      Icons.description,
-                      maxLines: 5,
-                    ),
-                    const SizedBox(height: 8),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      activeColor: AppColors.error,
-                      title: const Text(
-                        'Mark as urgent',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                        ),
+              content: SizedBox(
+                width: 500,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildTextField(titleController, 'Title', Icons.title),
+                      const SizedBox(height: 4),
+                      _buildTextField(
+                        contentController,
+                        'Content details',
+                        Icons.description,
+                        maxLines: 5,
                       ),
-                      subtitle: const Text(
-                        'Urgent notices are highlighted for residents',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
+                      const SizedBox(height: 8),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        activeColor: AppColors.error,
+                        title: const Text(
+                          'Mark as urgent',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
+                        subtitle: const Text(
+                          'Urgent notices are highlighted for residents',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                        value: isUrgent,
+                        onChanged: (val) =>
+                            setDialogState(() => isUrgent = val),
                       ),
-                      value: isUrgent,
-                      onChanged: (val) => setDialogState(() => isUrgent = val),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               actions: [
@@ -319,8 +335,11 @@ class _AnnouncementsAdminPageState
         return AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
           ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           title: const Text(
             'Delete Announcement',
             style: TextStyle(
@@ -417,6 +436,7 @@ class _AnnouncementsAdminPageState
                 return RefreshIndicator(
                   onRefresh: () async =>
                       ref.invalidate(adminAnnouncementsProvider),
+                  // Full-width list reaching the right edge on web.
                   child: ListView.builder(
                     itemCount: announcements.length,
                     itemBuilder: (context, index) {

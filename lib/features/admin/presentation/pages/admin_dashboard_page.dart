@@ -64,6 +64,7 @@ class AdminDashboardPage extends ConsumerWidget {
     }
 
     return SingleChildScrollView(
+      // Full-width dashboard reaching the right edge on web.
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -172,20 +173,23 @@ class AdminDashboardPage extends ConsumerWidget {
             subtitle: 'Key community metrics at a glance',
           ),
           const SizedBox(height: 18),
-          // Dashboard Cards — size to the available width so they fit phones.
+          // Dashboard Cards — balanced multi-column grid that fills the row
+          // on wide laptops and stacks down to one/two-up on phones.
           LayoutBuilder(
             builder: (context, constraints) {
               const spacing = 18.0;
               final maxW = constraints.maxWidth;
-              // One per row on narrow phones, two-up on mid widths, else flow.
-              double cardWidth;
+              // Columns scale with width; cards share the row evenly so they
+              // neither stretch too wide nor leave large empty gaps.
+              int columns;
               if (maxW < 360) {
-                cardWidth = maxW;
+                columns = 1;
               } else if (maxW < 720) {
-                cardWidth = (maxW - spacing) / 2;
+                columns = 2;
               } else {
-                cardWidth = 260;
+                columns = 4;
               }
+              final cardWidth = (maxW - spacing * (columns - 1)) / columns;
               return Wrap(
                 spacing: spacing,
                 runSpacing: spacing,

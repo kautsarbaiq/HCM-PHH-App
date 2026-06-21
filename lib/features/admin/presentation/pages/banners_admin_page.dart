@@ -71,8 +71,11 @@ class _BannersAdminPageState extends ConsumerState<BannersAdminPage> {
             return AlertDialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
               ),
+              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               title: Text(
                 isEdit ? 'Edit Banner' : 'Add New Banner',
                 style: const TextStyle(
@@ -80,42 +83,47 @@ class _BannersAdminPageState extends ConsumerState<BannersAdminPage> {
                   color: AppColors.textPrimary,
                 ),
               ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildTextField(
-                      titleController,
-                      'Banner Title',
-                      Icons.title,
-                    ),
-                    _buildTextField(
-                      urlController,
-                      'Image URL (optional)',
-                      Icons.link,
-                    ),
-                    const SizedBox(height: 8),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      activeColor: AppColors.success,
-                      title: const Text(
-                        'Active',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                        ),
+              content: SizedBox(
+                width: 480,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildTextField(
+                        titleController,
+                        'Banner Title',
+                        Icons.title,
                       ),
-                      subtitle: const Text(
-                        'Only active banners are shown to residents',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                        ),
+                      const SizedBox(height: 4),
+                      _buildTextField(
+                        urlController,
+                        'Image URL (optional)',
+                        Icons.link,
                       ),
-                      value: isActive,
-                      onChanged: (val) => setDialogState(() => isActive = val),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        activeColor: AppColors.success,
+                        title: const Text(
+                          'Active',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        subtitle: const Text(
+                          'Only active banners are shown to residents',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                        value: isActive,
+                        onChanged: (val) =>
+                            setDialogState(() => isActive = val),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               actions: [
@@ -234,8 +242,11 @@ class _BannersAdminPageState extends ConsumerState<BannersAdminPage> {
         return AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
           ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           title: const Text(
             'Delete Banner',
             style: TextStyle(
@@ -332,8 +343,12 @@ class _BannersAdminPageState extends ConsumerState<BannersAdminPage> {
                 }
                 return LayoutBuilder(
                   builder: (context, constraints) {
+                    // Scale columns with width so banner thumbnails stay a
+                    // sensible size instead of ballooning on wide laptops.
                     int crossAxisCount = 1;
-                    if (constraints.maxWidth > 800) {
+                    if (constraints.maxWidth > 1100) {
+                      crossAxisCount = 4;
+                    } else if (constraints.maxWidth > 800) {
                       crossAxisCount = 3;
                     } else if (constraints.maxWidth > 500) {
                       crossAxisCount = 2;

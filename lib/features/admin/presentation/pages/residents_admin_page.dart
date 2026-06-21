@@ -52,8 +52,11 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
         return AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
           ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           title: Row(
             children: [
               const Icon(Icons.person, color: AppColors.brand),
@@ -69,20 +72,26 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
               ),
             ],
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildDetailItem('House / Unit', _houseLabel(resident.houseId)),
-                _buildDetailItem('Email Address', resident.email ?? '-'),
-                _buildDetailItem('Phone Number', resident.phone ?? '-'),
-                _buildDetailItem(
-                  'Account Status',
-                  resident.status,
-                  isStatus: true,
-                ),
-              ],
+          content: SizedBox(
+            width: 480,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDetailItem(
+                    'House / Unit',
+                    _houseLabel(resident.houseId),
+                  ),
+                  _buildDetailItem('Email Address', resident.email ?? '-'),
+                  _buildDetailItem('Phone Number', resident.phone ?? '-'),
+                  _buildDetailItem(
+                    'Account Status',
+                    resident.status,
+                    isStatus: true,
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -147,8 +156,10 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
     // Warm the houses list so house labels resolve to readable numbers.
     ref.watch(adminHousesProvider);
 
+    // Full-width content on web — stretch so the table/rows fill the area up to
+    // the right edge (start-alignment let the list shrink to its row content).
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Header
         const SectionHeader(
@@ -188,21 +199,34 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
         ),
         const SizedBox(height: 16),
 
-        // Search Bar
-        PremiumCard(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          radius: 16,
-          child: TextField(
-            onChanged: (val) {
-              setState(() {
-                _searchQuery = val;
-              });
-            },
-            decoration: const InputDecoration(
-              hintText: 'Search residents by name or email...',
-              hintStyle: TextStyle(color: AppColors.textSecondary),
-              border: InputBorder.none,
-              icon: Icon(Icons.search_rounded, color: AppColors.textSecondary),
+        // Search Bar — single full-width field, no nested icon box.
+        TextField(
+          onChanged: (val) {
+            setState(() {
+              _searchQuery = val;
+            });
+          },
+          decoration: InputDecoration(
+            hintText: 'Search residents by name or email...',
+            hintStyle: const TextStyle(color: AppColors.textSecondary),
+            prefixIcon: const Icon(
+              Icons.search_rounded,
+              color: AppColors.textSecondary,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(vertical: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.brand, width: 1.5),
             ),
           ),
         ),
@@ -300,29 +324,28 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
                 ],
               ),
             ),
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    _houseLabel(resident.houseId),
-                    textAlign: TextAlign.right,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      fontSize: 13,
-                    ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  _houseLabel(resident.houseId),
+                  textAlign: TextAlign.right,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    fontSize: 13,
                   ),
-                  const SizedBox(height: 6),
-                  StatusPill(
-                    label: resident.status.toUpperCase(),
-                    color: isActive ? AppColors.success : AppColors.warning,
-                    dense: true,
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 6),
+                StatusPill(
+                  label: resident.status.toUpperCase(),
+                  color: isActive ? AppColors.success : AppColors.warning,
+                  dense: true,
+                ),
+              ],
             ),
             const SizedBox(width: 8),
             IconButton(
@@ -452,7 +475,10 @@ class _ResidentEditDialogState extends ConsumerState<_ResidentEditDialog> {
 
     return AlertDialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+      contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       title: const Text(
         'Edit Resident',
         style: TextStyle(
@@ -460,85 +486,88 @@ class _ResidentEditDialogState extends ConsumerState<_ResidentEditDialog> {
           color: AppColors.textPrimary,
         ),
       ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Assign to House',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
+      content: SizedBox(
+        width: 480,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Assign to House',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            housesAsync.when(
-              loading: () => const CircularProgressIndicator(),
-              error: (e, st) => Text('Error loading houses: $e'),
-              data: (houses) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFE0E5F2)),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      isExpanded: true,
-                      value: _selectedHouseId,
-                      hint: const Text('Select a house'),
-                      items: houses.map((house) {
-                        return DropdownMenuItem(
-                          value: house.id,
-                          child: Text(
-                            '${house.houseNumber} (${house.houseType})',
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedHouseId = val;
-                        });
-                      },
+              const SizedBox(height: 10),
+              housesAsync.when(
+                loading: () => const CircularProgressIndicator(),
+                error: (e, st) => Text('Error loading houses: $e'),
+                data: (houses) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFE0E5F2)),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Status: ',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: _selectedHouseId,
+                        hint: const Text('Select a house'),
+                        items: houses.map((house) {
+                          return DropdownMenuItem(
+                            value: house.id,
+                            child: Text(
+                              '${house.houseNumber} (${house.houseType})',
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedHouseId = val;
+                          });
+                        },
+                      ),
+                    ),
+                  );
+                },
               ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: [
-                ChoiceChip(
-                  label: const Text('Active'),
-                  selected: _status == 'active',
-                  selectedColor: AppColors.success.withOpacity(0.2),
-                  checkmarkColor: AppColors.success,
-                  onSelected: (val) {
-                    if (val) setState(() => _status = 'active');
-                  },
+              const SizedBox(height: 20),
+              const Text(
+                'Status: ',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
                 ),
-                ChoiceChip(
-                  label: const Text('Inactive'),
-                  selected: _status == 'inactive',
-                  selectedColor: AppColors.warning.withOpacity(0.2),
-                  checkmarkColor: AppColors.warning,
-                  onSelected: (val) {
-                    if (val) setState(() => _status = 'inactive');
-                  },
-                ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Active'),
+                    selected: _status == 'active',
+                    selectedColor: AppColors.success.withOpacity(0.2),
+                    checkmarkColor: AppColors.success,
+                    onSelected: (val) {
+                      if (val) setState(() => _status = 'active');
+                    },
+                  ),
+                  ChoiceChip(
+                    label: const Text('Inactive'),
+                    selected: _status == 'inactive',
+                    selectedColor: AppColors.warning.withOpacity(0.2),
+                    checkmarkColor: AppColors.warning,
+                    onSelected: (val) {
+                      if (val) setState(() => _status = 'inactive');
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
