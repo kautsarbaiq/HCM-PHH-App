@@ -32,7 +32,7 @@ class HCMApp extends StatelessWidget {
       splitScreenMode: true,
       builder: (context, child) {
         return MaterialApp.router(
-          title: 'Housing Community Management',
+          title: 'PHH Housing',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           routerConfig: AppRouter.router,

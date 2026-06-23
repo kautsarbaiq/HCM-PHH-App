@@ -17,7 +17,7 @@ class ResidentLoginPage extends ConsumerStatefulWidget {
 }
 
 class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
-  final _emailController = TextEditingController(text: 'resident@hcm.com');
+  final _emailController = TextEditingController(text: 'resident@phh.com');
   final _passwordController = TextEditingController(text: 'password123');
   bool _isLoading = false;
   bool _isSignUp = false;

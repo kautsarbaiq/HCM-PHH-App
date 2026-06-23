@@ -112,6 +112,18 @@ CREATE POLICY "owner update own house" ON houses
 --  CREATE POLICY "profiles update own" ON profiles FOR UPDATE TO authenticated
 --    USING (id = auth.uid()) WITH CHECK (id = auth.uid());)
 
+-- 7) Visitor pre-registration (resident) ----------------------------------------
+-- Fixes "new row violates row-level security policy for table visitors" (42501).
+-- A resident can pre-register a visitor for THEIR OWN house. Keyed off
+-- profiles.house_id (NOT houses.owner_id), so it works regardless of owner_id.
+-- INSERT policies are OR'd, so this is additive to any existing guard policy.
+DROP POLICY IF EXISTS "resident insert own-house visitor" ON visitors;
+CREATE POLICY "resident insert own-house visitor" ON visitors
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    house_id = (SELECT house_id FROM profiles WHERE id = auth.uid())
+  );
+
 -- ============================================================================
 -- Also verify (not SQL-fixable here):
 --   * admin@hcm.com still has profiles.role = 'admin'

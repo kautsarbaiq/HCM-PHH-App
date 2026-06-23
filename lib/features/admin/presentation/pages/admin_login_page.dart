@@ -19,7 +19,7 @@ class AdminLoginPage extends ConsumerStatefulWidget {
 class _AdminLoginPageState extends ConsumerState<AdminLoginPage> {
   // Prefill demo credentials only in debug builds; ship empty fields in release.
   final _emailController = TextEditingController(
-    text: kDebugMode ? 'admin@hcm.com' : '',
+    text: kDebugMode ? 'admin@phh.com' : '',
   );
   final _passwordController = TextEditingController(
     text: kDebugMode ? 'password123' : '',

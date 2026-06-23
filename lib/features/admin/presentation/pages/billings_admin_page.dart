@@ -196,19 +196,25 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
       return;
     }
 
-    final houses = (housesAsync.valueOrNull ?? [])
-        .where((h) => h.ownerId != null && h.ownerId!.isNotEmpty)
-        .toList();
+    // Show ALL houses (not only ones with an owner set).
+    final houses = (housesAsync.valueOrNull ?? []).toList();
 
     if (houses.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'No houses with an owner assigned — assign an owner first.',
-          ),
-        ),
+        const SnackBar(content: Text('No houses found. Add a house first.')),
       );
       return;
+    }
+
+    // The resident an invoice goes to: the house owner, else the resident
+    // assigned to that house (profiles.house_id). Null if the house is empty.
+    final residents = ref.read(adminResidentsProvider).valueOrNull ?? [];
+    String? residentForHouse(House h) {
+      if ((h.ownerId ?? '').isNotEmpty) return h.ownerId;
+      for (final r in residents) {
+        if (r.houseId == h.id) return r.id;
+      }
+      return null;
     }
 
     final defaultInvoice =
@@ -419,19 +425,20 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                           final house = houses.firstWhere(
                             (h) => h.id == selectedHouseId,
                           );
-                          // The owner receives the invoice. Abort if the house
-                          // somehow has no owner assigned.
-                          if (house.ownerId == null || house.ownerId!.isEmpty) {
+                          // Send the invoice to the house owner, or the resident
+                          // assigned to that house. Abort only if the house is
+                          // truly empty (no one to bill).
+                          final ownerId = residentForHouse(house);
+                          if (ownerId == null) {
                             messenger.showSnackBar(
                               const SnackBar(
                                 content: Text(
-                                  'Selected house has no owner assigned. Assign an owner first.',
+                                  'That house has no resident assigned yet — assign one first.',
                                 ),
                               ),
                             );
                             return;
                           }
-                          final ownerId = house.ownerId!;
                           final dueIso = DateFormat(
                             'yyyy-MM-dd',
                           ).format(dueDate);
