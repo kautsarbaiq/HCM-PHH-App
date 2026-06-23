@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:hcm_app/theme/app_colors.dart';
+import '../../../../core/repositories/announcement_repository.dart';
 import '../../../../core/repositories/billing_repository.dart';
 import '../../../../core/repositories/facility_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
@@ -27,6 +28,14 @@ final dashboardBookingsProvider = FutureProvider<List<Booking>>((ref) async {
   return ref.read(facilityRepositoryProvider).getMyBookings(uid);
 });
 
+// Latest announcements for the dashboard. Reuses the same repository as the
+// community page; results are already ordered newest-first by published_at.
+final dashboardAnnouncementsProvider = FutureProvider<List<Announcement>>((
+  ref,
+) {
+  return ref.read(announcementRepositoryProvider).getAllAnnouncements();
+});
+
 final _currency = NumberFormat.currency(
   locale: 'id_ID',
   symbol: 'RM ',
@@ -36,6 +45,20 @@ final _currency = NumberFormat.currency(
 String _bookingDateLabel(String iso) {
   try {
     return DateFormat('EEE, MMM dd').format(DateTime.parse(iso));
+  } catch (_) {
+    return iso;
+  }
+}
+
+String _relativeLabel(String iso) {
+  try {
+    final dt = DateTime.parse(iso).toLocal();
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return DateFormat('MMM d, yyyy').format(dt);
   } catch (_) {
     return iso;
   }
@@ -55,6 +78,7 @@ class DashboardPage extends ConsumerWidget {
             onRefresh: () async {
               ref.invalidate(dashboardOutstandingProvider);
               ref.invalidate(dashboardBookingsProvider);
+              ref.invalidate(dashboardAnnouncementsProvider);
               ref.invalidate(currentProfileProvider);
             },
             child: ListView(
@@ -65,13 +89,17 @@ class DashboardPage extends ConsumerWidget {
                     .animate()
                     .fadeIn(duration: 350.ms)
                     .slideY(begin: -0.12, end: 0),
-                const SizedBox(height: 22),
-                const HomeBannerCarousel(),
+                const SizedBox(height: 18),
+                _announcements(context, ref)
+                    .animate()
+                    .fadeIn(duration: 380.ms)
+                    .slideY(begin: 0.08, end: 0),
                 _hero(context, ref)
                     .animate()
                     .fadeIn(duration: 400.ms)
                     .slideY(begin: 0.10, end: 0),
                 const SizedBox(height: 16),
+                const HomeBannerCarousel(),
                 _upcoming(
                   context,
                   ref,
@@ -192,6 +220,162 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
+  // ---- Announcements card -------------------------------------------------
+  Widget _announcements(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(dashboardAnnouncementsProvider);
+    final items = async.valueOrNull ?? const <Announcement>[];
+
+    // No data (loading, error, or empty) → take up no space.
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    final latest = items.take(2).toList();
+
+    Widget row(Announcement a, {bool divider = false}) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (divider)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Divider(
+                height: 1,
+                thickness: 1,
+                color: const Color(0xFF6A7BA8).withOpacity(0.10),
+              ),
+            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  gradient: AppColors.brandGradient,
+                  borderRadius: BorderRadius.circular(13),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.brand.withOpacity(0.28),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  PhosphorIconsFill.megaphone,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            a.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                              fontSize: 14.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _relativeLabel(a.publishedAt),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      a.content,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12.5,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: GestureDetector(
+        onTap: () => context.go('/community'),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6A7BA8).withOpacity(0.10),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    'Announcements',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  const Spacer(),
+                  const Text(
+                    'See all',
+                    style: TextStyle(
+                      color: AppColors.brand,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: 3),
+                  const Icon(
+                    PhosphorIconsBold.arrowRight,
+                    color: AppColors.brand,
+                    size: 13,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              for (var i = 0; i < latest.length; i++)
+                row(latest[i], divider: i > 0),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // ---- Hero "outstanding" card -------------------------------------------
   Widget _hero(BuildContext context, WidgetRef ref) {
     final billsAsync = ref.watch(dashboardOutstandingProvider);
@@ -201,74 +385,74 @@ class DashboardPage extends ConsumerWidget {
         width: double.infinity,
         decoration: BoxDecoration(
           gradient: AppColors.brandGradient,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: AppColors.brand.withOpacity(0.38),
-              blurRadius: 26,
-              offset: const Offset(0, 14),
+              color: AppColors.brand.withOpacity(0.34),
+              blurRadius: 22,
+              offset: const Offset(0, 12),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(24),
           child: Stack(
             children: [
               Positioned(
-                top: -34,
-                right: -24,
-                child: _circle(120, Colors.white.withOpacity(0.12)),
+                top: -28,
+                right: -20,
+                child: _circle(96, Colors.white.withOpacity(0.12)),
               ),
               Positioned(
-                bottom: -50,
-                right: 40,
-                child: _circle(110, Colors.white.withOpacity(0.08)),
+                bottom: -40,
+                right: 34,
+                child: _circle(84, Colors.white.withOpacity(0.08)),
               ),
               Padding(
-                padding: const EdgeInsets.all(22),
+                padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(9),
+                          padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.18),
-                            borderRadius: BorderRadius.circular(13),
+                            borderRadius: BorderRadius.circular(11),
                           ),
                           child: const Icon(
                             PhosphorIconsFill.wallet,
                             color: Colors.white,
-                            size: 20,
+                            size: 18,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 11),
                         Text(
                           cleared ? 'Account status' : 'Your outstanding',
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.92),
-                            fontSize: 13.5,
+                            fontSize: 13,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0.2,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 12),
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
                       child: amount,
                     ),
-                    if (sub != null) ...[const SizedBox(height: 6), sub],
-                    const SizedBox(height: 20),
+                    if (sub != null) ...[const SizedBox(height: 4), sub],
+                    const SizedBox(height: 14),
                     GestureDetector(
                       onTap: () => context.go('/bills'),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
+                          horizontal: 18,
+                          vertical: 10,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -282,14 +466,14 @@ class DashboardPage extends ConsumerWidget {
                               style: const TextStyle(
                                 color: AppColors.brand,
                                 fontWeight: FontWeight.w800,
-                                fontSize: 14,
+                                fontSize: 13.5,
                               ),
                             ),
                             const SizedBox(width: 6),
                             const Icon(
                               PhosphorIconsBold.arrowRight,
                               color: AppColors.brand,
-                              size: 15,
+                              size: 14,
                             ),
                           ],
                         ),
@@ -309,7 +493,7 @@ class DashboardPage extends ConsumerWidget {
         amount: const Text(
           'Loading…',
           style: TextStyle(
-            fontSize: 22,
+            fontSize: 20,
             fontWeight: FontWeight.w800,
             color: Colors.white,
           ),
@@ -319,7 +503,7 @@ class DashboardPage extends ConsumerWidget {
         amount: const Text(
           'Unavailable',
           style: TextStyle(
-            fontSize: 22,
+            fontSize: 20,
             fontWeight: FontWeight.w800,
             color: Colors.white,
           ),
@@ -342,7 +526,7 @@ class DashboardPage extends ConsumerWidget {
             amount: const Text(
               'All cleared',
               style: TextStyle(
-                fontSize: 30,
+                fontSize: 26,
                 fontWeight: FontWeight.w800,
                 color: Colors.white,
                 letterSpacing: -0.8,
@@ -362,7 +546,7 @@ class DashboardPage extends ConsumerWidget {
           amount: Text(
             _currency.format(total),
             style: const TextStyle(
-              fontSize: 34,
+              fontSize: 29,
               fontWeight: FontWeight.w800,
               color: Colors.white,
               letterSpacing: -1,
