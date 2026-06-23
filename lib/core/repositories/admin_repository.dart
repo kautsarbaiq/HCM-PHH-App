@@ -96,6 +96,14 @@ class AdminRepository {
           .from('profiles')
           .update({'house_id': houseId})
           .eq('id', residentId);
+      // Vacate any OTHER house this resident previously owned, so one resident
+      // can't show up as the owner of many houses (the "every house shows the
+      // same resident" bug).
+      await _supabase
+          .from('houses')
+          .update({'owner_id': null})
+          .eq('owner_id', residentId)
+          .neq('id', houseId);
       // …and record them as the house's owner. This is REQUIRED: the visitors
       // INSERT RLS policy and the house-based billing form both key off
       // houses.owner_id, so without this the resident can't pre-register a

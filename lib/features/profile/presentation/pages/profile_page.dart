@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:path/path.dart' as p;
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -100,11 +102,21 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     setState(() => _isUploading = true);
 
     try {
-      final file = File(pickedFile.path);
       final profile = await ref.read(currentProfileProvider.future);
       if (profile == null) throw Exception('Profile not found');
 
-      await ref.read(storageRepositoryProvider).uploadAvatar(file, profile.id);
+      final storage = ref.read(storageRepositoryProvider);
+      if (kIsWeb) {
+        // On web XFile.path is unusable and dart:io File is unavailable, so we
+        // upload the picked image's bytes instead.
+        final bytes = await pickedFile.readAsBytes();
+        var ext = p.extension(pickedFile.name);
+        if (ext.isEmpty) ext = p.extension(pickedFile.path);
+        if (ext.isEmpty) ext = '.jpg';
+        await storage.uploadAvatarBytes(bytes, profile.id, ext);
+      } else {
+        await storage.uploadAvatar(File(pickedFile.path), profile.id);
+      }
 
       // Refresh profile data and re-attempt loading the (new) avatar image.
       _avatarFailed = false;
@@ -135,9 +147,30 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     if (_isUploadingDoc) return;
 
     final messenger = ScaffoldMessenger.of(context);
-    final picked = await FilePicker.platform.pickFiles();
-    final pickedPath = picked?.files.single.path;
-    if (picked == null || pickedPath == null) return;
+    // On web we must request the file bytes (path is null there).
+    final picked = await FilePicker.platform.pickFiles(withData: kIsWeb);
+    if (picked == null) return;
+    final file = picked.files.single;
+
+    // On web we need bytes; on mobile we need a real filesystem path.
+    if (kIsWeb && file.bytes == null) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Could not read the selected file.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    if (!kIsWeb && file.path == null) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Could not access the selected file.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     if (!mounted) return;
     final details = await _askDocumentDetails();
@@ -146,9 +179,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     setState(() => _isUploadingDoc = true);
     try {
       final uid = Supabase.instance.client.auth.currentUser!.id;
-      final path = await ref
-          .read(storageRepositoryProvider)
-          .uploadResidentDocument(File(pickedPath), uid);
+      final storage = ref.read(storageRepositoryProvider);
+      final String path;
+      if (kIsWeb) {
+        final ext = (file.extension != null && file.extension!.isNotEmpty)
+            ? '.${file.extension}'
+            : p.extension(file.name);
+        path = await storage.uploadResidentDocumentBytes(file.bytes!, uid, ext);
+      } else {
+        path = await storage.uploadResidentDocument(File(file.path!), uid);
+      }
       await ref
           .read(documentRepositoryProvider)
           .addResidentDocument(

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:path/path.dart' as path;
@@ -34,6 +35,43 @@ class StorageRepository {
           .getPublicUrl(storagePath);
 
       // Update profile
+      await _supabase
+          .from('profiles')
+          .update({'avatar_url': publicUrl})
+          .eq('id', userId);
+
+      return publicUrl;
+    } catch (e) {
+      print('Error uploading avatar: $e');
+      throw Exception('Failed to upload avatar image');
+    }
+  }
+
+  /// Web-safe variant of [uploadAvatar]: uploads raw [bytes] (with the given
+  /// file [ext], e.g. `.png`) to the `avatars` bucket, updates
+  /// `profiles.avatar_url`, and returns the public URL. Same contract as
+  /// [uploadAvatar]; used on Flutter web where `File`/path access is unavailable.
+  Future<String> uploadAvatarBytes(
+    Uint8List bytes,
+    String userId,
+    String ext,
+  ) async {
+    try {
+      final fileName = '$userId-${DateTime.now().millisecondsSinceEpoch}$ext';
+      final storagePath = '$userId/$fileName';
+
+      await _supabase.storage
+          .from('avatars')
+          .uploadBinary(
+            storagePath,
+            bytes,
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+          );
+
+      final publicUrl = _supabase.storage
+          .from('avatars')
+          .getPublicUrl(storagePath);
+
       await _supabase
           .from('profiles')
           .update({'avatar_url': publicUrl})
@@ -114,6 +152,33 @@ class StorageRepository {
           .upload(
             objectPath,
             file,
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+          );
+      return objectPath;
+    } catch (e) {
+      print('Error uploading document: $e');
+      throw Exception('Failed to upload document');
+    }
+  }
+
+  /// Web-safe variant of [uploadResidentDocument]: uploads raw [bytes] (with the
+  /// given file [ext], e.g. `.pdf`) to the private `resident_documents` bucket
+  /// under the owner's user-id folder, and returns the stored OBJECT PATH. Same
+  /// contract as [uploadResidentDocument]; used on Flutter web where
+  /// `File`/path access is unavailable.
+  Future<String> uploadResidentDocumentBytes(
+    Uint8List bytes,
+    String userId,
+    String ext,
+  ) async {
+    try {
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}$ext';
+      final objectPath = '$userId/$fileName';
+      await _supabase.storage
+          .from('resident_documents')
+          .uploadBinary(
+            objectPath,
+            bytes,
             fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
           );
       return objectPath;

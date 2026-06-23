@@ -55,7 +55,12 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepository(Supabase.instance.client);
 });
 
-final currentProfileProvider = FutureProvider<Profile?>((ref) async {
+// autoDispose so the cached profile is dropped when no screen is watching it
+// (e.g. after logout), preventing the previous account's name/avatar from
+// leaking into the next sign-in.
+final currentProfileProvider = FutureProvider.autoDispose<Profile?>((
+  ref,
+) async {
   final user = Supabase.instance.client.auth.currentUser;
   if (user == null) return null;
   return ref.read(profileRepositoryProvider).getProfile(user.id);

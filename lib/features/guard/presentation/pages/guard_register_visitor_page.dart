@@ -77,6 +77,7 @@ class _GuardRegisterVisitorPageState
         imageQuality: 55,
       );
       if (picked == null) return;
+      if (!mounted) return;
       setState(() {
         final file = File(picked.path);
         if (type == 'vehicle') _vehicleFile = file;

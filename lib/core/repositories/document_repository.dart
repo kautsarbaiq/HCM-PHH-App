@@ -72,11 +72,16 @@ class DocumentRepository {
         .toList();
   }
 
-  /// The current resident's personal documents (RLS scopes to user_id = auth.uid()).
+  /// The current resident's personal documents. Filtered by user_id explicitly
+  /// (NOT relying on RLS — the admin read policy is OR'd in and would otherwise
+  /// return every resident's documents when an admin hits this).
   Future<List<ResidentDocument>> getMyResidentDocuments() async {
+    final uid = _supabase.auth.currentUser?.id;
+    if (uid == null) return [];
     final response = await _supabase
         .from('resident_documents')
         .select()
+        .eq('user_id', uid)
         .order('created_at', ascending: true);
     return (response as List)
         .map((json) => ResidentDocument.fromJson(json))

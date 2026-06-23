@@ -19,11 +19,17 @@ import '../../../emergency/presentation/widgets/emergency_bottom_sheet.dart';
 import '../widgets/quick_action_item.dart';
 import '../widgets/home_banner_carousel.dart';
 
-final dashboardOutstandingProvider = FutureProvider<List<Billing>>((ref) {
+// autoDispose so a previous account's bills/bookings/announcements aren't shown
+// to the next user after a logout→login on the same device.
+final dashboardOutstandingProvider = FutureProvider.autoDispose<List<Billing>>((
+  ref,
+) {
   return ref.read(billingRepositoryProvider).getMyBillings();
 });
 
-final dashboardBookingsProvider = FutureProvider<List<Booking>>((ref) async {
+final dashboardBookingsProvider = FutureProvider.autoDispose<List<Booking>>((
+  ref,
+) async {
   final uid = Supabase.instance.client.auth.currentUser?.id;
   if (uid == null) return [];
   return ref.read(facilityRepositoryProvider).getMyBookings(uid);
@@ -31,11 +37,10 @@ final dashboardBookingsProvider = FutureProvider<List<Booking>>((ref) async {
 
 // Latest announcements for the dashboard. Reuses the same repository as the
 // community page; results are already ordered newest-first by published_at.
-final dashboardAnnouncementsProvider = FutureProvider<List<Announcement>>((
-  ref,
-) {
-  return ref.read(announcementRepositoryProvider).getAllAnnouncements();
-});
+final dashboardAnnouncementsProvider =
+    FutureProvider.autoDispose<List<Announcement>>((ref) {
+      return ref.read(announcementRepositoryProvider).getAllAnnouncements();
+    });
 
 final _currency = NumberFormat.currency(
   locale: 'id_ID',

@@ -65,8 +65,9 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
         if (r.houseId == house.id) return r.fullName;
       }
     }
-    // Fall back to the owner_id join if it happens to be populated.
-    return house.owner?.fullName ?? '-';
+    // No resident assigned. Don't fall back to a possibly-stale owner_id join —
+    // that caused every house to show the same person ("Demo").
+    return '-';
   }
 
   List<House> _filterHouses(List<House> houses) {

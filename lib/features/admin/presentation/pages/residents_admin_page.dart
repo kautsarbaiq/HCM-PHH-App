@@ -629,7 +629,11 @@ class _ResidentEditDialogState extends ConsumerState<_ResidentEditDialog> {
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
                         isExpanded: true,
-                        value: _selectedHouseId,
+                        // Guard against a houseId that isn't in the loaded list
+                        // (deleted/renamed house) — an unknown value asserts.
+                        value: houses.any((h) => h.id == _selectedHouseId)
+                            ? _selectedHouseId
+                            : null,
                         hint: const Text('Select a house'),
                         items: houses.map((house) {
                           return DropdownMenuItem(
@@ -713,6 +717,9 @@ class _ResidentEditDialogState extends ConsumerState<_ResidentEditDialog> {
                       );
                     }
                     ref.invalidate(adminResidentsProvider);
+                    // houses.owner_id changed → refresh the houses cache so the
+                    // billing form doesn't bill a stale (previous) owner.
+                    ref.invalidate(adminHousesProvider);
                     navigator.pop();
                   } catch (e) {
                     if (mounted) {

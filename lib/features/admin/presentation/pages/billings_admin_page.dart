@@ -212,11 +212,12 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
     // assigned to that house (profiles.house_id). Null if the house is empty.
     final residents = ref.read(adminResidentsProvider).valueOrNull ?? [];
     String? residentForHouse(House h) {
-      if ((h.ownerId ?? '').isNotEmpty) return h.ownerId;
+      // Prefer the freshly-loaded residents list (kept current) over the
+      // possibly-stale cached houses.owner_id, so we never bill the wrong one.
       for (final r in residents) {
         if (r.houseId == h.id) return r.id;
       }
-      return null;
+      return (h.ownerId ?? '').isNotEmpty ? h.ownerId : null;
     }
 
     final defaultInvoice =

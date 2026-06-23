@@ -124,6 +124,20 @@ CREATE POLICY "resident insert own-house visitor" ON visitors
     house_id = (SELECT house_id FROM profiles WHERE id = auth.uid())
   );
 
+-- 8) Resident can READ BACK the visitor they just created --------------------
+-- The app inserts a visitor then immediately re-selects it (.single()). If the
+-- resident can insert (own house) but the SELECT policy only allows owner_id
+-- rows, the read-back fails with PGRST116 and the UI shows a false error even
+-- though the row was created. Allow reading visitors you created / for your
+-- own house (SELECT policies are OR'd, so this is additive).
+DROP POLICY IF EXISTS "resident read own-created visitor" ON visitors;
+CREATE POLICY "resident read own-created visitor" ON visitors
+  FOR SELECT TO authenticated
+  USING (
+    created_by = auth.uid()
+    OR house_id = (SELECT house_id FROM profiles WHERE id = auth.uid())
+  );
+
 -- ============================================================================
 -- Also verify (not SQL-fixable here):
 --   * admin@hcm.com still has profiles.role = 'admin'
