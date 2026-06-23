@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/repositories/emergency_repository.dart';
 import '../../../../l10n/app_strings.dart';
@@ -66,9 +67,19 @@ class ActiveEmergencyBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final alerts =
+    final myId = Supabase.instance.client.auth.currentUser?.id;
+    final all =
         ref.watch(activeEmergenciesProvider).valueOrNull ??
         const <EmergencyAlert>[];
+
+    // Staff (admin/guard) see every active alert. A resident only sees
+    // broadcasts addressed to everyone + the alerts they raised themselves —
+    // so the banner never piles up with other residents' panic alerts.
+    final alerts = canResolve
+        ? all
+        : all
+              .where((a) => a.type == 'broadcast' || a.triggeredBy == myId)
+              .toList();
     if (alerts.isEmpty) return const SizedBox.shrink();
 
     return Padding(
@@ -167,7 +178,7 @@ class ActiveEmergencyBanner extends ConsumerWidget {
                             ),
                           ),
                         ],
-                        if (canResolve) ...[
+                        if (canResolve || a.triggeredBy == myId) ...[
                           const SizedBox(height: 10),
                           GestureDetector(
                             onTap: () => _resolve(context, ref, a.id),
@@ -183,14 +194,18 @@ class ActiveEmergencyBanner extends ConsumerWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
-                                    PhosphorIconsBold.check,
-                                    color: Color(0xFFDC2626),
+                                  Icon(
+                                    canResolve
+                                        ? PhosphorIconsBold.check
+                                        : PhosphorIconsBold.x,
+                                    color: const Color(0xFFDC2626),
                                     size: 14,
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    ref.tr('emergency.resolve'),
+                                    canResolve
+                                        ? ref.tr('emergency.resolve')
+                                        : ref.tr('emergency.cancel'),
                                     style: const TextStyle(
                                       color: Color(0xFFDC2626),
                                       fontWeight: FontWeight.w800,

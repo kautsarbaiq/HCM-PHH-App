@@ -275,6 +275,11 @@ const Map<String, Map<AppLang, String>> _strings = {
     AppLang.ms: 'Selesai',
     AppLang.zh: '解除',
   },
+  'emergency.cancel': {
+    AppLang.en: 'Cancel',
+    AppLang.ms: 'Batal',
+    AppLang.zh: '取消',
+  },
   'emergency.resolved': {
     AppLang.en: 'Emergency resolved',
     AppLang.ms: 'Kecemasan diselesaikan',

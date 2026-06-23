@@ -63,7 +63,6 @@ class DashboardPage extends ConsumerWidget {
             onRefresh: () async {
               ref.invalidate(dashboardOutstandingProvider);
               ref.invalidate(dashboardBookingsProvider);
-              ref.invalidate(homeBannersProvider);
               ref.invalidate(homeAnnouncementsProvider);
               ref.invalidate(currentProfileProvider);
             },
@@ -238,52 +237,64 @@ class DashboardPage extends ConsumerWidget {
                 child: _circle(84, Colors.white.withOpacity(0.08)),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.18),
-                            borderRadius: BorderRadius.circular(11),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.18),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  PhosphorIconsFill.wallet,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Flexible(
+                                child: Text(
+                                  cleared
+                                      ? ref.tr('dash.accountStatus')
+                                      : ref.tr('dash.outstanding'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.92),
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          child: const Icon(
-                            PhosphorIconsFill.wallet,
-                            color: Colors.white,
-                            size: 18,
+                          const SizedBox(height: 8),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: amount,
                           ),
-                        ),
-                        const SizedBox(width: 11),
-                        Text(
-                          cleared
-                              ? ref.tr('dash.accountStatus')
-                              : ref.tr('dash.outstanding'),
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.92),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                      ],
+                          if (sub != null) ...[const SizedBox(height: 3), sub],
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: amount,
-                    ),
-                    if (sub != null) ...[const SizedBox(height: 4), sub],
-                    const SizedBox(height: 14),
+                    const SizedBox(width: 12),
                     GestureDetector(
                       onTap: () => context.go('/bills'),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 10,
+                          horizontal: 16,
+                          vertical: 9,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -299,14 +310,14 @@ class DashboardPage extends ConsumerWidget {
                               style: const TextStyle(
                                 color: AppColors.brand,
                                 fontWeight: FontWeight.w800,
-                                fontSize: 13.5,
+                                fontSize: 13,
                               ),
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 5),
                             const Icon(
                               PhosphorIconsBold.arrowRight,
                               color: AppColors.brand,
-                              size: 14,
+                              size: 13,
                             ),
                           ],
                         ),

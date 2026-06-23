@@ -72,7 +72,24 @@ CREATE POLICY "admin delete community docs" ON storage.objects
     AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+-- 4) Emergency: a resident can CANCEL (resolve) the alert they raised ----------
+-- So panic alerts don't pile up — the person who triggered one can clear it.
+-- UPDATE policies are OR'd, so this is additive to the staff-resolve policy.
+DROP POLICY IF EXISTS "owner resolve own emergency" ON public.emergencies;
+CREATE POLICY "owner resolve own emergency" ON public.emergencies
+  FOR UPDATE TO authenticated
+  USING (triggered_by = auth.uid())
+  WITH CHECK (triggered_by = auth.uid());
+
+-- 5) Announcements double as the dashboard banner slides -----------------------
+-- Banner & announcement are merged: the resident slider renders each
+-- announcement with its image, and the admin Announcements form sets the image
+-- (and an optional tap-through link). Add the columns it needs.
+ALTER TABLE public.announcements ADD COLUMN IF NOT EXISTS image_url text;
+ALTER TABLE public.announcements ADD COLUMN IF NOT EXISTS link_url text;
+
 -- ============================================================================
--- After running this: emergency alerts appear live on all dashboards, guards &
--- admins can resolve & broadcast, and admins can upload community documents.
+-- After running this: emergency alerts appear live on all dashboards, residents
+-- can cancel their own alerts, guards & admins can resolve & broadcast, admins
+-- can upload community documents, and announcements carry a banner image.
 -- ============================================================================

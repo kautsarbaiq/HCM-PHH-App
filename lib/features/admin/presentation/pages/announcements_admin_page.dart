@@ -151,6 +151,9 @@ class _AnnouncementsAdminPageState
     final contentController = TextEditingController(
       text: announcement?.content ?? '',
     );
+    final imageController = TextEditingController(
+      text: announcement?.imageUrl ?? '',
+    );
     bool isUrgent = announcement?.isUrgent ?? false;
     bool isSaving = false;
 
@@ -187,6 +190,12 @@ class _AnnouncementsAdminPageState
                         'Content details',
                         Icons.description,
                         maxLines: 5,
+                      ),
+                      const SizedBox(height: 4),
+                      _buildTextField(
+                        imageController,
+                        'Banner image URL (optional)',
+                        Icons.image_outlined,
                       ),
                       const SizedBox(height: 8),
                       SwitchListTile(
@@ -248,6 +257,9 @@ class _AnnouncementsAdminPageState
                                     'title': titleController.text,
                                     'content': contentController.text,
                                     'is_urgent': isUrgent,
+                                    'image_url': imageController.text.trim().isEmpty
+                                        ? null
+                                        : imageController.text.trim(),
                                   });
                             } else {
                               await ref
@@ -259,6 +271,7 @@ class _AnnouncementsAdminPageState
                                       content: contentController.text,
                                       isUrgent: isUrgent,
                                       publishedAt: '',
+                                      imageUrl: imageController.text.trim(),
                                     ),
                                   );
                             }

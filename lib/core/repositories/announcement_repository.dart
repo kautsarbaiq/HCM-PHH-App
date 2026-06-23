@@ -7,6 +7,10 @@ class Announcement {
   final String content;
   final bool isUrgent;
   final String publishedAt;
+  // Banner image + optional link — announcements now double as the dashboard
+  // banner slides (banner & announcement are merged into one concept).
+  final String? imageUrl;
+  final String? linkUrl;
 
   Announcement({
     required this.id,
@@ -14,15 +18,19 @@ class Announcement {
     required this.content,
     required this.isUrgent,
     required this.publishedAt,
+    this.imageUrl,
+    this.linkUrl,
   });
 
   factory Announcement.fromJson(Map<String, dynamic> json) {
     return Announcement(
       id: json['id'] as String,
-      title: json['title'] as String,
-      content: json['content'] as String,
-      isUrgent: json['is_urgent'] as bool,
-      publishedAt: json['published_at'] as String,
+      title: json['title'] as String? ?? '',
+      content: json['content'] as String? ?? '',
+      isUrgent: json['is_urgent'] as bool? ?? false,
+      publishedAt: json['published_at'] as String? ?? '',
+      imageUrl: json['image_url'] as String?,
+      linkUrl: json['link_url'] as String?,
     );
   }
 
@@ -31,6 +39,10 @@ class Announcement {
       'title': title,
       'content': content,
       'is_urgent': isUrgent,
+      'image_url': (imageUrl != null && imageUrl!.trim().isEmpty)
+          ? null
+          : imageUrl,
+      'link_url': (linkUrl != null && linkUrl!.trim().isEmpty) ? null : linkUrl,
       'created_by': Supabase.instance.client.auth.currentUser?.id,
     };
   }

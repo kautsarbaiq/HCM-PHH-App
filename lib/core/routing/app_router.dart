@@ -26,7 +26,6 @@ import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/residents_admin_page.dart';
 import '../../features/admin/presentation/pages/houses_admin_page.dart';
 import '../../features/admin/presentation/pages/announcements_admin_page.dart';
-import '../../features/admin/presentation/pages/banners_admin_page.dart';
 import '../../features/admin/presentation/pages/billings_admin_page.dart';
 import '../../features/admin/presentation/pages/visitors_admin_page.dart';
 import '../../features/admin/presentation/pages/events_admin_page.dart';
@@ -225,10 +224,6 @@ class AppRouter {
           GoRoute(
             path: '/admin/announcements',
             builder: (context, state) => const AnnouncementsAdminPage(),
-          ),
-          GoRoute(
-            path: '/admin/banners',
-            builder: (context, state) => const BannersAdminPage(),
           ),
           GoRoute(
             path: '/admin/billings',

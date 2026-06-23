@@ -110,8 +110,6 @@ class AdminLayout extends StatelessWidget {
       title = 'Houses';
     } else if (location.contains('announcements')) {
       title = 'Announcements';
-    } else if (location.contains('banners')) {
-      title = 'Banners';
     } else if (location.contains('billings')) {
       title = 'Billings';
     } else if (location.contains('visitors')) {
@@ -286,14 +284,6 @@ class AdminLayout extends StatelessWidget {
                     'Announcements',
                     '/admin/announcements',
                     location.startsWith('/admin/announcements'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    Icons.view_carousel_rounded,
-                    'Banners',
-                    '/admin/banners',
-                    location.startsWith('/admin/banners'),
                     isDesktop,
                   ),
                   _item(
