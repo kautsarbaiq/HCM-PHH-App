@@ -1,7 +1,13 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as p;
 import '../../../../core/repositories/announcement_repository.dart';
+import '../../../../core/repositories/storage_repository.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -156,6 +162,7 @@ class _AnnouncementsAdminPageState
     );
     bool isUrgent = announcement?.isUrgent ?? false;
     bool isSaving = false;
+    bool isUploading = false;
 
     showDialog(
       context: context,
@@ -196,6 +203,109 @@ class _AnnouncementsAdminPageState
                         imageController,
                         'Banner image URL (optional)',
                         Icons.image_outlined,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: isUploading
+                                ? null
+                                : () async {
+                                    final messenger = ScaffoldMessenger.of(
+                                      context,
+                                    );
+                                    final result = await FilePicker.platform
+                                        .pickFiles(
+                                          type: FileType.image,
+                                          withData: kIsWeb,
+                                        );
+                                    if (result == null ||
+                                        result.files.isEmpty) {
+                                      return;
+                                    }
+                                    final file = result.files.first;
+                                    setDialogState(() => isUploading = true);
+                                    try {
+                                      final storage = ref.read(
+                                        storageRepositoryProvider,
+                                      );
+                                      String url;
+                                      if (kIsWeb) {
+                                        if (file.bytes == null) {
+                                          throw Exception(
+                                            'Could not read the file.',
+                                          );
+                                        }
+                                        final ext =
+                                            (file.extension != null &&
+                                                file.extension!.isNotEmpty)
+                                            ? '.${file.extension}'
+                                            : p.extension(file.name);
+                                        url = await storage
+                                            .uploadCommunityDocumentBytes(
+                                              file.bytes!,
+                                              file.name,
+                                              ext,
+                                            );
+                                      } else {
+                                        if (file.path == null) {
+                                          throw Exception(
+                                            'Could not read the file.',
+                                          );
+                                        }
+                                        url = await storage
+                                            .uploadCommunityDocument(
+                                              File(file.path!),
+                                              file.name,
+                                            );
+                                      }
+                                      setDialogState(() {
+                                        imageController.text = url;
+                                        isUploading = false;
+                                      });
+                                    } catch (e) {
+                                      setDialogState(() => isUploading = false);
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text('Upload failed: $e'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  },
+                            icon: isUploading
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.upload_rounded, size: 18),
+                            label: Text(
+                              isUploading ? 'Uploading…' : 'Upload image',
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.brand,
+                              side: const BorderSide(color: AppColors.brand),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          if (imageController.text.trim().isNotEmpty)
+                            const Expanded(
+                              child: Text(
+                                'Image set ✓',
+                                style: TextStyle(
+                                  color: AppColors.success,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       SwitchListTile(
