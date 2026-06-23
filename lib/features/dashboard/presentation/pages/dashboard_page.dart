@@ -13,6 +13,7 @@ import '../../../../core/repositories/facility_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../main/presentation/pages/main_navigation_page.dart';
 import '../../../emergency/presentation/widgets/emergency_bottom_sheet.dart';
 import '../widgets/quick_action_item.dart';
@@ -107,6 +108,7 @@ class DashboardPage extends ConsumerWidget {
                 const SizedBox(height: 28),
                 _quickActions(
                   context,
+                  ref,
                 ).animate().fadeIn(duration: 400.ms, delay: 140.ms),
               ],
             ),
@@ -166,9 +168,9 @@ class DashboardPage extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Welcome back 👋',
-                style: TextStyle(
+              Text(
+                ref.tr('dash.welcomeBack'),
+                style: const TextStyle(
                   fontSize: 13,
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
@@ -340,9 +342,9 @@ class DashboardPage extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  const Text(
-                    'Announcements',
-                    style: TextStyle(
+                  Text(
+                    ref.tr('dash.announcements'),
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
@@ -429,7 +431,9 @@ class DashboardPage extends ConsumerWidget {
                         ),
                         const SizedBox(width: 11),
                         Text(
-                          cleared ? 'Account status' : 'Your outstanding',
+                          cleared
+                              ? ref.tr('dash.accountStatus')
+                              : ref.tr('dash.outstanding'),
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.92),
                             fontSize: 13,
@@ -462,7 +466,9 @@ class DashboardPage extends ConsumerWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              cleared ? 'View invoices' : 'Pay now',
+                              cleared
+                                  ? ref.tr('dash.viewInvoices')
+                                  : ref.tr('dash.payNow'),
                               style: const TextStyle(
                                 color: AppColors.brand,
                                 fontWeight: FontWeight.w800,
@@ -523,9 +529,9 @@ class DashboardPage extends ConsumerWidget {
         if (unpaid.isEmpty) {
           return shell(
             cleared: true,
-            amount: const Text(
-              'All cleared',
-              style: TextStyle(
+            amount: Text(
+              ref.tr('dash.allCleared'),
+              style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
                 color: Colors.white,
@@ -533,7 +539,7 @@ class DashboardPage extends ConsumerWidget {
               ),
             ),
             sub: Text(
-              "You're all paid up 🎉",
+              ref.tr('dash.paidUp'),
               style: TextStyle(
                 color: Colors.white.withOpacity(0.92),
                 fontSize: 13,
@@ -646,22 +652,22 @@ class DashboardPage extends ConsumerWidget {
           children: [
             badge(),
             const SizedBox(width: 14),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'No upcoming bookings',
-                    style: TextStyle(
+                    ref.tr('dash.noBookings'),
+                    style: const TextStyle(
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
                       fontSize: 14.5,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    'Tap to book a facility',
-                    style: TextStyle(
+                    ref.tr('dash.tapToBook'),
+                    style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12.5,
                     ),
@@ -730,13 +736,13 @@ class DashboardPage extends ConsumerWidget {
   }
 
   // ---- Quick actions ------------------------------------------------------
-  Widget _quickActions(BuildContext context) {
+  Widget _quickActions(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(
-          title: 'Quick Actions',
-          subtitle: 'Everything one tap away',
+        SectionHeader(
+          title: ref.tr('dash.quickActions'),
+          subtitle: ref.tr('dash.quickActionsSub'),
         ),
         const SizedBox(height: 16),
         Row(
@@ -744,7 +750,7 @@ class DashboardPage extends ConsumerWidget {
             Expanded(
               child: QuickActionItem(
                 icon: PhosphorIconsFill.bellSimpleRinging,
-                label: 'Emergency',
+                label: ref.tr('dash.emergency'),
                 color: AppColors.accentCoral,
                 onTap: () => showModalBottomSheet(
                   context: context,
@@ -758,7 +764,7 @@ class DashboardPage extends ConsumerWidget {
             Expanded(
               child: QuickActionItem(
                 icon: PhosphorIconsFill.identificationCard,
-                label: 'Visitor Pass',
+                label: ref.tr('dash.visitorPass'),
                 color: AppColors.brand,
                 onTap: () => context.go('/access'),
               ),
@@ -771,7 +777,7 @@ class DashboardPage extends ConsumerWidget {
             Expanded(
               child: QuickActionItem(
                 icon: PhosphorIconsFill.wallet,
-                label: 'Bills & Pay',
+                label: ref.tr('dash.billsPay'),
                 color: AppColors.accentSky,
                 onTap: () => context.go('/bills'),
               ),
@@ -780,7 +786,7 @@ class DashboardPage extends ConsumerWidget {
             Expanded(
               child: QuickActionItem(
                 icon: PhosphorIconsFill.calendarCheck,
-                label: 'Bookings',
+                label: ref.tr('dash.bookings'),
                 color: AppColors.accentAmber,
                 onTap: () => context.push('/facility'),
               ),

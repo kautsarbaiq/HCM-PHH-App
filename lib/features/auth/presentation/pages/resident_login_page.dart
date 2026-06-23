@@ -8,6 +8,8 @@ import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/glass_text_field.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/gradient_background.dart';
+import '../../../../core/widgets/language_switcher.dart';
+import '../../../../l10n/app_strings.dart';
 
 class ResidentLoginPage extends ConsumerStatefulWidget {
   const ResidentLoginPage({super.key});
@@ -113,22 +115,24 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                       ),
                     ),
                     const SizedBox(height: 22),
-                    const Text(
-                      'PHH Residency',
+                    Text(
+                      ref.tr('login.title'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary,
                         letterSpacing: 0.2,
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    const Center(child: LanguageSwitcher()),
                     if (_isSignUp) ...[
                       const SizedBox(height: 8),
-                      const Text(
-                        'Create your account',
+                      Text(
+                        ref.tr('login.createAccount'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
                           color: AppColors.textSecondary,
@@ -143,13 +147,13 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           GlassTextField(
-                            hintText: 'Email Address',
+                            hintText: ref.tr('login.email'),
                             prefixIcon: Icons.email_outlined,
                             controller: _emailController,
                           ),
                           const SizedBox(height: 16),
                           GlassTextField(
-                            hintText: 'Password',
+                            hintText: ref.tr('login.password'),
                             prefixIcon: Icons.lock_outline,
                             isPassword: true,
                             controller: _passwordController,
@@ -157,7 +161,9 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                           const SizedBox(height: 24),
                           // Bold gradient primary button
                           _GradientButton(
-                            label: _isSignUp ? 'Sign Up' : 'Log In',
+                            label: _isSignUp
+                                ? ref.tr('login.signup')
+                                : ref.tr('login.login'),
                             isLoading: _isLoading,
                             onPressed: _isLoading ? null : _handleAuth,
                           ),
@@ -167,8 +173,8 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                                 setState(() => _isSignUp = !_isSignUp),
                             child: Text(
                               _isSignUp
-                                  ? 'Already have an account? Log In'
-                                  : 'Need an account? Sign Up',
+                                  ? ref.tr('login.haveAccount')
+                                  : ref.tr('login.needAccount'),
                               style: const TextStyle(
                                 color: AppColors.brand,
                                 fontWeight: FontWeight.w600,

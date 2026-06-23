@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/widgets/language_switcher.dart';
 import '../../../../theme/app_colors.dart';
 
 class AdminLayout extends StatelessWidget {
@@ -295,6 +296,10 @@ class AdminLayout extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Center(child: LanguageSwitcher()),
             ),
             Padding(
               padding: const EdgeInsets.all(14),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/repositories/profile_repository.dart';
+import '../../../../core/widgets/language_switcher.dart';
 import '../../../../theme/app_colors.dart';
 
 class AppDrawer extends ConsumerWidget {
@@ -102,6 +103,25 @@ class AppDrawer extends ConsumerWidget {
                           title: 'Book Facilities',
                           subtitle: 'Pool, gym, BBQ & more',
                           route: '/facility',
+                        ),
+                        const SizedBox(height: 16),
+                        _buildSectionLabel('Language'),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+                          child: Row(
+                            children: const [
+                              Text(
+                                'Language',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              Spacer(),
+                              LanguageSwitcher(),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 32),
                       ],

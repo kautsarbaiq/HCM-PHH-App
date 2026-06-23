@@ -1,14 +1,16 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:hcm_app/theme/app_colors.dart';
 import '../../../emergency/presentation/widgets/emergency_bottom_sheet.dart';
+import '../../../../l10n/app_strings.dart';
 import '../widgets/app_drawer.dart';
 
 final GlobalKey<ScaffoldState> mainScaffoldKey = GlobalKey<ScaffoldState>();
 
-class MainNavigationPage extends StatelessWidget {
+class MainNavigationPage extends ConsumerWidget {
   final Widget child;
 
   const MainNavigationPage({super.key, required this.child});
@@ -40,7 +42,7 @@ class MainNavigationPage extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final int currentIndex = _calculateSelectedIndex(context);
 
     return Scaffold(
@@ -95,14 +97,18 @@ class MainNavigationPage extends StatelessWidget {
             left: 24,
             right: 24,
             bottom: 32,
-            child: _buildFloatingNavBar(context, currentIndex),
+            child: _buildFloatingNavBar(context, ref, currentIndex),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFloatingNavBar(BuildContext context, int currentIndex) {
+  Widget _buildFloatingNavBar(
+    BuildContext context,
+    WidgetRef ref,
+    int currentIndex,
+  ) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(35),
       child: BackdropFilter(
@@ -135,7 +141,7 @@ class MainNavigationPage extends StatelessWidget {
                   currentIndex: currentIndex,
                   icon: PhosphorIconsRegular.house,
                   activeIcon: PhosphorIconsFill.house,
-                  label: 'Home',
+                  label: ref.tr('nav.home'),
                 ),
               ),
               Expanded(
@@ -145,7 +151,7 @@ class MainNavigationPage extends StatelessWidget {
                   currentIndex: currentIndex,
                   icon: PhosphorIconsRegular.qrCode,
                   activeIcon: PhosphorIconsFill.qrCode,
-                  label: 'Access',
+                  label: ref.tr('nav.access'),
                 ),
               ),
               Expanded(
@@ -155,7 +161,7 @@ class MainNavigationPage extends StatelessWidget {
                   currentIndex: currentIndex,
                   icon: PhosphorIconsRegular.receipt,
                   activeIcon: PhosphorIconsFill.receipt,
-                  label: 'Bills',
+                  label: ref.tr('nav.bills'),
                 ),
               ),
               Expanded(
@@ -165,7 +171,7 @@ class MainNavigationPage extends StatelessWidget {
                   currentIndex: currentIndex,
                   icon: PhosphorIconsRegular.users,
                   activeIcon: PhosphorIconsFill.users,
-                  label: 'Community',
+                  label: ref.tr('nav.community'),
                 ),
               ),
             ],

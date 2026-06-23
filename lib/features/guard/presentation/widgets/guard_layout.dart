@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/widgets/language_switcher.dart';
 import '../../../../theme/app_colors.dart';
 
 class GuardLayout extends StatelessWidget {
@@ -197,6 +198,10 @@ class GuardLayout extends StatelessWidget {
               accent: AppColors.mintGradient,
             ),
             const Spacer(),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Center(child: LanguageSwitcher()),
+            ),
             Padding(
               padding: const EdgeInsets.all(12),
               child: _SidebarItem(
