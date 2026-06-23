@@ -188,6 +188,52 @@ class StorageRepository {
     }
   }
 
+  /// Uploads a community document (rules/regulations PDF, etc.) to the PUBLIC
+  /// `documents` bucket under path `<timestamp>-<fileName>`, and returns the
+  /// PUBLIC url. Used by the admin E-Document panel so resident downloads work.
+  Future<String> uploadCommunityDocument(File file, String fileName) async {
+    try {
+      final objectPath = '${DateTime.now().millisecondsSinceEpoch}-$fileName';
+      await _supabase.storage
+          .from('documents')
+          .upload(
+            objectPath,
+            file,
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+          );
+      return _supabase.storage.from('documents').getPublicUrl(objectPath);
+    } catch (e) {
+      print('Error uploading community document: $e');
+      throw Exception('Failed to upload document');
+    }
+  }
+
+  /// Web-safe variant of [uploadCommunityDocument]: uploads raw [bytes] (with
+  /// the given file [ext], e.g. `.pdf`) to the PUBLIC `documents` bucket under
+  /// path `<timestamp>-<fileName>`, and returns the PUBLIC url. Same contract as
+  /// [uploadCommunityDocument]; used on Flutter web where `File`/path access is
+  /// unavailable.
+  Future<String> uploadCommunityDocumentBytes(
+    Uint8List bytes,
+    String fileName,
+    String ext,
+  ) async {
+    try {
+      final objectPath = '${DateTime.now().millisecondsSinceEpoch}-$fileName';
+      await _supabase.storage
+          .from('documents')
+          .uploadBinary(
+            objectPath,
+            bytes,
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+          );
+      return _supabase.storage.from('documents').getPublicUrl(objectPath);
+    } catch (e) {
+      print('Error uploading community document: $e');
+      throw Exception('Failed to upload document');
+    }
+  }
+
   /// Short-lived signed URL for a stored resident-document object path (or a
   /// stored public-style URL). Returns null on any failure (never throws).
   Future<String?> signedResidentDocUrl(String stored) async {

@@ -21,14 +21,16 @@ class EmergencyAlert {
   });
 
   factory EmergencyAlert.fromJson(Map<String, dynamic> json) {
+    // Defensive casts — a single malformed/legacy row must never break the whole
+    // realtime feed (which would make ALL active alerts vanish from dashboards).
     return EmergencyAlert(
       id: json['id'].toString(),
-      type: json['type'] as String,
-      title: json['title'] as String,
-      subtitle: json['subtitle'] as String,
-      triggeredBy: json['triggered_by'] as String,
+      type: json['type'] as String? ?? 'broadcast',
+      title: json['title'] as String? ?? '',
+      subtitle: json['subtitle'] as String? ?? '',
+      triggeredBy: json['triggered_by'] as String? ?? '',
       status: json['status'] as String? ?? 'Active',
-      createdAt: json['created_at'] as String,
+      createdAt: json['created_at'] as String? ?? '',
     );
   }
 
@@ -46,6 +48,14 @@ class EmergencyAlert {
 final emergencyRepositoryProvider = Provider<EmergencyRepository>((ref) {
   return EmergencyRepository(Supabase.instance.client);
 });
+
+/// Live feed of currently-active emergencies, shared by the resident, admin and
+/// guard dashboards. autoDispose so the realtime channel is torn down when no
+/// screen is watching it (e.g. after logout).
+final activeEmergenciesProvider =
+    StreamProvider.autoDispose<List<EmergencyAlert>>((ref) {
+      return ref.watch(emergencyRepositoryProvider).listenToActiveEmergencies();
+    });
 
 class EmergencyRepository {
   final SupabaseClient _supabase;
@@ -72,5 +82,34 @@ class EmergencyRepository {
         .map(
           (maps) => maps.map((map) => EmergencyAlert.fromJson(map)).toList(),
         );
+  }
+
+  /// Mark an emergency as resolved so it disappears from the active feed. Used
+  /// by admin & guard from the active-emergency banner.
+  Future<void> resolveEmergency(String id) async {
+    await _supabase
+        .from('emergencies')
+        .update({'status': 'Resolved'})
+        .eq('id', id);
+  }
+
+  /// Admin/guard broadcast: raise an emergency that every user will see on
+  /// their dashboard. Reuses the same `emergencies` table & realtime feed.
+  Future<void> broadcastEmergency({
+    required String title,
+    required String message,
+    required String triggeredBy,
+  }) async {
+    await triggerAlert(
+      EmergencyAlert(
+        id: '',
+        type: 'broadcast',
+        title: title,
+        subtitle: message,
+        triggeredBy: triggeredBy,
+        status: 'Active',
+        createdAt: '',
+      ),
+    );
   }
 }

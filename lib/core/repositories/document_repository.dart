@@ -72,6 +72,39 @@ class DocumentRepository {
         .toList();
   }
 
+  /// Inserts a community document row (e.g. a rules/regulations PDF) into
+  /// `documents`. [fileUrl] is the PUBLIC url returned by
+  /// StorageRepository.uploadCommunityDocument(Bytes). `created_by` is stamped
+  /// with the current admin's user id.
+  Future<void> createDocument({
+    required String title,
+    String? category,
+    required String fileUrl,
+    String? fileSize,
+    bool isPublic = true,
+  }) async {
+    final uid = _supabase.auth.currentUser?.id;
+    await _supabase.from('documents').insert({
+      'title': title,
+      'category': category,
+      'file_url': fileUrl,
+      'file_size': fileSize,
+      'is_public': isPublic,
+      'created_by': uid,
+    });
+  }
+
+  /// Updates a community document row. Pass snake_case DB column keys, e.g.
+  /// {'title': ..., 'category': ..., 'file_url': ..., 'file_size': ...}.
+  Future<void> updateDocument(String id, Map<String, dynamic> updates) async {
+    await _supabase.from('documents').update(updates).eq('id', id);
+  }
+
+  /// Deletes a community document row.
+  Future<void> deleteDocument(String id) async {
+    await _supabase.from('documents').delete().eq('id', id);
+  }
+
   /// The current resident's personal documents. Filtered by user_id explicitly
   /// (NOT relying on RLS — the admin read policy is OR'd in and would otherwise
   /// return every resident's documents when an admin hits this).

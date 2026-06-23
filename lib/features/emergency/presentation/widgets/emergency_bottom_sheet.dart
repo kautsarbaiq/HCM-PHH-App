@@ -71,12 +71,16 @@ class _EmergencyBottomSheetState extends ConsumerState<EmergencyBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    // Make the sheet substantial — at least ~72% of the screen — so it never
+    // looks like a cramped little strip. It still scrolls if content overflows.
+    final minHeight = MediaQuery.of(context).size.height * 0.72;
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           padding: const EdgeInsets.all(24),
+          constraints: BoxConstraints(minHeight: minHeight),
           decoration: BoxDecoration(
             color: AppColors.primaryWhite.withOpacity(0.92),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),

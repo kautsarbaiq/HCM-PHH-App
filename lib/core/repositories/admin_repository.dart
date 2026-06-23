@@ -11,6 +11,10 @@ final adminResidentsProvider = FutureProvider<List<Profile>>((ref) async {
   return ref.watch(adminRepositoryProvider).getAllResidents();
 });
 
+final adminGuardsProvider = FutureProvider<List<Profile>>((ref) async {
+  return ref.watch(adminRepositoryProvider).getAllGuards();
+});
+
 class AdminRepository {
   final SupabaseClient _supabase;
 
@@ -125,6 +129,52 @@ class AdminRepository {
           .eq('id', residentId);
     } catch (e) {
       throw Exception('Failed to update resident status');
+    }
+  }
+
+  // --- Committee ---
+  /// Set (or clear) a resident's committee position. Passing null removes them
+  /// from the committee directory.
+  Future<void> setCommitteePosition(String profileId, String? position) async {
+    try {
+      await _supabase
+          .from('profiles')
+          .update({'position': position})
+          .eq('id', profileId);
+    } catch (e) {
+      throw Exception('Failed to update committee position');
+    }
+  }
+
+  // --- Security Guards ---
+  Future<List<Profile>> getAllGuards() async {
+    try {
+      final response = await _supabase
+          .from('profiles')
+          .select()
+          .eq('role', 'guard')
+          .order('on_duty', ascending: false)
+          .order('full_name', ascending: true);
+      return (response as List).map((json) => Profile.fromJson(json)).toList();
+    } catch (e) {
+      print('Error fetching guards: $e');
+      throw Exception('Failed to fetch guards');
+    }
+  }
+
+  Future<void> updateGuardDuty(
+    String profileId, {
+    String? shift,
+    String? post,
+    required bool onDuty,
+  }) async {
+    try {
+      await _supabase
+          .from('profiles')
+          .update({'shift': shift, 'post': post, 'on_duty': onDuty})
+          .eq('id', profileId);
+    } catch (e) {
+      throw Exception('Failed to update guard duty');
     }
   }
 }

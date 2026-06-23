@@ -116,6 +116,24 @@ class AdminLayout extends StatelessWidget {
       title = 'Billings';
     } else if (location.contains('visitors')) {
       title = 'Visitors';
+    } else if (location.contains('events')) {
+      title = 'Events';
+    } else if (location.contains('polls')) {
+      title = 'Polling';
+    } else if (location.contains('documents')) {
+      title = 'Documents';
+    } else if (location.contains('forms')) {
+      title = 'E-Forms';
+    } else if (location.contains('contacts')) {
+      title = 'Contacts';
+    } else if (location.contains('guards')) {
+      title = 'Guards';
+    } else if (location.contains('marketplace')) {
+      title = 'Market Square';
+    } else if (location.contains('facilities')) {
+      title = 'Facilities';
+    } else if (location.contains('bookings')) {
+      title = 'Bookings';
     }
 
     return Container(
@@ -292,6 +310,78 @@ class AdminLayout extends StatelessWidget {
                     'Visitors',
                     '/admin/visitors',
                     location.startsWith('/admin/visitors'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.event_rounded,
+                    'Events',
+                    '/admin/events',
+                    location.startsWith('/admin/events'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.how_to_vote_rounded,
+                    'Polling',
+                    '/admin/polls',
+                    location.startsWith('/admin/polls'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.picture_as_pdf_rounded,
+                    'Documents',
+                    '/admin/documents',
+                    location.startsWith('/admin/documents'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.description_rounded,
+                    'Forms',
+                    '/admin/forms',
+                    location.startsWith('/admin/forms'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.contacts_rounded,
+                    'Contacts',
+                    '/admin/contacts',
+                    location.startsWith('/admin/contacts'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.shield_rounded,
+                    'Guards',
+                    '/admin/guards',
+                    location.startsWith('/admin/guards'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.storefront_rounded,
+                    'Market',
+                    '/admin/marketplace',
+                    location.startsWith('/admin/marketplace'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.pool_rounded,
+                    'Facilities',
+                    '/admin/facilities',
+                    location.startsWith('/admin/facilities'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.event_available_rounded,
+                    'Bookings',
+                    '/admin/bookings',
+                    location.startsWith('/admin/bookings'),
                     isDesktop,
                   ),
                 ],

@@ -258,4 +258,61 @@ const Map<String, Map<AppLang, String>> _strings = {
     AppLang.ms: 'Log Keluar',
     AppLang.zh: '退出登录',
   },
+
+  // Emergency
+  'emergency.active': {
+    AppLang.en: 'Active Emergency',
+    AppLang.ms: 'Kecemasan Aktif',
+    AppLang.zh: '紧急警报',
+  },
+  'emergency.activePlural': {
+    AppLang.en: 'Active Emergencies',
+    AppLang.ms: 'Kecemasan Aktif',
+    AppLang.zh: '紧急警报',
+  },
+  'emergency.resolve': {
+    AppLang.en: 'Resolve',
+    AppLang.ms: 'Selesai',
+    AppLang.zh: '解除',
+  },
+  'emergency.resolved': {
+    AppLang.en: 'Emergency resolved',
+    AppLang.ms: 'Kecemasan diselesaikan',
+    AppLang.zh: '紧急情况已解除',
+  },
+  'emergency.broadcast': {
+    AppLang.en: 'Broadcast Alert',
+    AppLang.ms: 'Siar Amaran',
+    AppLang.zh: '发布警报',
+  },
+  'emergency.broadcastTitle': {
+    AppLang.en: 'Broadcast to everyone',
+    AppLang.ms: 'Siar kepada semua',
+    AppLang.zh: '向所有人发布',
+  },
+  'emergency.broadcastSub': {
+    AppLang.en: 'This alert shows on every resident and guard dashboard.',
+    AppLang.ms: 'Amaran ini dipaparkan pada papan pemuka setiap penghuni dan pengawal.',
+    AppLang.zh: '此警报将显示在每位住户和保安的仪表板上。',
+  },
+  'emergency.alertTitle': {
+    AppLang.en: 'Title',
+    AppLang.ms: 'Tajuk',
+    AppLang.zh: '标题',
+  },
+  'emergency.message': {
+    AppLang.en: 'Message',
+    AppLang.ms: 'Mesej',
+    AppLang.zh: '内容',
+  },
+  'emergency.send': {
+    AppLang.en: 'Send Alert',
+    AppLang.ms: 'Hantar Amaran',
+    AppLang.zh: '发送警报',
+  },
+  'emergency.sent': {
+    AppLang.en: 'Emergency broadcast sent',
+    AppLang.ms: 'Siaran kecemasan dihantar',
+    AppLang.zh: '紧急广播已发送',
+  },
 };

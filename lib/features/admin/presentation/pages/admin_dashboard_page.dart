@@ -6,6 +6,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../emergency/presentation/widgets/active_emergency_banner.dart';
+import '../../../emergency/presentation/widgets/emergency_broadcast_sheet.dart';
 
 typedef DashboardStats = ({
   int residents,
@@ -68,6 +70,9 @@ class AdminDashboardPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Live emergency feed (resident panic alerts + broadcasts). Admin can
+          // resolve. Renders nothing when there are no active emergencies.
+          const ActiveEmergencyBanner(canResolve: true),
           // Hero welcome banner — brand gradient with a logo badge.
           Container(
             width: double.infinity,
@@ -119,6 +124,16 @@ class AdminDashboardPage extends ConsumerWidget {
                       ),
                     ],
                   ),
+                ),
+                IconButton(
+                  onPressed: () => showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => const EmergencyBroadcastSheet(),
+                  ),
+                  icon: const Icon(Icons.campaign_rounded, color: Colors.white),
+                  tooltip: 'Broadcast emergency alert',
                 ),
                 IconButton(
                   onPressed: () => ref.invalidate(adminDashboardStatsProvider),

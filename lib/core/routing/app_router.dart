@@ -29,6 +29,15 @@ import '../../features/admin/presentation/pages/announcements_admin_page.dart';
 import '../../features/admin/presentation/pages/banners_admin_page.dart';
 import '../../features/admin/presentation/pages/billings_admin_page.dart';
 import '../../features/admin/presentation/pages/visitors_admin_page.dart';
+import '../../features/admin/presentation/pages/events_admin_page.dart';
+import '../../features/admin/presentation/pages/polls_admin_page.dart';
+import '../../features/admin/presentation/pages/documents_admin_page.dart';
+import '../../features/admin/presentation/pages/forms_admin_page.dart';
+import '../../features/admin/presentation/pages/contacts_admin_page.dart';
+import '../../features/admin/presentation/pages/guards_admin_page.dart';
+import '../../features/admin/presentation/pages/marketplace_admin_page.dart';
+import '../../features/admin/presentation/pages/facilities_admin_page.dart';
+import '../../features/admin/presentation/pages/bookings_admin_page.dart';
 
 // Guard imports
 import '../../features/guard/presentation/pages/guard_login_page.dart';
@@ -228,6 +237,42 @@ class AppRouter {
           GoRoute(
             path: '/admin/visitors',
             builder: (context, state) => const VisitorsAdminPage(),
+          ),
+          GoRoute(
+            path: '/admin/events',
+            builder: (context, state) => const EventsAdminPage(),
+          ),
+          GoRoute(
+            path: '/admin/polls',
+            builder: (context, state) => const PollsAdminPage(),
+          ),
+          GoRoute(
+            path: '/admin/documents',
+            builder: (context, state) => const DocumentsAdminPage(),
+          ),
+          GoRoute(
+            path: '/admin/forms',
+            builder: (context, state) => const FormsAdminPage(),
+          ),
+          GoRoute(
+            path: '/admin/contacts',
+            builder: (context, state) => const ContactsAdminPage(),
+          ),
+          GoRoute(
+            path: '/admin/guards',
+            builder: (context, state) => const GuardsAdminPage(),
+          ),
+          GoRoute(
+            path: '/admin/marketplace',
+            builder: (context, state) => const MarketplaceAdminPage(),
+          ),
+          GoRoute(
+            path: '/admin/facilities',
+            builder: (context, state) => const FacilitiesAdminPage(),
+          ),
+          GoRoute(
+            path: '/admin/bookings',
+            builder: (context, state) => const BookingsAdminPage(),
           ),
         ],
       ),

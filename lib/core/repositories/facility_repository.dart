@@ -48,6 +48,7 @@ class Facility {
   final String name;
   final String? description;
   final String? iconName;
+  final bool isActive;
   final int? maxCapacity;
 
   Facility({
@@ -55,6 +56,7 @@ class Facility {
     required this.name,
     this.description,
     this.iconName,
+    this.isActive = true,
     this.maxCapacity,
   });
 
@@ -64,6 +66,7 @@ class Facility {
       name: json['name'] as String,
       description: json['description'] as String?,
       iconName: json['icon_name'] as String?,
+      isActive: json['is_active'] as bool? ?? true,
       maxCapacity: json['max_capacity'] as int?,
     );
   }
@@ -86,6 +89,63 @@ class FacilityRepository {
         .order('name', ascending: true);
 
     return (response as List).map((json) => Facility.fromJson(json)).toList();
+  }
+
+  /// Admin: all facilities regardless of active state (no is_active filter).
+  Future<List<Facility>> getAllFacilitiesIncludingInactive() async {
+    final response = await _supabase
+        .from('facilities')
+        .select()
+        .order('name', ascending: true);
+
+    return (response as List).map((json) => Facility.fromJson(json)).toList();
+  }
+
+  Future<Facility> createFacility({
+    required String name,
+    String? description,
+    String? iconName,
+    int? maxCapacity,
+    bool isActive = true,
+  }) async {
+    final response = await _supabase
+        .from('facilities')
+        .insert({
+          'name': name,
+          'description': description,
+          'icon_name': iconName,
+          'max_capacity': maxCapacity,
+          'is_active': isActive,
+        })
+        .select()
+        .single();
+
+    return Facility.fromJson(response);
+  }
+
+  Future<void> updateFacility(String id, Map<String, dynamic> updates) async {
+    await _supabase.from('facilities').update(updates).eq('id', id);
+  }
+
+  Future<void> deleteFacility(String id) async {
+    await _supabase.from('facilities').delete().eq('id', id);
+  }
+
+  /// Admin: every booking row (relies on admin_all RLS so admin sees all).
+  Future<List<Booking>> getAllBookings() async {
+    final response = await _supabase
+        .from('bookings')
+        .select('*')
+        .order('date', ascending: false);
+
+    return (response as List).map((json) => Booking.fromJson(json)).toList();
+  }
+
+  Future<void> updateBookingStatus(String id, String status) async {
+    await _supabase
+        .from('bookings')
+        .update({'status': status})
+        .eq('id', id);
   }
 
   Future<List<Booking>> getMyBookings(String userId) async {

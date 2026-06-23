@@ -126,10 +126,14 @@ class EPollingPage extends ConsumerWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 StatusPill(
-                                  label: hasVoted ? 'VOTED' : 'ACTIVE',
-                                  color: hasVoted
-                                      ? AppColors.success
-                                      : AppColors.warning,
+                                  label: !poll.isActive
+                                      ? 'CLOSED'
+                                      : (hasVoted ? 'VOTED' : 'ACTIVE'),
+                                  color: !poll.isActive
+                                      ? AppColors.textSecondary
+                                      : (hasVoted
+                                            ? AppColors.success
+                                            : AppColors.warning),
                                   dense: true,
                                 ),
                                 Text(
@@ -170,7 +174,7 @@ class EPollingPage extends ConsumerWidget {
                                 padding: const EdgeInsets.only(bottom: 12),
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(12),
-                                  onTap: (hasVoted || !userReady)
+                                  onTap: (hasVoted || !userReady || !poll.isActive)
                                       ? null
                                       : () async {
                                           final messenger =

@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/widgets/language_switcher.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../emergency/presentation/widgets/active_emergency_banner.dart';
+import '../../../emergency/presentation/widgets/emergency_broadcast_sheet.dart';
 
 class GuardLayout extends StatelessWidget {
   final Widget child;
@@ -88,6 +90,19 @@ class GuardLayout extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(
+              PhosphorIconsFill.megaphone,
+              color: AppColors.error,
+            ),
+            onPressed: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => const EmergencyBroadcastSheet(),
+            ),
+            tooltip: 'Broadcast emergency alert',
+          ),
+          IconButton(
+            icon: const Icon(
               PhosphorIconsRegular.signOut,
               color: AppColors.error,
             ),
@@ -104,7 +119,15 @@ class GuardLayout extends StatelessWidget {
               width: sidebarWidth,
               child: _sidebar(context, isWide: true),
             ),
-          Expanded(child: child),
+          Expanded(
+            child: Column(
+              children: [
+                // Live emergency feed on every guard screen; guards can resolve.
+                const ActiveEmergencyBanner(canResolve: true),
+                Expanded(child: child),
+              ],
+            ),
+          ),
         ],
       ),
     );
