@@ -179,6 +179,77 @@ class EPollingPage extends ConsumerWidget {
                                       : () async {
                                           final messenger =
                                               ScaffoldMessenger.of(context);
+                                          final optionLabel =
+                                              (poll.options[i]['label'] ?? '')
+                                                  .toString();
+                                          final confirmed =
+                                              await showDialog<bool>(
+                                                context: context,
+                                                builder: (dctx) => AlertDialog(
+                                                  backgroundColor: Colors.white,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          20,
+                                                        ),
+                                                  ),
+                                                  title: const Text(
+                                                    'Confirm your vote',
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                      color:
+                                                          AppColors.textPrimary,
+                                                    ),
+                                                  ),
+                                                  content: Text(
+                                                    'Vote for "$optionLabel"? Your vote cannot be changed afterwards.',
+                                                    style: const TextStyle(
+                                                      color: AppColors
+                                                          .textSecondary,
+                                                    ),
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                            dctx,
+                                                            false,
+                                                          ),
+                                                      child: const Text(
+                                                        'Cancel',
+                                                        style: TextStyle(
+                                                          color: Colors.grey,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    ElevatedButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                            dctx,
+                                                            true,
+                                                          ),
+                                                      style:
+                                                          ElevatedButton.styleFrom(
+                                                            backgroundColor:
+                                                                AppColors.brand,
+                                                            foregroundColor:
+                                                                Colors.white,
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    12,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                      child: const Text(
+                                                        'Confirm',
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                          if (confirmed != true) return;
                                           try {
                                             await ref
                                                 .read(pollsProvider.notifier)

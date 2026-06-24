@@ -193,7 +193,8 @@ class StorageRepository {
   /// PUBLIC url. Used by the admin E-Document panel so resident downloads work.
   Future<String> uploadCommunityDocument(File file, String fileName) async {
     try {
-      final objectPath = '${DateTime.now().millisecondsSinceEpoch}-$fileName';
+      final safe = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+      final objectPath = '${DateTime.now().millisecondsSinceEpoch}-$safe';
       await _supabase.storage
           .from('documents')
           .upload(
@@ -204,7 +205,8 @@ class StorageRepository {
       return _supabase.storage.from('documents').getPublicUrl(objectPath);
     } catch (e) {
       print('Error uploading community document: $e');
-      throw Exception('Failed to upload document');
+      // Surface the real reason (RLS / missing bucket) so it can be fixed.
+      throw Exception('Failed to upload document: $e');
     }
   }
 
@@ -219,7 +221,8 @@ class StorageRepository {
     String ext,
   ) async {
     try {
-      final objectPath = '${DateTime.now().millisecondsSinceEpoch}-$fileName';
+      final safe = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+      final objectPath = '${DateTime.now().millisecondsSinceEpoch}-$safe';
       await _supabase.storage
           .from('documents')
           .uploadBinary(
@@ -230,7 +233,8 @@ class StorageRepository {
       return _supabase.storage.from('documents').getPublicUrl(objectPath);
     } catch (e) {
       print('Error uploading community document: $e');
-      throw Exception('Failed to upload document');
+      // Surface the real reason (RLS / missing bucket) so it can be fixed.
+      throw Exception('Failed to upload document: $e');
     }
   }
 

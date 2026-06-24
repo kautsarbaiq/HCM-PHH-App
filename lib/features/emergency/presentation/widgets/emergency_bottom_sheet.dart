@@ -26,6 +26,44 @@ class _EmergencyBottomSheetState extends ConsumerState<EmergencyBottomSheet> {
     required Color color,
   }) async {
     if (_isSending) return;
+
+    // Confirm first so an accidental tap never fires a real alert.
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Text(
+          'Send this alert now? $subtitle.',
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: color,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
     setState(() => _sendingType = type);
 
     final messenger = ScaffoldMessenger.of(context);
@@ -71,9 +109,9 @@ class _EmergencyBottomSheetState extends ConsumerState<EmergencyBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    // Make the sheet substantial — at least ~72% of the screen — so it never
-    // looks like a cramped little strip. It still scrolls if content overflows.
-    final minHeight = MediaQuery.of(context).size.height * 0.72;
+    // Make the sheet tall enough that all options are visible without feeling
+    // cramped. SafeArea (below) keeps the top handle clear of the status bar.
+    final minHeight = MediaQuery.of(context).size.height * 0.82;
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       child: BackdropFilter(

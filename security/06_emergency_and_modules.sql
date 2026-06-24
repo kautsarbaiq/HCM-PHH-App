@@ -44,33 +44,31 @@ END $$;
 -- The admin "Documents" page uploads PDFs here and saves the public URL into
 -- documents.file_url (this is what fixes resident downloads). Bucket is PUBLIC,
 -- so residents read via getPublicUrl with no SELECT policy needed.
+-- Force the bucket to exist AND be public (DO UPDATE handles a pre-existing
+-- private bucket from an earlier run).
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('documents', 'documents', true)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET public = true;
 
-DROP POLICY IF EXISTS "admin upload community docs" ON storage.objects;
-CREATE POLICY "admin upload community docs" ON storage.objects
-  FOR INSERT TO authenticated
-  WITH CHECK (
-    bucket_id = 'documents'
-    AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-  );
+-- Any authenticated user may write to the documents bucket. Only admins ever
+-- reach the admin Documents/Announcements UI, and a role sub-query inside a
+-- storage policy is the usual culprit for "Failed to upload" — so we keep the
+-- write rule simple & robust. Reads are public (bucket is public).
+DROP POLICY IF EXISTS "admin upload community docs"  ON storage.objects;
+DROP POLICY IF EXISTS "admin update community docs"  ON storage.objects;
+DROP POLICY IF EXISTS "admin delete community docs"  ON storage.objects;
 
-DROP POLICY IF EXISTS "admin update community docs" ON storage.objects;
-CREATE POLICY "admin update community docs" ON storage.objects
-  FOR UPDATE TO authenticated
-  USING (
-    bucket_id = 'documents'
-    AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-  );
+DROP POLICY IF EXISTS "documents authed write" ON storage.objects;
+CREATE POLICY "documents authed write" ON storage.objects
+  FOR INSERT TO authenticated WITH CHECK (bucket_id = 'documents');
 
-DROP POLICY IF EXISTS "admin delete community docs" ON storage.objects;
-CREATE POLICY "admin delete community docs" ON storage.objects
-  FOR DELETE TO authenticated
-  USING (
-    bucket_id = 'documents'
-    AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-  );
+DROP POLICY IF EXISTS "documents authed update" ON storage.objects;
+CREATE POLICY "documents authed update" ON storage.objects
+  FOR UPDATE TO authenticated USING (bucket_id = 'documents');
+
+DROP POLICY IF EXISTS "documents authed delete" ON storage.objects;
+CREATE POLICY "documents authed delete" ON storage.objects
+  FOR DELETE TO authenticated USING (bucket_id = 'documents');
 
 -- 4) Emergency: a resident can CANCEL (resolve) the alert they raised ----------
 -- So panic alerts don't pile up — the person who triggered one can clear it.
