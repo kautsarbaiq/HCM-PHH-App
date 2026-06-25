@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +18,13 @@ void main() async {
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL'] ?? '',
     anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    // On WEB, do not persist the session to the browser — every visit must go
+    // through the login screen (no silent auto-login as the last account on a
+    // shared computer). On mobile, keep the default persistent session so the
+    // installed app stays logged in between launches.
+    authOptions: kIsWeb
+        ? const FlutterAuthClientOptions(localStorage: EmptyLocalStorage())
+        : const FlutterAuthClientOptions(),
   );
 
   runApp(const ProviderScope(child: HCMApp()));
