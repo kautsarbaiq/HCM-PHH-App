@@ -191,18 +191,23 @@ class StorageRepository {
   /// Uploads a community document (rules/regulations PDF, etc.) to the PUBLIC
   /// `documents` bucket under path `<timestamp>-<fileName>`, and returns the
   /// PUBLIC url. Used by the admin E-Document panel so resident downloads work.
+  // NOTE: community files (admin documents + announcement banner images) are
+  // stored in the PUBLIC `avatars` bucket under a `community/` folder. The
+  // `avatars` bucket + its `avatars_write` policy (INSERT TO authenticated)
+  // already exist and are proven to work, so uploads succeed with NO extra SQL.
   Future<String> uploadCommunityDocument(File file, String fileName) async {
     try {
       final safe = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-      final objectPath = '${DateTime.now().millisecondsSinceEpoch}-$safe';
+      final objectPath =
+          'community/${DateTime.now().millisecondsSinceEpoch}-$safe';
       await _supabase.storage
-          .from('documents')
+          .from('avatars')
           .upload(
             objectPath,
             file,
             fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
           );
-      return _supabase.storage.from('documents').getPublicUrl(objectPath);
+      return _supabase.storage.from('avatars').getPublicUrl(objectPath);
     } catch (e) {
       print('Error uploading community document: $e');
       // Surface the real reason (RLS / missing bucket) so it can be fixed.
@@ -222,15 +227,16 @@ class StorageRepository {
   ) async {
     try {
       final safe = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-      final objectPath = '${DateTime.now().millisecondsSinceEpoch}-$safe';
+      final objectPath =
+          'community/${DateTime.now().millisecondsSinceEpoch}-$safe';
       await _supabase.storage
-          .from('documents')
+          .from('avatars')
           .uploadBinary(
             objectPath,
             bytes,
             fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
           );
-      return _supabase.storage.from('documents').getPublicUrl(objectPath);
+      return _supabase.storage.from('avatars').getPublicUrl(objectPath);
     } catch (e) {
       print('Error uploading community document: $e');
       // Surface the real reason (RLS / missing bucket) so it can be fixed.
