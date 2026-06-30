@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/routing/app_router.dart';
+import 'core/services/realtime_sync.dart';
 import 'l10n/app_strings.dart';
 import 'theme/app_theme.dart';
 
@@ -42,18 +43,20 @@ class HCMApp extends ConsumerWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp.router(
-          title: 'PHH Housing',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          locale: lang.locale,
-          supportedLocales: const [Locale('en'), Locale('ms'), Locale('zh')],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          routerConfig: AppRouter.router,
+        return RealtimeSync(
+          child: MaterialApp.router(
+            title: 'PHH Housing',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            locale: lang.locale,
+            supportedLocales: const [Locale('en'), Locale('ms'), Locale('zh')],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            routerConfig: AppRouter.router,
+          ),
         );
       },
     );
