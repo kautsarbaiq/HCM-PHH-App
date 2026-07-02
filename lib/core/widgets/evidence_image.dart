@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../repositories/storage_repository.dart';
 
-/// Resolves (and caches) a short-lived signed URL for each stored evidence
-/// reference. Because it's a `family` keyed on the stored value, each distinct
-/// photo is signed only once per Riverpod cache lifetime.
-final signedEvidenceUrlProvider = FutureProvider.family<String?, String>(
-  (ref, stored) =>
-      ref.read(storageRepositoryProvider).signedEvidenceUrl(stored),
-);
+/// Resolves a short-lived signed URL for each stored evidence reference.
+/// autoDispose: signed URLs expire (1h), so they must never be cached for the
+/// app's lifetime — long sessions would show broken images.
+final signedEvidenceUrlProvider = FutureProvider.autoDispose
+    .family<String?, String>(
+      (ref, stored) =>
+          ref.read(storageRepositoryProvider).signedEvidenceUrl(stored),
+    );
 
 /// Displays an evidence photo stored in the PRIVATE `guard_evidence` bucket by
 /// first resolving a signed URL (the raw stored public URL would 403). Shows a

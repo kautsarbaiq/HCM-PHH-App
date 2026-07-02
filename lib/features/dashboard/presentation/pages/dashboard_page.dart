@@ -32,7 +32,20 @@ final dashboardBookingsProvider = FutureProvider.autoDispose<List<Booking>>((
 ) async {
   final uid = Supabase.instance.client.auth.currentUser?.id;
   if (uid == null) return [];
-  return ref.read(facilityRepositoryProvider).getMyBookings(uid);
+  final all = await ref.read(facilityRepositoryProvider).getMyBookings(uid);
+  // The card shows [first] as the next upcoming booking, so drop past and
+  // cancelled/rejected ones (list is already ordered by date ascending).
+  final now = DateTime.now();
+  final todayIso =
+      '${now.year.toString().padLeft(4, '0')}-'
+      '${now.month.toString().padLeft(2, '0')}-'
+      '${now.day.toString().padLeft(2, '0')}';
+  return all.where((b) {
+    final s = b.status.toLowerCase();
+    return b.date.compareTo(todayIso) >= 0 &&
+        s != 'cancelled' &&
+        s != 'rejected';
+  }).toList();
 });
 
 final _currency = NumberFormat.currency(

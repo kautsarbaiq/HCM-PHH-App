@@ -32,10 +32,11 @@ final adminDashboardStatsProvider = FutureProvider.autoDispose<DashboardStats>((
       .count(CountOption.exact)
       .eq('role', 'resident');
   final houses = await supabase.from('houses').count(CountOption.exact);
+  // "Active" = anything not settled yet (covers unpaid AND overdue).
   final activeBillings = await supabase
       .from('billings')
       .count(CountOption.exact)
-      .eq('status', 'unpaid');
+      .neq('status', 'paid');
   final todayVisitors = await supabase
       .from('visitors')
       .count(CountOption.exact)

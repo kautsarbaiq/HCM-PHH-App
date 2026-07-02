@@ -34,7 +34,18 @@ class EventsNotifier extends AsyncNotifier<List<CommunityEvent>> {
   @override
   Future<List<CommunityEvent>> build() async {
     final repo = ref.read(eventRepositoryProvider);
-    return repo.getAllEvents();
+    final all = await repo.getAllEvents();
+    // Upcoming events first (soonest on top), past ones pushed to the bottom —
+    // a freshly created event is immediately visible, not buried under old
+    // ones.
+    final cutoff = DateTime.now().subtract(const Duration(days: 1));
+    DateTime parse(CommunityEvent e) =>
+        DateTime.tryParse(e.date) ?? DateTime(2000);
+    final upcoming = all.where((e) => parse(e).isAfter(cutoff)).toList()
+      ..sort((a, b) => parse(a).compareTo(parse(b)));
+    final past = all.where((e) => !parse(e).isAfter(cutoff)).toList()
+      ..sort((a, b) => parse(b).compareTo(parse(a)));
+    return [...upcoming, ...past];
   }
 
   Future<void> toggleRsvp(String eventId) async {

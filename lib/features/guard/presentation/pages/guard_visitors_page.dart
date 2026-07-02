@@ -331,6 +331,11 @@ class _VisitorCardList extends StatelessWidget {
                     label: 'Plate',
                     value: visitor.vehiclePlate ?? '-',
                   ),
+                  if ((visitor.idNumber ?? '').isNotEmpty)
+                    _CardInfoRow(
+                      label: 'IC / Passport',
+                      value: visitor.idNumber!,
+                    ),
                   _CardInfoRow(
                     label: 'Check-in',
                     value: _checkInDisplay(visitor),

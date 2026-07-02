@@ -315,6 +315,14 @@ class _VisitorLogCard extends StatelessWidget {
                 ? visitor.vehiclePlate!
                 : '-',
           ),
+          if ((visitor.idNumber ?? '').isNotEmpty)
+            _InfoRow(label: 'IC / Passport', value: visitor.idNumber!),
+          if (visitor.idDetails != null &&
+              ('${visitor.idDetails!['nationality'] ?? ''}').isNotEmpty)
+            _InfoRow(
+              label: 'Nationality',
+              value: '${visitor.idDetails!['nationality']}',
+            ),
           _InfoRow(label: 'Check-in', value: _formatTime(visitor.checkedInAt)),
           _InfoRow(
             label: 'Check-out',

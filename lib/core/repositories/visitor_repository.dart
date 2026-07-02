@@ -21,6 +21,9 @@ class Visitor {
   final String? visitorPhotoUrl;
   final String? vehiclePhotoUrl;
   final String? licensePhotoUrl;
+  // Data auto-extracted from the visitor's ID/license by the scan-id function.
+  final String? idNumber;
+  final Map<String, dynamic>? idDetails;
 
   // Joined fields
   final House? house;
@@ -43,6 +46,8 @@ class Visitor {
     this.visitorPhotoUrl,
     this.vehiclePhotoUrl,
     this.licensePhotoUrl,
+    this.idNumber,
+    this.idDetails,
     this.house,
     this.creator,
   });
@@ -65,6 +70,8 @@ class Visitor {
       visitorPhotoUrl: json['visitor_photo_url'] as String?,
       vehiclePhotoUrl: json['vehicle_photo_url'] as String?,
       licensePhotoUrl: json['license_photo_url'] as String?,
+      idNumber: json['id_number'] as String?,
+      idDetails: json['id_details'] as Map<String, dynamic>?,
       house: json['houses'] != null
           ? House.fromJson(json['houses'] as Map<String, dynamic>)
           : null,

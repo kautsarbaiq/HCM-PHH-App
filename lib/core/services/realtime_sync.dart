@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -85,6 +88,7 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
     dashboardOutstandingProvider,
     myBillingsProvider,
     adminBillingsProvider,
+    adminDashboardStatsProvider,
   ],
   'bookings': [
     dashboardBookingsProvider,
@@ -97,6 +101,7 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
     myVisitorsProvider,
     guardVisitorsProvider,
     adminVisitorsProvider,
+    adminDashboardStatsProvider,
   ],
   'documents': [eDocumentsProvider, adminDocumentsProvider],
   'forms': [eFormsProvider, adminFormsProvider],
@@ -109,6 +114,9 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
     guardHousesProvider,
     adminHousesProvider,
     adminDashboardStatsProvider,
+    // These embed houses(*) in their select:
+    guardVisitorsProvider,
+    adminVisitorsProvider,
   ],
   'profiles': [
     currentProfileProvider,
@@ -117,6 +125,15 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
     adminResidentsProvider,
     adminGuardsProvider,
     adminDashboardStatsProvider,
+    // These embed profiles(*) in their select, so a profile edit must
+    // refresh the names/phones they display:
+    guardHousesProvider,
+    adminHousesProvider,
+    adminBillingsProvider,
+    guardVisitorsProvider,
+    adminVisitorsProvider,
+    adminFormSubmissionsProvider,
+    adminIdScansProvider,
   ],
   'resident_documents': [myResidentDocsProvider],
   'resident_id_scans': [myIdScansProvider, adminIdScansProvider],
@@ -127,8 +144,14 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
 /// channel listening to all app tables, and whenever a row changes anywhere
 /// (from web OR mobile), it invalidates the affected providers so the open
 /// screen re-fetches and updates instantly — no refresh, no app restart.
-/// (Supabase Realtime is WebSocket-based; this is the built-in equivalent of a
-/// socket server, so no separate Socket.IO backend is needed.)
+///
+/// Realtime delivery is RLS-filtered per subscriber, and the claims are fixed
+/// at SUBSCRIBE time. A channel joined before login is an `anon` subscriber and
+/// never receives events for private tables (billings, visitors, ...), so this
+/// widget re-subscribes whenever auth changes (login / logout / session restore
+/// / token refresh). It also re-subscribes with a backoff when the socket
+/// drops, and refreshes everything when the app returns from the background —
+/// either way no screen is left showing stale data.
 class RealtimeSync extends ConsumerStatefulWidget {
   final Widget child;
   const RealtimeSync({super.key, required this.child});
@@ -137,14 +160,55 @@ class RealtimeSync extends ConsumerStatefulWidget {
   ConsumerState<RealtimeSync> createState() => _RealtimeSyncState();
 }
 
-class _RealtimeSyncState extends ConsumerState<RealtimeSync> {
+class _RealtimeSyncState extends ConsumerState<RealtimeSync>
+    with WidgetsBindingObserver {
   RealtimeChannel? _channel;
+  StreamSubscription<AuthState>? _authSub;
+  Timer? _retryTimer;
+  int _retryAttempt = 0;
+  int _channelSeq = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _subscribe();
+    // onAuthStateChange also emits the current state as its first event.
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((state) {
+      switch (state.event) {
+        case AuthChangeEvent.initialSession:
+        case AuthChangeEvent.signedIn:
+        case AuthChangeEvent.signedOut:
+        case AuthChangeEvent.tokenRefreshed:
+          _resubscribe();
+        default:
+          break;
+      }
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // The OS may have dropped the socket while backgrounded; rejoin and
+    // refetch so the user never returns to stale screens.
+    if (state == AppLifecycleState.resumed) {
+      _resubscribe();
+    }
+  }
+
+  void _resubscribe() {
+    if (!mounted) return;
+    _retryTimer?.cancel();
+    _teardownChannel();
+    _subscribe();
+    _invalidateAll(); // catch up on anything missed while unsubscribed
+  }
+
+  void _subscribe() {
     final client = Supabase.instance.client;
-    final channel = client.channel('app_realtime_sync');
+    // Unique topic per join so a stale server-side subscription can never be
+    // confused with the new one.
+    final channel = client.channel('app_realtime_sync_${++_channelSeq}');
     for (final table in _providersByTable.keys) {
       channel.onPostgresChanges(
         event: PostgresChangeEvent.all,
@@ -158,16 +222,51 @@ class _RealtimeSyncState extends ConsumerState<RealtimeSync> {
         },
       );
     }
-    channel.subscribe();
     _channel = channel;
+    channel.subscribe((status, [error]) {
+      // Statuses from a channel we already replaced are ignored.
+      if (!mounted || !identical(channel, _channel)) return;
+      if (status == RealtimeSubscribeStatus.subscribed) {
+        _retryAttempt = 0;
+      } else if (status == RealtimeSubscribeStatus.channelError ||
+          status == RealtimeSubscribeStatus.timedOut ||
+          status == RealtimeSubscribeStatus.closed) {
+        _scheduleRetry();
+      }
+    });
+  }
+
+  void _scheduleRetry() {
+    _retryTimer?.cancel();
+    final seconds = math.min(30, 2 << math.min(_retryAttempt, 4)); // 2..30s
+    _retryAttempt++;
+    _retryTimer = Timer(Duration(seconds: seconds), () {
+      if (mounted) _resubscribe();
+    });
+  }
+
+  void _teardownChannel() {
+    final ch = _channel;
+    _channel = null; // makes the old channel's subscribe-callback a no-op
+    if (ch != null) {
+      Supabase.instance.client.removeChannel(ch);
+    }
+  }
+
+  void _invalidateAll() {
+    for (final providers in _providersByTable.values) {
+      for (final provider in providers) {
+        ref.invalidate(provider);
+      }
+    }
   }
 
   @override
   void dispose() {
-    final ch = _channel;
-    if (ch != null) {
-      Supabase.instance.client.removeChannel(ch);
-    }
+    WidgetsBinding.instance.removeObserver(this);
+    _retryTimer?.cancel();
+    _authSub?.cancel();
+    _teardownChannel();
     super.dispose();
   }
 

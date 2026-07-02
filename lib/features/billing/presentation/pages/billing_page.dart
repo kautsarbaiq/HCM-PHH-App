@@ -17,13 +17,15 @@ import '../widgets/transaction_history_item.dart';
 final billingTabIndexProvider = StateProvider<int>((ref) => 0);
 
 /// The current resident's bills, fetched live from Supabase (RLS scopes the
-/// rows to the logged-in resident).
+/// rows to the logged-in resident). autoDispose: refetches fresh every time
+/// the page is opened, so a bill created while this page was closed always
+/// shows even if a realtime event was missed.
 final myBillingsProvider =
-    AsyncNotifierProvider<MyBillingsNotifier, List<Billing>>(
+    AsyncNotifierProvider.autoDispose<MyBillingsNotifier, List<Billing>>(
       () => MyBillingsNotifier(),
     );
 
-class MyBillingsNotifier extends AsyncNotifier<List<Billing>> {
+class MyBillingsNotifier extends AutoDisposeAsyncNotifier<List<Billing>> {
   @override
   Future<List<Billing>> build() async {
     return ref.read(billingRepositoryProvider).getMyBillings();
