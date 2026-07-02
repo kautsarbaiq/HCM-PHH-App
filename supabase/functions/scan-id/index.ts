@@ -17,8 +17,15 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Gemini model — Flash is free-tier, fast, and supports vision + JSON output.
-const MODEL = "gemini-2.0-flash";
+// Gemini models to try, in order — different accounts have free-tier quota on
+// different Flash models, so we fall back until one succeeds.
+const MODELS = [
+  "gemini-2.5-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-2.0-flash",
+  "gemini-flash-latest",
+  "gemini-1.5-flash",
+];
 
 // Gemini response schema (types are UPPERCASE per the Gemini Schema enum).
 const RESPONSE_SCHEMA = {
@@ -66,58 +73,62 @@ Deno.serve(async (req: Request) => {
       return json({ error: "imageBase64 (base64 string) is required" }, 400);
     }
 
-    const url =
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        // Works for both classic (AIza...) and new (AQ...) Gemini API keys.
-        "x-goog-api-key": apiKey,
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                inline_data: {
-                  mime_type: mediaType ?? "image/jpeg",
-                  data: imageBase64,
-                },
+    const payload = JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              inline_data: {
+                mime_type: mediaType ?? "image/jpeg",
+                data: imageBase64,
               },
-              {
-                text:
-                  "This is a photo of an ID document (driving license, identity card, or passport). " +
-                  "Extract the fields. Copy every value exactly as printed on the document. " +
-                  "If a field is not visible or not present, use an empty string.",
-              },
-            ],
-          },
-        ],
-        generationConfig: {
-          response_mime_type: "application/json",
-          response_schema: RESPONSE_SCHEMA,
+            },
+            {
+              text:
+                "This is a photo of an ID document (driving license, identity card, or passport). " +
+                "Extract the fields. Copy every value exactly as printed on the document. " +
+                "If a field is not visible or not present, use an empty string.",
+            },
+          ],
         },
-      }),
+      ],
+      generationConfig: {
+        response_mime_type: "application/json",
+        response_schema: RESPONSE_SCHEMA,
+      },
     });
 
-    const data = await resp.json();
-    if (!resp.ok) {
-      return json({ error: "gemini_error", detail: data }, 502);
+    let lastDetail: unknown = null;
+    for (const model of MODELS) {
+      const url =
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          // Works for both classic (AIza...) and new (AQ...) Gemini API keys.
+          "x-goog-api-key": apiKey,
+        },
+        body: payload,
+      });
+      const data = await resp.json();
+      if (resp.ok) {
+        // With response_mime_type=application/json, the text part is valid JSON.
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+        let fields: Record<string, string> = {};
+        try {
+          fields = JSON.parse(text);
+        } catch (_) {
+          fields = {};
+        }
+        return json({ fields, model }, 200);
+      }
+      lastDetail = data;
+      // 429 (quota) / 404 (model not available) → try the next model.
     }
 
-    // With response_mime_type=application/json, the text part is valid JSON.
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
-    let fields: Record<string, string> = {};
-    try {
-      fields = JSON.parse(text);
-    } catch (_) {
-      fields = {};
-    }
-
-    return json({ fields }, 200);
+    return json({ error: "gemini_error", detail: lastDetail }, 502);
   } catch (e) {
     return json({ error: String(e) }, 500);
   }
