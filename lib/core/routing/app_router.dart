@@ -16,6 +16,7 @@ import '../../features/directory/presentation/pages/committee_page.dart';
 import '../../features/directory/presentation/pages/security_guard_page.dart';
 import '../../features/directory/presentation/pages/econtact_page.dart';
 import '../../features/marketplace/presentation/pages/market_square_page.dart';
+import '../../features/idscan/presentation/pages/id_scan_page.dart';
 import '../../features/auth/presentation/pages/resident_login_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 
@@ -37,6 +38,7 @@ import '../../features/admin/presentation/pages/guards_admin_page.dart';
 import '../../features/admin/presentation/pages/marketplace_admin_page.dart';
 import '../../features/admin/presentation/pages/facilities_admin_page.dart';
 import '../../features/admin/presentation/pages/bookings_admin_page.dart';
+import '../../features/admin/presentation/pages/id_scans_admin_page.dart';
 
 // Guard imports
 import '../../features/guard/presentation/pages/guard_login_page.dart';
@@ -197,6 +199,10 @@ class AppRouter {
         path: '/market-square',
         builder: (context, state) => const MarketSquarePage(),
       ),
+      GoRoute(
+        path: '/scan-id',
+        builder: (context, state) => const IdScanPage(),
+      ),
 
       // Admin Routes
       GoRoute(
@@ -268,6 +274,10 @@ class AppRouter {
           GoRoute(
             path: '/admin/bookings',
             builder: (context, state) => const BookingsAdminPage(),
+          ),
+          GoRoute(
+            path: '/admin/id-scans',
+            builder: (context, state) => const IdScansAdminPage(),
           ),
         ],
       ),

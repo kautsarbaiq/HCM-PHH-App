@@ -130,6 +130,8 @@ class AdminLayout extends StatelessWidget {
       title = 'Market Square';
     } else if (location.contains('facilities')) {
       title = 'Facilities';
+    } else if (location.contains('id-scans')) {
+      title = 'Resident IDs';
     } else if (location.contains('bookings')) {
       title = 'Bookings';
     }
@@ -372,6 +374,14 @@ class AdminLayout extends StatelessWidget {
                     'Bookings',
                     '/admin/bookings',
                     location.startsWith('/admin/bookings'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.badge_rounded,
+                    'Resident IDs',
+                    '/admin/id-scans',
+                    location.startsWith('/admin/id-scans'),
                     isDesktop,
                   ),
                 ],

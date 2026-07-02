@@ -49,6 +49,13 @@ class AppDrawer extends ConsumerWidget {
                           subtitle: 'Rules & regulations',
                           route: '/edocument',
                         ),
+                        _buildDrawerTile(
+                          context,
+                          icon: PhosphorIconsRegular.identificationCard,
+                          title: 'Scan ID',
+                          subtitle: 'Auto-fill from your ID / license',
+                          route: '/scan-id',
+                        ),
                         const SizedBox(height: 8),
                         _buildSectionLabel('Directory'),
                         _buildDrawerTile(

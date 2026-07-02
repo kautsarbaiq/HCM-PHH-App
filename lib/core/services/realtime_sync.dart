@@ -7,6 +7,8 @@ import '../repositories/contact_repository.dart' show adminContactsProvider;
 import '../repositories/profile_repository.dart' show currentProfileProvider;
 import '../repositories/admin_repository.dart'
     show adminResidentsProvider, adminGuardsProvider;
+import '../repositories/id_scan_repository.dart'
+    show myIdScansProvider, adminIdScansProvider;
 
 // Resident-facing providers
 import '../../features/dashboard/presentation/widgets/home_banner_carousel.dart'
@@ -117,6 +119,7 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
     adminDashboardStatsProvider,
   ],
   'resident_documents': [myResidentDocsProvider],
+  'resident_id_scans': [myIdScansProvider, adminIdScansProvider],
   'tickets': [myTicketsProvider],
 };
 
