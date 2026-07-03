@@ -70,13 +70,33 @@ class _BookingsAdminPageState extends ConsumerState<BookingsAdminPage> {
     );
   }
 
+  /// Booking currently being updated (its buttons show a spinner meanwhile).
+  String? _updatingId;
+
   Future<void> _setStatus(Booking booking, String status) async {
+    if (_updatingId != null) return;
+    setState(() => _updatingId = booking.id);
     try {
       await ref
           .read(adminBookingsProvider.notifier)
           .updateBookingStatus(booking.id, status);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            status == 'Confirmed'
+                ? '"${booking.facilityName}" booking confirmed ✓'
+                : '"${booking.facilityName}" booking rejected',
+          ),
+          backgroundColor: status == 'Confirmed'
+              ? AppColors.success
+              : AppColors.error,
+        ),
+      );
     } catch (e) {
       _showError(e);
+    } finally {
+      if (mounted) setState(() => _updatingId = null);
     }
   }
 
@@ -230,27 +250,42 @@ class _BookingsAdminPageState extends ConsumerState<BookingsAdminPage> {
                               ],
                             ),
                           ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.check_circle_rounded,
-                                  color: AppColors.success,
+                          trailing: _updatingId == b.id
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                    ),
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (b.status.toLowerCase() != 'confirmed')
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.check_circle_rounded,
+                                          color: AppColors.success,
+                                        ),
+                                        onPressed: () =>
+                                            _setStatus(b, 'Confirmed'),
+                                        tooltip: 'Approve Booking',
+                                      ),
+                                    if (b.status.toLowerCase() != 'cancelled')
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.cancel_rounded,
+                                          color: AppColors.error,
+                                        ),
+                                        onPressed: () =>
+                                            _setStatus(b, 'Cancelled'),
+                                        tooltip: 'Reject Booking',
+                                      ),
+                                  ],
                                 ),
-                                onPressed: () => _setStatus(b, 'Confirmed'),
-                                tooltip: 'Approve Booking',
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.cancel_rounded,
-                                  color: AppColors.error,
-                                ),
-                                onPressed: () => _setStatus(b, 'Cancelled'),
-                                tooltip: 'Reject Booking',
-                              ),
-                            ],
-                          ),
                         ),
                       );
                     },
