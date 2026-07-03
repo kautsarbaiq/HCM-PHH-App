@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "421743746409",
+    "project_id": "hcm-phh",
+    "storage_bucket": "hcm-phh.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:421743746409:android:00d2693213a50d0c3c31f8",
+        "android_client_info": {
+          "package_name": "com.bluesoft.hcm_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNKOSn4haCPr82s7S_c4fyMJBTP_bOSQU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -28,16 +28,19 @@ class AuthService {
     );
   }
 
+  /// Sign up a new RESIDENT account. The role is never sent from the client —
+  /// the handle_new_user trigger assigns 'resident'; admins/guards are
+  /// promoted by an admin afterwards. (Sending a role in signup metadata
+  /// would let anyone register themselves as admin.)
   Future<AuthResponse> signUpWithEmailPassword(
     String email,
     String password,
     String fullName,
-    String role,
   ) async {
     return await _supabase.auth.signUp(
       email: email,
       password: password,
-      data: {'full_name': fullName, 'role': role},
+      data: {'full_name': fullName},
     );
   }
 

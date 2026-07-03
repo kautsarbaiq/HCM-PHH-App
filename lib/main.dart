@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -7,6 +9,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/routing/app_router.dart';
+import 'core/services/push_service.dart';
 import 'core/services/realtime_sync.dart';
 import 'l10n/app_strings.dart';
 import 'theme/app_theme.dart';
@@ -28,6 +31,9 @@ void main() async {
         : const FlutterAuthClientOptions(),
   );
 
+  // Push notifications (mobile only; no-op on web, never blocks startup).
+  unawaited(PushService.init());
+
   runApp(const ProviderScope(child: HCMApp()));
 }
 
@@ -47,6 +53,7 @@ class HCMApp extends ConsumerWidget {
           child: MaterialApp.router(
             title: 'PHH Housing',
             debugShowCheckedModeBanner: false,
+            scaffoldMessengerKey: pushMessengerKey,
             theme: AppTheme.lightTheme,
             locale: lang.locale,
             supportedLocales: const [Locale('en'), Locale('ms'), Locale('zh')],

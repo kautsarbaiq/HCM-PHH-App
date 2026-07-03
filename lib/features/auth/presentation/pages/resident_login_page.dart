@@ -21,32 +21,78 @@ class ResidentLoginPage extends ConsumerStatefulWidget {
 class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
   final _emailController = TextEditingController(text: 'resident@phh.com');
   final _passwordController = TextEditingController(text: 'password123');
+  final _nameController = TextEditingController();
   bool _isLoading = false;
   bool _isSignUp = false;
 
-  void _handleAuth() async {
-    setState(() => _isLoading = true);
+  void _showMessage(String message, {bool error = true}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: error ? Colors.red : const Color(0xFF10B981),
+      ),
+    );
+  }
 
+  /// Translate raw GoTrue errors into something the user can act on.
+  String _friendlyAuthError(AuthException e) {
+    final m = e.message.toLowerCase();
+    if (m.contains('invalid login credentials')) {
+      return 'Email or password is incorrect. Check the spelling of your '
+          'email (dots matter, e.g. babar.juara@… ≠ babarjuara@…).';
+    }
+    if (m.contains('email not confirmed')) {
+      return 'This email has not been confirmed yet. Please check your inbox.';
+    }
+    if (m.contains('already registered')) {
+      return 'This email is already registered — please log in instead.';
+    }
+    return e.message;
+  }
+
+  void _handleAuth() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    if (email.isEmpty || password.isEmpty) {
+      _showMessage('Please fill in email and password.');
+      return;
+    }
+    if (_isSignUp) {
+      if (_nameController.text.trim().length < 2) {
+        _showMessage('Please enter your full name.');
+        return;
+      }
+      if (password.length < 6) {
+        _showMessage('Password must be at least 6 characters.');
+        return;
+      }
+    }
+
+    setState(() => _isLoading = true);
     try {
       final authService = ref.read(authServiceProvider);
 
       if (_isSignUp) {
-        await authService.signUpWithEmailPassword(
-          _emailController.text.trim(),
-          _passwordController.text,
-          'Demo Resident',
-          'resident',
+        final res = await authService.signUpWithEmailPassword(
+          email,
+          password,
+          _nameController.text.trim(),
         );
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sign up successful! Please log in.')),
-        );
-        setState(() => _isSignUp = false);
+        if (res.session != null) {
+          // Email confirmation is disabled → signed in immediately.
+          await refreshUserRole();
+          if (!mounted) return;
+          context.go(homeRouteForRole(appUserRoleNotifier.value));
+        } else {
+          _showMessage(
+            'Account created! Please confirm your email, then log in.',
+            error: false,
+          );
+          setState(() => _isSignUp = false);
+        }
       } else {
-        await authService.signInWithEmailPassword(
-          _emailController.text.trim(),
-          _passwordController.text,
-        );
+        await authService.signInWithEmailPassword(email, password);
 
         // Load the role so we can route admin/guard/resident to the right area.
         await refreshUserRole();
@@ -55,17 +101,10 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
       }
     } on AuthException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
-      );
+      _showMessage(_friendlyAuthError(e));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unexpected error occurred'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showMessage('Unexpected error occurred');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -73,10 +112,24 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
     }
   }
 
+  void _toggleSignUp() {
+    setState(() {
+      _isSignUp = !_isSignUp;
+      if (_isSignUp) {
+        // Clear the prefilled demo credentials — registering with them would
+        // hit "already registered".
+        _emailController.clear();
+        _passwordController.clear();
+        _nameController.clear();
+      }
+    });
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
@@ -146,6 +199,14 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          if (_isSignUp) ...[
+                            GlassTextField(
+                              hintText: 'Full Name',
+                              prefixIcon: Icons.person_outline,
+                              controller: _nameController,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                           GlassTextField(
                             hintText: ref.tr('login.email'),
                             prefixIcon: Icons.email_outlined,
@@ -169,8 +230,7 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                           ),
                           const SizedBox(height: 6),
                           TextButton(
-                            onPressed: () =>
-                                setState(() => _isSignUp = !_isSignUp),
+                            onPressed: _toggleSignUp,
                             child: Text(
                               _isSignUp
                                   ? ref.tr('login.haveAccount')
