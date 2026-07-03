@@ -21,8 +21,9 @@ class SplashPage extends StatelessWidget {
               Container(
                     width: 96,
                     height: 96,
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      gradient: AppColors.brandGradient,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(28),
                       boxShadow: [
                         BoxShadow(
@@ -32,10 +33,9 @@ class SplashPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.holiday_village_rounded,
-                      color: Colors.white,
-                      size: 50,
+                    child: Image.asset(
+                      'assets/branding/logo.png',
+                      fit: BoxFit.contain,
                     ),
                   )
                   .animate()

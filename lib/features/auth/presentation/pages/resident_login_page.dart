@@ -150,8 +150,9 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                     Container(
                       width: 84,
                       height: 84,
+                      padding: const EdgeInsets.all(9),
                       decoration: BoxDecoration(
-                        gradient: AppColors.brandGradient,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(26),
                         boxShadow: [
                           BoxShadow(
@@ -161,10 +162,9 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.holiday_village_rounded,
-                        color: Colors.white,
-                        size: 44,
+                      child: Image.asset(
+                        'assets/branding/logo.png',
+                        fit: BoxFit.contain,
                       ),
                     ),
                     const SizedBox(height: 22),

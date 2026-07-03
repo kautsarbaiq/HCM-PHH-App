@@ -94,14 +94,14 @@ class AdminDashboardPage extends ConsumerWidget {
                 Container(
                   width: 56,
                   height: 56,
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(18),
                   ),
-                  child: const Icon(
-                    Icons.holiday_village_rounded,
-                    color: Colors.white,
-                    size: 30,
+                  child: Image.asset(
+                    'assets/branding/logo.png',
+                    fit: BoxFit.contain,
                   ),
                 ),
                 const SizedBox(width: 18),

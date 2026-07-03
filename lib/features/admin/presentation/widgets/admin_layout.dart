@@ -82,8 +82,9 @@ class AdminLayout extends StatelessWidget {
     return Container(
       width: size,
       height: size,
+      padding: EdgeInsets.all(size * 0.1),
       decoration: BoxDecoration(
-        gradient: AppColors.brandGradient,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(size * 0.3),
         boxShadow: [
           BoxShadow(
@@ -93,11 +94,7 @@ class AdminLayout extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(
-        Icons.holiday_village_rounded,
-        color: Colors.white,
-        size: size * 0.6,
-      ),
+      child: Image.asset('assets/branding/logo.png', fit: BoxFit.contain),
     );
   }
 
