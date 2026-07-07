@@ -19,8 +19,24 @@ class ResidentLoginPage extends ConsumerStatefulWidget {
 }
 
 class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
-  final _emailController = TextEditingController(text: 'resident@phh.com');
-  final _passwordController = TextEditingController(text: 'password123');
+  // Empty in production. Local test builds can inject credentials with
+  // --dart-define=TEST_EMAIL=... --dart-define=TEST_PASSWORD=...
+  // (optionally --dart-define=TEST_AUTOLOGIN=true to submit automatically).
+  final _emailController = TextEditingController(
+    text: const String.fromEnvironment('TEST_EMAIL'),
+  );
+  final _passwordController = TextEditingController(
+    text: const String.fromEnvironment('TEST_PASSWORD'),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    const autologin = bool.fromEnvironment('TEST_AUTOLOGIN');
+    if (autologin && _emailController.text.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _handleAuth());
+    }
+  }
   final _nameController = TextEditingController();
   bool _isLoading = false;
   bool _isSignUp = false;

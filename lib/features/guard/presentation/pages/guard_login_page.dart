@@ -17,7 +17,7 @@ class GuardLoginPage extends ConsumerStatefulWidget {
 
 class _GuardLoginPageState extends ConsumerState<GuardLoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(text: 'guard@phh.com');
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -152,7 +152,7 @@ class _GuardLoginPageState extends ConsumerState<GuardLoginPage> {
                         }
                         return null;
                       },
-                      decoration: _inputDecoration('guard@phh.com').copyWith(
+                      decoration: _inputDecoration('Email').copyWith(
                         prefixIcon: const Icon(
                           PhosphorIconsRegular.envelopeSimple,
                           color: AppColors.textSecondary,

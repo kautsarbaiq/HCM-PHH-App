@@ -48,6 +48,10 @@ class AppColors {
   static const Color accentPink = Color(0xFFFF6B9D);
   static const Color accentCoral = Color(0xFFFF7A6B);
 
+  /// Lime-yellow highlight used behind HCA duotone icons (the "sticker" fill
+  /// from the reference design).
+  static const Color duotoneFill = Color(0xFFF2E76B);
+
   // ---- Text ----
   static const Color textPrimary = Brand.isPhh
       ? Color(0xFF1B2559) // deep indigo-navy

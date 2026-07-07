@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import '../../../../core/config/brand.dart';
 import '../../../../theme/app_colors.dart';
 
-/// A clean, premium quick-action tile: a white rounded card with a vivid solid
-/// (gradient-from-accent) icon badge and a label. Presses give a subtle scale.
+/// Quick-action tile, themed per brand:
+///  - PHH: the original vivid gradient icon badge on a white card.
+///  - HCA: duotone icon (soft accent fill behind a navy outline) — the
+///    "outlined sticker" style, no colored badge.
 class QuickActionItem extends StatefulWidget {
   final IconData icon;
+
+  /// Outline (Regular) variant of [icon]; used for the HCA duotone style.
+  /// Falls back to [icon] alone when not provided.
+  final IconData? outlineIcon;
   final String label;
   final Color color;
   final VoidCallback onTap;
@@ -12,6 +19,7 @@ class QuickActionItem extends StatefulWidget {
   const QuickActionItem({
     super.key,
     required this.icon,
+    this.outlineIcon,
     required this.label,
     required this.color,
     required this.onTap,
@@ -45,16 +53,57 @@ class _QuickActionItemState extends State<QuickActionItem>
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  /// PHH: vivid gradient badge with a white icon (original style).
+  Widget _gradientBadge() {
     final c = widget.color;
-    // A clean two-stop gradient (accent → a touch deeper) — vivid but never muddy.
     final gradient = LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [c, Color.lerp(c, Colors.black, 0.20)!],
     );
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(17),
+        boxShadow: [
+          BoxShadow(
+            color: c.withOpacity(0.32),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Icon(widget.icon, color: Colors.white, size: 25),
+    );
+  }
 
+  /// HCA: duotone icon — the Fill glyph in a soft accent tint sits behind the
+  /// Regular (outline) glyph in navy. No badge box.
+  Widget _duotoneIcon() {
+    return SizedBox(
+      width: 52,
+      height: 52,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Transform.translate(
+            offset: const Offset(3, 3),
+            child: Icon(widget.icon, color: AppColors.duotoneFill, size: 40),
+          ),
+          Icon(
+            widget.outlineIcon ?? widget.icon,
+            color: AppColors.deepSlate,
+            size: 40,
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTapDown: (_) => _controller.forward(),
       onTapUp: (_) => _controller.reverse(),
@@ -80,22 +129,7 @@ class _QuickActionItemState extends State<QuickActionItem>
             mainAxisSize: MainAxisSize.min,
             children: [
               RepaintBoundary(
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    gradient: gradient,
-                    borderRadius: BorderRadius.circular(17),
-                    boxShadow: [
-                      BoxShadow(
-                        color: c.withOpacity(0.32),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Icon(widget.icon, color: Colors.white, size: 25),
-                ),
+                child: Brand.isPhh ? _gradientBadge() : _duotoneIcon(),
               ),
               const SizedBox(height: 12),
               Text(

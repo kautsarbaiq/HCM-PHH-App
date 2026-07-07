@@ -48,7 +48,8 @@ class MainNavigationPage extends ConsumerWidget {
 
     return Scaffold(
       key: mainScaffoldKey,
-      drawer: const AppDrawer(),
+      // HCA replaces the side drawer with the home Quick Access grid.
+      drawer: Brand.isPhh ? const AppDrawer() : null,
       body: Stack(
         children: [
           child,

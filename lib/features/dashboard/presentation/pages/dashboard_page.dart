@@ -16,6 +16,8 @@ import '../../../../l10n/app_strings.dart';
 import '../../../main/presentation/pages/main_navigation_page.dart';
 import '../../../emergency/presentation/widgets/emergency_bottom_sheet.dart';
 import '../../../emergency/presentation/widgets/active_emergency_banner.dart';
+import 'package:hcm_app/core/config/brand.dart';
+import '../widgets/quick_access_grid.dart';
 import '../widgets/quick_action_item.dart';
 import '../widgets/home_banner_carousel.dart';
 
@@ -101,10 +103,13 @@ class DashboardPage extends ConsumerWidget {
                   ref,
                 ).animate().fadeIn(duration: 400.ms, delay: 80.ms),
                 const SizedBox(height: 28),
-                _quickActions(
-                  context,
-                  ref,
-                ).animate().fadeIn(duration: 400.ms, delay: 140.ms),
+                // PHH keeps the original quick-action cards; HCA gets the
+                // customizable Quick Access grid (no side drawer).
+                (Brand.isPhh
+                        ? _quickActions(context, ref)
+                        : const QuickAccessSection())
+                    .animate()
+                    .fadeIn(duration: 400.ms, delay: 140.ms),
               ],
             ),
           ),
@@ -187,10 +192,12 @@ class DashboardPage extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: 10),
-        _circleButton(
-          icon: PhosphorIconsRegular.list,
-          onTap: () => mainScaffoldKey.currentState?.openDrawer(),
-        ),
+        // HCA has no side drawer — every feature lives in Quick Access.
+        if (Brand.isPhh)
+          _circleButton(
+            icon: PhosphorIconsRegular.list,
+            onTap: () => mainScaffoldKey.currentState?.openDrawer(),
+          ),
       ],
     );
   }
@@ -601,6 +608,7 @@ class DashboardPage extends ConsumerWidget {
             Expanded(
               child: QuickActionItem(
                 icon: PhosphorIconsFill.bellSimpleRinging,
+                outlineIcon: PhosphorIconsRegular.bellSimpleRinging,
                 label: ref.tr('dash.emergency'),
                 color: AppColors.accentCoral,
                 onTap: () => showModalBottomSheet(
@@ -615,6 +623,7 @@ class DashboardPage extends ConsumerWidget {
             Expanded(
               child: QuickActionItem(
                 icon: PhosphorIconsFill.identificationCard,
+                outlineIcon: PhosphorIconsRegular.identificationCard,
                 label: ref.tr('dash.visitorPass'),
                 color: AppColors.brand,
                 onTap: () => context.go('/access'),
@@ -628,6 +637,7 @@ class DashboardPage extends ConsumerWidget {
             Expanded(
               child: QuickActionItem(
                 icon: PhosphorIconsFill.wallet,
+                outlineIcon: PhosphorIconsRegular.wallet,
                 label: ref.tr('dash.billsPay'),
                 color: AppColors.accentSky,
                 onTap: () => context.go('/bills'),
@@ -637,6 +647,7 @@ class DashboardPage extends ConsumerWidget {
             Expanded(
               child: QuickActionItem(
                 icon: PhosphorIconsFill.calendarCheck,
+                outlineIcon: PhosphorIconsRegular.calendarCheck,
                 label: ref.tr('dash.bookings'),
                 color: AppColors.accentAmber,
                 onTap: () => context.push('/facility'),

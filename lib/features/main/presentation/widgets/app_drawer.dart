@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../../../../core/config/brand.dart';
 import '../../../../core/repositories/profile_repository.dart';
 import '../../../../core/widgets/language_switcher.dart';
 import '../../../../theme/app_colors.dart';
@@ -38,6 +39,7 @@ class AppDrawer extends ConsumerWidget {
                         _buildDrawerTile(
                           context,
                           icon: PhosphorIconsRegular.fileText,
+                          fillIcon: PhosphorIconsFill.fileText,
                           title: 'E-Form',
                           subtitle: 'Submit forms online',
                           route: '/eform',
@@ -45,6 +47,7 @@ class AppDrawer extends ConsumerWidget {
                         _buildDrawerTile(
                           context,
                           icon: PhosphorIconsRegular.filePdf,
+                          fillIcon: PhosphorIconsFill.filePdf,
                           title: 'E-Document',
                           subtitle: 'Rules & regulations',
                           route: '/edocument',
@@ -52,6 +55,7 @@ class AppDrawer extends ConsumerWidget {
                         _buildDrawerTile(
                           context,
                           icon: PhosphorIconsRegular.identificationCard,
+                          fillIcon: PhosphorIconsFill.identificationCard,
                           title: 'Scan ID',
                           subtitle: 'Auto-fill from your ID / license',
                           route: '/scan-id',
@@ -61,6 +65,7 @@ class AppDrawer extends ConsumerWidget {
                         _buildDrawerTile(
                           context,
                           icon: PhosphorIconsRegular.usersThree,
+                          fillIcon: PhosphorIconsFill.usersThree,
                           title: 'Committee',
                           subtitle: 'Management committee',
                           route: '/committee',
@@ -68,6 +73,7 @@ class AppDrawer extends ConsumerWidget {
                         _buildDrawerTile(
                           context,
                           icon: PhosphorIconsRegular.shieldCheck,
+                          fillIcon: PhosphorIconsFill.shieldCheck,
                           title: 'Security Guard',
                           subtitle: 'On duty today',
                           route: '/security-guard',
@@ -75,6 +81,7 @@ class AppDrawer extends ConsumerWidget {
                         _buildDrawerTile(
                           context,
                           icon: PhosphorIconsRegular.addressBook,
+                          fillIcon: PhosphorIconsFill.addressBook,
                           title: 'E-Contact',
                           subtitle: 'Essential contacts',
                           route: '/econtact',
@@ -84,6 +91,7 @@ class AppDrawer extends ConsumerWidget {
                         _buildDrawerTile(
                           context,
                           icon: PhosphorIconsRegular.calendarCheck,
+                          fillIcon: PhosphorIconsFill.calendarCheck,
                           title: 'Events (RSVP)',
                           subtitle: 'Upcoming community events',
                           route: '/events',
@@ -91,6 +99,7 @@ class AppDrawer extends ConsumerWidget {
                         _buildDrawerTile(
                           context,
                           icon: PhosphorIconsRegular.chartBar,
+                          fillIcon: PhosphorIconsFill.chartBar,
                           title: 'E-Polling',
                           subtitle: 'Vote on community matters',
                           route: '/epolling',
@@ -100,6 +109,7 @@ class AppDrawer extends ConsumerWidget {
                         _buildDrawerTile(
                           context,
                           icon: PhosphorIconsRegular.storefront,
+                          fillIcon: PhosphorIconsFill.storefront,
                           title: 'Market Square',
                           subtitle: 'Trusted home services',
                           route: '/market-square',
@@ -107,6 +117,7 @@ class AppDrawer extends ConsumerWidget {
                         _buildDrawerTile(
                           context,
                           icon: PhosphorIconsRegular.buildings,
+                          fillIcon: PhosphorIconsFill.buildings,
                           title: 'Book Facilities',
                           subtitle: 'Pool, gym, BBQ & more',
                           route: '/facility',
@@ -247,6 +258,7 @@ class AppDrawer extends ConsumerWidget {
   Widget _buildDrawerTile(
     BuildContext context, {
     required IconData icon,
+    IconData? fillIcon,
     required String title,
     required String subtitle,
     required String route,
@@ -266,14 +278,33 @@ class AppDrawer extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.backgroundGrey,
-                    borderRadius: BorderRadius.circular(12),
+                // PHH: original boxed icon. HCA: duotone (soft teal fill
+                // behind a navy outline), no box.
+                if (Brand.isPhh || fillIcon == null)
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundGrey,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icon, color: AppColors.deepSlate, size: 20),
+                  )
+                else
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(
+                          fillIcon,
+                          color: AppColors.primaryBlue.withOpacity(0.40),
+                          size: 30,
+                        ),
+                        Icon(icon, color: AppColors.deepSlate, size: 30),
+                      ],
+                    ),
                   ),
-                  child: Icon(icon, color: AppColors.deepSlate, size: 20),
-                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
