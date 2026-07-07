@@ -139,21 +139,28 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Housing-area wallpaper in the brand palette.
-          Image.asset('assets/branding/login_bg.png', fit: BoxFit.cover),
-          // Soft veil so the form stays readable over the illustration.
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withOpacity(0.30),
-                  Colors.white.withOpacity(0.05),
-                ],
+          // PHH keeps its original plain gradient; HCA gets the housing-area
+          // wallpaper in the logo palette.
+          if (Brand.isPhh)
+            const DecoratedBox(
+              decoration: BoxDecoration(gradient: AppColors.canvasGradient),
+            )
+          else ...[
+            Image.asset('assets/branding/login_bg.png', fit: BoxFit.cover),
+            // Soft veil so the form stays readable over the illustration.
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withOpacity(0.30),
+                    Colors.white.withOpacity(0.05),
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -167,9 +174,10 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                     Container(
                       width: 84,
                       height: 84,
-                      padding: const EdgeInsets.all(9),
+                      padding: EdgeInsets.all(Brand.isPhh ? 0 : 9),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Brand.isPhh ? null : Colors.white,
+                        gradient: Brand.isPhh ? AppColors.brandGradient : null,
                         borderRadius: BorderRadius.circular(26),
                         boxShadow: [
                           BoxShadow(
@@ -179,7 +187,13 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                           ),
                         ],
                       ),
-                      child: Image.asset(Brand.logoAsset, fit: BoxFit.contain),
+                      child: Brand.isPhh
+                          ? const Icon(
+                              Icons.holiday_village_rounded,
+                              color: Colors.white,
+                              size: 44,
+                            )
+                          : Image.asset(Brand.logoAsset, fit: BoxFit.contain),
                     ),
                     const SizedBox(height: 22),
                     Text(

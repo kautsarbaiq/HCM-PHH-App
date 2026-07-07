@@ -22,9 +22,10 @@ class SplashPage extends StatelessWidget {
               Container(
                     width: 96,
                     height: 96,
-                    padding: const EdgeInsets.all(10),
+                    padding: EdgeInsets.all(Brand.isPhh ? 0 : 10),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Brand.isPhh ? null : Colors.white,
+                      gradient: Brand.isPhh ? AppColors.brandGradient : null,
                       borderRadius: BorderRadius.circular(28),
                       boxShadow: [
                         BoxShadow(
@@ -34,7 +35,13 @@ class SplashPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Image.asset(Brand.logoAsset, fit: BoxFit.contain),
+                    child: Brand.isPhh
+                        ? const Icon(
+                            Icons.holiday_village_rounded,
+                            color: Colors.white,
+                            size: 50,
+                          )
+                        : Image.asset(Brand.logoAsset, fit: BoxFit.contain),
                   )
                   .animate()
                   .scale(

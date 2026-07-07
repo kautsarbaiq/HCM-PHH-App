@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:hcm_app/core/config/brand.dart';
 import 'package:hcm_app/theme/app_colors.dart';
 import '../../../emergency/presentation/widgets/emergency_bottom_sheet.dart';
 import '../../../../l10n/app_strings.dart';
@@ -199,15 +200,37 @@ class MainNavigationPage extends ConsumerWidget {
           curve: Curves.easeInOut,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: BoxDecoration(
-            // Selected tab = solid logo-gradient pill (teal → navy).
-            gradient: isSelected ? AppColors.brandGradient : null,
+            // PHH keeps the original subtle tint pill; HCA uses a solid
+            // logo-gradient pill (teal → navy).
+            gradient: isSelected
+                ? (Brand.isPhh
+                      ? LinearGradient(
+                          colors: [
+                            AppColors.brand.withOpacity(0.14),
+                            AppColors.brand.withOpacity(0.03),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : AppColors.brandGradient)
+                : null,
             borderRadius: BorderRadius.circular(22),
+            border: Brand.isPhh
+                ? Border.all(
+                    color: isSelected
+                        ? AppColors.brand.withOpacity(0.24)
+                        : Colors.transparent,
+                    width: 1,
+                  )
+                : null,
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: AppColors.brand.withOpacity(0.30),
-                      blurRadius: 14,
-                      offset: const Offset(0, 6),
+                      color: AppColors.brand.withOpacity(
+                        Brand.isPhh ? 0.08 : 0.30,
+                      ),
+                      blurRadius: Brand.isPhh ? 12 : 14,
+                      offset: Offset(0, Brand.isPhh ? 4 : 6),
                     ),
                   ]
                 : null,
@@ -221,7 +244,9 @@ class MainNavigationPage extends ConsumerWidget {
                 duration: const Duration(milliseconds: 250),
                 child: Icon(
                   isSelected ? activeIcon : icon,
-                  color: isSelected ? Colors.white : AppColors.textSecondary,
+                  color: isSelected
+                      ? (Brand.isPhh ? AppColors.brand : Colors.white)
+                      : AppColors.textSecondary,
                   size: 22,
                 ),
               ),
@@ -235,7 +260,9 @@ class MainNavigationPage extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                    color: isSelected
+                        ? (Brand.isPhh ? AppColors.brand : Colors.white)
+                        : AppColors.textSecondary,
                     letterSpacing: -0.2,
                   ),
                 ),
@@ -246,7 +273,7 @@ class MainNavigationPage extends ConsumerWidget {
                   width: 4,
                   height: 4,
                   decoration: const BoxDecoration(
-                    color: Colors.white,
+                    color: Brand.isPhh ? AppColors.brand : Colors.white,
                     shape: BoxShape.circle,
                   ),
                 ),
