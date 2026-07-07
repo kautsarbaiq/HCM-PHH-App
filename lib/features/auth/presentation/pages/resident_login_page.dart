@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/config/brand.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/user_role.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/glass_text_field.dart';
 import '../../../../core/widgets/premium_card.dart';
-import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/language_switcher.dart';
 import '../../../../l10n/app_strings.dart';
 
@@ -136,10 +136,27 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GradientBackground(
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Housing-area wallpaper in the brand palette.
+          Image.asset('assets/branding/login_bg.png', fit: BoxFit.cover),
+          // Soft veil so the form stays readable over the illustration.
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white.withOpacity(0.30),
+                  Colors.white.withOpacity(0.05),
+                ],
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 420),
@@ -162,14 +179,11 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                           ),
                         ],
                       ),
-                      child: Image.asset(
-                        'assets/branding/logo.png',
-                        fit: BoxFit.contain,
-                      ),
+                      child: Image.asset(Brand.logoAsset, fit: BoxFit.contain),
                     ),
                     const SizedBox(height: 22),
                     Text(
-                      ref.tr('login.title'),
+                      Brand.appName,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 28,
@@ -249,7 +263,8 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
               ),
             ),
           ),
-        ),
+          ),
+        ],
       ),
     );
   }

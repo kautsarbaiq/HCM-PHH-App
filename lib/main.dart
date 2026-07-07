@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'core/config/brand.dart';
 import 'core/routing/app_router.dart';
 import 'core/services/push_service.dart';
 import 'core/services/realtime_sync.dart';
@@ -17,7 +18,8 @@ import 'theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env");
+  // Each brand ships its own Supabase project credentials.
+  await dotenv.load(fileName: Brand.envFile);
 
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL'] ?? '',
@@ -51,7 +53,7 @@ class HCMApp extends ConsumerWidget {
       builder: (context, child) {
         return RealtimeSync(
           child: MaterialApp.router(
-            title: 'PHH Housing',
+            title: Brand.appName,
             debugShowCheckedModeBanner: false,
             scaffoldMessengerKey: pushMessengerKey,
             theme: AppTheme.lightTheme,

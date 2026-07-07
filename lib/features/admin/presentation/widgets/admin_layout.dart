@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/config/brand.dart';
 import '../../../../core/widgets/language_switcher.dart';
 import '../../../../theme/app_colors.dart';
 
@@ -31,7 +32,7 @@ class AdminLayout extends StatelessWidget {
                   _logoBadge(28),
                   const SizedBox(width: 10),
                   const Text(
-                    'PHH Housing',
+                    Brand.appName,
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w800,
@@ -94,7 +95,7 @@ class AdminLayout extends StatelessWidget {
           ),
         ],
       ),
-      child: Image.asset('assets/branding/logo.png', fit: BoxFit.contain),
+      child: Image.asset(Brand.logoAsset, fit: BoxFit.contain),
     );
   }
 
@@ -237,7 +238,7 @@ class AdminLayout extends StatelessWidget {
                 _logoBadge(40),
                 const SizedBox(width: 12),
                 const Text(
-                  'PHH Housing',
+                  Brand.appName,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,

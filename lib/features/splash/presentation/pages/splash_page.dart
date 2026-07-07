@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../core/config/brand.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../theme/app_colors.dart';
 
@@ -33,10 +34,7 @@ class SplashPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Image.asset(
-                      'assets/branding/logo.png',
-                      fit: BoxFit.contain,
-                    ),
+                    child: Image.asset(Brand.logoAsset, fit: BoxFit.contain),
                   )
                   .animate()
                   .scale(
@@ -48,7 +46,7 @@ class SplashPage extends StatelessWidget {
                   .fadeIn(duration: 400.ms),
               const SizedBox(height: 26),
               const Text(
-                'PHH',
+                Brand.appName,
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,

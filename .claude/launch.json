@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "hcm-web",
+      "runtimeExecutable": "/usr/local/bin/npx",
+      "runtimeArgs": ["-y", "serve", "-l", "8797", "build/web"],
+      "port": 8797
+    }
+  ]
+}

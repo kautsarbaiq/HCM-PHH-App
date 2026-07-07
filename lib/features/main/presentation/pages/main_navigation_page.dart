@@ -199,29 +199,15 @@ class MainNavigationPage extends ConsumerWidget {
           curve: Curves.easeInOut,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: BoxDecoration(
-            gradient: isSelected
-                ? LinearGradient(
-                    colors: [
-                      AppColors.brand.withOpacity(0.14),
-                      AppColors.brand.withOpacity(0.03),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
+            // Selected tab = solid logo-gradient pill (teal → navy).
+            gradient: isSelected ? AppColors.brandGradient : null,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: isSelected
-                  ? AppColors.brand.withOpacity(0.24)
-                  : Colors.transparent,
-              width: 1,
-            ),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: AppColors.brand.withOpacity(0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                      color: AppColors.brand.withOpacity(0.30),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
                     ),
                   ]
                 : null,
@@ -235,7 +221,7 @@ class MainNavigationPage extends ConsumerWidget {
                 duration: const Duration(milliseconds: 250),
                 child: Icon(
                   isSelected ? activeIcon : icon,
-                  color: isSelected ? AppColors.brand : AppColors.textSecondary,
+                  color: isSelected ? Colors.white : AppColors.textSecondary,
                   size: 22,
                 ),
               ),
@@ -249,9 +235,7 @@ class MainNavigationPage extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    color: isSelected
-                        ? AppColors.brand
-                        : AppColors.textSecondary,
+                    color: isSelected ? Colors.white : AppColors.textSecondary,
                     letterSpacing: -0.2,
                   ),
                 ),
@@ -262,7 +246,7 @@ class MainNavigationPage extends ConsumerWidget {
                   width: 4,
                   height: 4,
                   decoration: const BoxDecoration(
-                    color: AppColors.brand,
+                    color: Colors.white,
                     shape: BoxShape.circle,
                   ),
                 ),

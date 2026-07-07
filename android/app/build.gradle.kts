@@ -31,6 +31,24 @@ android {
         versionName = flutter.versionName
     }
 
+    // White-label: one codebase → two apps with separate ids, names and
+    // Supabase projects. Build with:
+    //   flutter build apk --flavor phh --dart-define=BRAND=phh
+    //   flutter build apk --flavor hca --dart-define=BRAND=hca
+    flavorDimensions += "brand"
+    productFlavors {
+        create("phh") {
+            dimension = "brand"
+            applicationId = "com.bluesoft.phh"
+            resValue("string", "app_name", "PHH Housing")
+        }
+        create("hca") {
+            dimension = "brand"
+            applicationId = "com.bluesoft.hcm_app"
+            resValue("string", "app_name", "Home Cloud Asia")
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

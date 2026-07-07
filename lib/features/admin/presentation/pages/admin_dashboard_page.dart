@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/config/brand.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -99,10 +100,7 @@ class AdminDashboardPage extends ConsumerWidget {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(18),
                   ),
-                  child: Image.asset(
-                    'assets/branding/logo.png',
-                    fit: BoxFit.contain,
-                  ),
+                  child: Image.asset(Brand.logoAsset, fit: BoxFit.contain),
                 ),
                 const SizedBox(width: 18),
                 const Expanded(
@@ -110,7 +108,7 @@ class AdminDashboardPage extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Welcome to PHH Housing',
+                        'Welcome to ${Brand.appName}',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,

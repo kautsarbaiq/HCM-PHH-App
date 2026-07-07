@@ -100,9 +100,9 @@ const Map<String, Map<AppLang, String>> _strings = {
 
   // Login
   'login.title': {
-    AppLang.en: 'PHH Residency',
-    AppLang.ms: 'PHH Residency',
-    AppLang.zh: 'PHH 住宅',
+    AppLang.en: 'Home Cloud Asia',
+    AppLang.ms: 'Home Cloud Asia',
+    AppLang.zh: 'Home Cloud Asia',
   },
   'login.createAccount': {
     AppLang.en: 'Create your account',
