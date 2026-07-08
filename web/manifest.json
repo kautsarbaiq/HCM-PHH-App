@@ -1,11 +1,11 @@
 {
-    "name": "HomeCloudAsia",
-    "short_name": "HomeCloudAsia",
+    "name": "PHH Housing",
+    "short_name": "PHH Housing",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Home Cloud Asia — housing community management.",
+    "description": "PHH Housing — housing community management.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

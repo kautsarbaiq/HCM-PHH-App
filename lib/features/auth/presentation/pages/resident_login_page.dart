@@ -54,8 +54,8 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
   String _friendlyAuthError(AuthException e) {
     final m = e.message.toLowerCase();
     if (m.contains('invalid login credentials')) {
-      return 'Email or password is incorrect. Check the spelling of your '
-          'email (dots matter, e.g. babar.juara@… ≠ babarjuara@…).';
+      return 'Email or password is incorrect. Please check your email is '
+          'typed correctly (for example: name@gmail.com).';
     }
     if (m.contains('email not confirmed')) {
       return 'This email has not been confirmed yet. Please check your inbox.';

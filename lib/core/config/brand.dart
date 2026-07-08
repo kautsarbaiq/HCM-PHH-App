@@ -9,7 +9,9 @@
 class Brand {
   Brand._();
 
-  static const String id = String.fromEnvironment('BRAND', defaultValue: 'hca');
+  // Default = phh (the original app / the existing adminhousing.vercel.app).
+  // Home Cloud Asia builds pass --dart-define=BRAND=hca explicitly.
+  static const String id = String.fromEnvironment('BRAND', defaultValue: 'phh');
   static const bool isPhh = id == 'phh';
 
   static const String appName = isPhh ? 'PHH Housing' : 'Home Cloud Asia';
