@@ -45,7 +45,7 @@ android {
         create("hca") {
             dimension = "brand"
             applicationId = "com.bluesoft.hcm_app"
-            resValue("string", "app_name", "Home Cloud Asia")
+            resValue("string", "app_name", "HomeCloudAsia")
         }
     }
 

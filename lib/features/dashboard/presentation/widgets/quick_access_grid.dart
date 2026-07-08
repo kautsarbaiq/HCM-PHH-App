@@ -413,25 +413,23 @@ class _GridTile extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(
-            width: 44,
-            height: 44,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Lime "sticker" fill, slightly offset from the outline —
-                // matches the reference icon style.
-                Transform.translate(
-                  offset: const Offset(3, 3),
-                  child: Icon(
-                    item.fillIcon,
-                    color: AppColors.duotoneFill,
-                    size: 36,
-                  ),
+          // Professional style: thin-line icon in the brand color on a soft
+          // tinted tile (banking-app look). Emergency stays red.
+          Builder(
+            builder: (_) {
+              final accent = item.isEmergency
+                  ? AppColors.error
+                  : AppColors.brand;
+              return Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: accent.withOpacity(0.09),
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                Icon(item.icon, color: AppColors.deepSlate, size: 36),
-              ],
-            ),
+                child: Icon(item.icon, color: accent, size: 24),
+              );
+            },
           ),
           const SizedBox(height: 8),
           Text(

@@ -79,26 +79,18 @@ class _QuickActionItemState extends State<QuickActionItem>
     );
   }
 
-  /// HCA: duotone icon — the Fill glyph in a soft accent tint sits behind the
-  /// Regular (outline) glyph in navy. No badge box.
+  /// HCA: professional banking-app style — thin-line icon in the accent
+  /// color on a softly tinted rounded tile.
   Widget _duotoneIcon() {
-    return SizedBox(
+    final accent = widget.color;
+    return Container(
       width: 52,
       height: 52,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Transform.translate(
-            offset: const Offset(3, 3),
-            child: Icon(widget.icon, color: AppColors.duotoneFill, size: 40),
-          ),
-          Icon(
-            widget.outlineIcon ?? widget.icon,
-            color: AppColors.deepSlate,
-            size: 40,
-          ),
-        ],
+      decoration: BoxDecoration(
+        color: accent.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(17),
       ),
+      child: Icon(widget.outlineIcon ?? widget.icon, color: accent, size: 25),
     );
   }
 
