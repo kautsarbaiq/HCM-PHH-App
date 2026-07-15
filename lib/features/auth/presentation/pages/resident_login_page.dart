@@ -162,7 +162,14 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
               decoration: BoxDecoration(gradient: AppColors.canvasGradient),
             )
           else ...[
-            Image.asset('assets/branding/login_bg.jpg', fit: BoxFit.cover),
+            // bottomCenter: on wide screens only the empty sky gets cropped —
+            // the buildings/waves at the bottom stay visible (phones are
+            // unaffected: portrait crops left/right, not vertically).
+            Image.asset(
+              'assets/branding/login_bg.jpg',
+              fit: BoxFit.cover,
+              alignment: Alignment.bottomCenter,
+            ),
             // Soft veil so the form stays readable over the illustration.
             Container(
               decoration: BoxDecoration(
