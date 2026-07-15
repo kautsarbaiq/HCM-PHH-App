@@ -162,7 +162,7 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
               decoration: BoxDecoration(gradient: AppColors.canvasGradient),
             )
           else ...[
-            Image.asset('assets/branding/login_bg.png', fit: BoxFit.cover),
+            Image.asset('assets/branding/login_bg.jpg', fit: BoxFit.cover),
             // Soft veil so the form stays readable over the illustration.
             Container(
               decoration: BoxDecoration(
