@@ -1,3 +1,4 @@
+import 'package:hcm_app/core/config/brand.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,16 +76,30 @@ class _EmergencyBottomSheetState extends ConsumerState<EmergencyBottomSheet> {
         throw Exception('You must be logged in to send an emergency alert.');
       }
 
+      // Point 10 (HCA): the alert names WHO pressed it and their HOUSE number.
+      // PHH keeps its original plain subtitle.
+      final repo = ref.read(emergencyRepositoryProvider);
+      String finalSubtitle = subtitle;
+      if (!Brand.isPhh) {
+        final houseNo = await repo.houseNumberOf(profile.houseId);
+        final who = [
+          if (houseNo != null) 'House $houseNo',
+          if (profile.fullName.isNotEmpty) profile.fullName,
+        ].join(' — ');
+        if (who.isNotEmpty) finalSubtitle = '$subtitle • $who';
+      }
+
       final alert = EmergencyAlert(
         id: '',
         type: type,
         title: title,
-        subtitle: subtitle,
+        subtitle: finalSubtitle,
         triggeredBy: profile.id,
         status: 'Active',
         createdAt: '',
+        houseId: profile.houseId,
       );
-      await ref.read(emergencyRepositoryProvider).triggerAlert(alert);
+      await repo.triggerAlert(alert);
 
       // Only confirm success once the alert is actually persisted.
       if (!mounted) return;

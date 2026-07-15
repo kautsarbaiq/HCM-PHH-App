@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/config/brand.dart';
 import '../../../../core/repositories/emergency_repository.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
@@ -50,8 +51,64 @@ class ActiveEmergencyBanner extends ConsumerWidget {
 
   Future<void> _resolve(BuildContext context, WidgetRef ref, String id) async {
     final messenger = ScaffoldMessenger.of(context);
+
+    // Point 12: staff clearing an alert must leave remarks (what happened,
+    // action taken). Residents cancelling their own alert skip the popup.
+    String? remarks;
+    if (canResolve && !Brand.isPhh) {
+      final controller = TextEditingController();
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dctx) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Clear Alert',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          content: TextField(
+            controller: controller,
+            maxLines: 3,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Remarks — what happened / action taken',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dctx, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                if (controller.text.trim().isEmpty) return;
+                Navigator.pop(dctx, true);
+              },
+              child: const Text('Clear Alert'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+      remarks = controller.text.trim();
+    } else if (!canResolve && !Brand.isPhh) {
+      remarks = 'Cancelled by the resident who raised it';
+    }
+
     try {
-      await ref.read(emergencyRepositoryProvider).resolveEmergency(id);
+      await ref
+          .read(emergencyRepositoryProvider)
+          .resolveEmergency(id, remarks: remarks);
       messenger.showSnackBar(
         SnackBar(
           content: Text(ref.tr('emergency.resolved')),

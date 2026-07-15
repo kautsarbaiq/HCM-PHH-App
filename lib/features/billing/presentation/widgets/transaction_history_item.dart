@@ -1,3 +1,4 @@
+import 'package:hcm_app/core/config/brand.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -21,7 +22,7 @@ class TransactionHistoryItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final currencyFormatter = NumberFormat.currency(
       locale: 'id_ID',
-      symbol: 'RM ',
+      symbol: Brand.isPhh ? 'Rp ' : 'RM ',
       decimalDigits: 0,
     );
 

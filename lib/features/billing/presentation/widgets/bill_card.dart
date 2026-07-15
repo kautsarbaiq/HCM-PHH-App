@@ -1,3 +1,4 @@
+import 'package:hcm_app/core/config/brand.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/widgets/action_button.dart';
@@ -26,7 +27,7 @@ class BillCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final currencyFormatter = NumberFormat.currency(
       locale: 'id_ID',
-      symbol: 'RM ',
+      symbol: Brand.isPhh ? 'Rp ' : 'RM ',
       decimalDigits: 0,
     );
 

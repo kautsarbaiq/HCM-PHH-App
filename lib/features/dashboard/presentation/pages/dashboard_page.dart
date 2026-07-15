@@ -52,7 +52,7 @@ final dashboardBookingsProvider = FutureProvider.autoDispose<List<Booking>>((
 
 final _currency = NumberFormat.currency(
   locale: 'id_ID',
-  symbol: 'RM ',
+  symbol: Brand.isPhh ? 'Rp ' : 'RM ',
   decimalDigits: 0,
 );
 

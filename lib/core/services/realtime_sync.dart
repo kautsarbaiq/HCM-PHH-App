@@ -6,10 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Repositories
+import '../config/brand.dart';
 import '../repositories/contact_repository.dart' show adminContactsProvider;
 import '../repositories/profile_repository.dart' show currentProfileProvider;
 import '../repositories/admin_repository.dart'
     show adminResidentsProvider, adminGuardsProvider;
+import '../repositories/emergency_repository.dart' show alertHistoryProvider;
 import '../repositories/id_scan_repository.dart'
     show myIdScansProvider, adminIdScansProvider;
 
@@ -137,7 +139,10 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
     adminFormSubmissionsProvider,
     adminIdScansProvider,
   ],
-  'communities': [adminCommunitiesProvider],
+  // communities table exists only on HCA — binding it on a PHH build would
+  // CHANNEL_ERROR the shared realtime channel and kill ALL live sync.
+  if (!Brand.isPhh) 'communities': [adminCommunitiesProvider],
+  'emergencies': [alertHistoryProvider],
   'resident_documents': [myResidentDocsProvider],
   'resident_id_scans': [myIdScansProvider, adminIdScansProvider],
   'tickets': [myTicketsProvider],

@@ -113,6 +113,8 @@ class AdminLayout extends StatelessWidget {
       title = 'Residents';
     } else if (location.contains('communities')) {
       title = 'Communities';
+    } else if (location.contains('alerts')) {
+      title = 'Alert History';
     } else if (location.contains('houses')) {
       title = 'Houses';
     } else if (location.contains('announcements')) {
@@ -294,6 +296,15 @@ class AdminLayout extends StatelessWidget {
                       'Communities',
                       '/admin/communities',
                       location.startsWith('/admin/communities'),
+                      isDesktop,
+                    ),
+                  if (!Brand.isPhh)
+                    _item(
+                      context,
+                      Icons.notifications_active_rounded,
+                      'Alert History',
+                      '/admin/alerts',
+                      location.startsWith('/admin/alerts'),
                       isDesktop,
                     ),
                   _item(

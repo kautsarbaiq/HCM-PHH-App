@@ -25,6 +25,7 @@ import '../../features/admin/presentation/pages/admin_login_page.dart';
 import '../../features/admin/presentation/widgets/admin_layout.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/residents_admin_page.dart';
+import '../../features/admin/presentation/pages/alerts_admin_page.dart';
 import '../../features/admin/presentation/pages/communities_admin_page.dart';
 import '../../features/admin/presentation/pages/houses_admin_page.dart';
 import '../../features/admin/presentation/pages/announcements_admin_page.dart';
@@ -231,6 +232,10 @@ class AppRouter {
           GoRoute(
             path: '/admin/communities',
             builder: (context, state) => const CommunitiesAdminPage(),
+          ),
+          GoRoute(
+            path: '/admin/alerts',
+            builder: (context, state) => const AlertsAdminPage(),
           ),
           GoRoute(
             path: '/admin/announcements',
