@@ -1,9 +1,17 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
+
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../theme/app_colors.dart';
 
-class VisitorPassCard extends StatelessWidget {
+class VisitorPassCard extends StatefulWidget {
   final String name;
   final String type;
   final String time;
@@ -19,8 +27,17 @@ class VisitorPassCard extends StatelessWidget {
     this.status = 'expected',
   });
 
+  @override
+  State<VisitorPassCard> createState() => _VisitorPassCardState();
+}
+
+class _VisitorPassCardState extends State<VisitorPassCard> {
+  // Captures just the QR tile as a shareable image (point 6).
+  final GlobalKey _qrKey = GlobalKey();
+  bool _sharing = false;
+
   ({String label, Color color}) get _statusBadge {
-    switch (status) {
+    switch (widget.status) {
       case 'checked_in':
         return (label: 'Checked-in', color: AppColors.success);
       case 'checked_out':
@@ -32,106 +49,136 @@ class VisitorPassCard extends StatelessWidget {
     }
   }
 
+  /// Render the QR tile to a PNG and open the OS share sheet (WhatsApp, etc.).
+  Future<void> _sharePass() async {
+    if (_sharing) return;
+    setState(() => _sharing = true);
+    try {
+      final boundary =
+          _qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return;
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (bytes == null) return;
+      final dir = await getTemporaryDirectory();
+      final file = await File(
+        '${dir.path}/visitor_pass_${DateTime.now().millisecondsSinceEpoch}.png',
+      ).writeAsBytes(bytes.buffer.asUint8List(0, bytes.lengthInBytes));
+
+      final text =
+          'Visitor pass for ${widget.name}\n${widget.type} • ${widget.time}\n'
+          'Show this QR code at the main gate.';
+      await SharePlus.instance.share(
+        ShareParams(text: text, files: [XFile(file.path)]),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not share the pass: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final badge = _statusBadge;
     return GlassCard(
       padding: const EdgeInsets.all(24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      name,
+                      widget.name,
                       style: const TextStyle(
                         fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
-                      type,
+                      widget.type,
                       style: const TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: badge.color.withOpacity(0.15),
+                  color: badge.color.withOpacity(0.14),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   badge.label,
                   style: TextStyle(
                     color: badge.color,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     fontSize: 12,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           LayoutBuilder(
             builder: (context, constraints) {
-              // Available width minus the container's inner 16px padding on
-              // each side; cap at 200 so it never grows oversized on tablets.
               final qrSize = (constraints.maxWidth - 32).clamp(120.0, 200.0);
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryWhite,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.shadowColor,
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: QrImageView(
-                  data: qrData,
-                  version: QrVersions.auto,
-                  size: qrSize,
-                  foregroundColor: AppColors.deepSlate,
-                  eyeStyle: const QrEyeStyle(
-                    eyeShape: QrEyeShape.square,
-                    color: AppColors.deepSlate,
+              return RepaintBoundary(
+                key: _qrKey,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryWhite,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.shadowColor,
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                  dataModuleStyle: const QrDataModuleStyle(
-                    dataModuleShape: QrDataModuleShape.square,
-                    color: AppColors.deepSlate,
+                  child: QrImageView(
+                    data: widget.qrData,
+                    version: QrVersions.auto,
+                    size: qrSize,
+                    foregroundColor: AppColors.deepSlate,
+                    eyeStyle: const QrEyeStyle(
+                      eyeShape: QrEyeShape.square,
+                      color: AppColors.deepSlate,
+                    ),
+                    dataModuleStyle: const QrDataModuleStyle(
+                      dataModuleShape: QrDataModuleShape.square,
+                      color: AppColors.deepSlate,
+                    ),
                   ),
                 ),
               );
             },
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 20),
           Text(
-            time,
+            widget.time,
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -142,6 +189,30 @@ class VisitorPassCard extends StatelessWidget {
           const Text(
             'Scan this QR code at the main gate',
             style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 16),
+          // Point 6: share the QR pass via WhatsApp / any app.
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _sharing ? null : _sharePass,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.brand,
+                side: const BorderSide(color: AppColors.brand),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              icon: _sharing
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(PhosphorIconsRegular.shareNetwork, size: 18),
+              label: Text(_sharing ? 'Preparing…' : 'Share pass'),
+            ),
           ),
         ],
       ),

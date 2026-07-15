@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/repositories/admin_repository.dart';
 import '../../../../core/repositories/house_repository.dart';
+import '../../../../core/config/brand.dart';
+import '../../../parking/parking_ui.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -397,6 +399,172 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
     );
   }
 
+  // HCA point 16: admin creates a login account for the owner of this house.
+  void _showCreateOwnerForm(House house) {
+    final nameController = TextEditingController();
+    final icController = TextEditingController();
+    final phoneController = TextEditingController();
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    bool isSaving = false;
+    bool obscure = true;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            InputDecoration deco(String label) => InputDecoration(
+              labelText: label,
+              filled: true,
+              fillColor: const Color(0xFFF4F6FB),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+            );
+
+            Future<void> submit() async {
+              final name = nameController.text.trim();
+              final email = emailController.text.trim();
+              final pass = passwordController.text;
+              if (name.isEmpty || email.isEmpty || pass.length < 6) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Name, email and a 6+ character password are required',
+                    ),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+              setDialogState(() => isSaving = true);
+              try {
+                await ref
+                    .read(houseRepositoryProvider)
+                    .createOwnerAccount(
+                      houseId: house.id,
+                      fullName: name,
+                      email: email,
+                      password: pass,
+                      phone: phoneController.text.trim(),
+                      icNumber: icController.text.trim(),
+                    );
+                if (!context.mounted) return;
+                Navigator.pop(context);
+                ref.invalidate(adminHousesProvider);
+                ref.invalidate(adminResidentsProvider);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Owner login created for ${house.houseNumber}'),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+              } catch (e) {
+                setDialogState(() => isSaving = false);
+                if (context.mounted) _showError(e);
+              }
+            }
+
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              title: Text(
+                'Create owner login — ${house.houseNumber}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                ),
+              ),
+              content: SizedBox(
+                width: 460,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: nameController,
+                        decoration: deco('Full name'),
+                        textCapitalization: TextCapitalization.words,
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: icController,
+                        decoration: deco('IC / passport number'),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: phoneController,
+                        decoration: deco('Phone'),
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: emailController,
+                        decoration: deco('Login email'),
+                        keyboardType: TextInputType.emailAddress,
+                        autocorrect: false,
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: passwordController,
+                        obscureText: obscure,
+                        decoration: deco('Password (min 6 chars)').copyWith(
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscure
+                                  ? Icons.visibility_off_rounded
+                                  : Icons.visibility_rounded,
+                              color: AppColors.textSecondary,
+                            ),
+                            onPressed: () =>
+                                setDialogState(() => obscure = !obscure),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSaving ? null : () => Navigator.pop(context),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.brand,
+                  ),
+                  onPressed: isSaving ? null : submit,
+                  child: isSaving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Create login'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _deleteHouse(House house) {
     showDialog(
       context: context,
@@ -697,6 +865,30 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                                                   _showDetails(house),
                                               tooltip: 'View Details',
                                             ),
+                                            if (!Brand.isPhh)
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.local_parking_rounded,
+                                                  color: AppColors.accentSky,
+                                                ),
+                                                onPressed: () =>
+                                                    showAdminParkingSheet(
+                                                      context,
+                                                      house.id,
+                                                      house.houseNumber,
+                                                    ),
+                                                tooltip: 'Parking bays',
+                                              ),
+                                            if (!Brand.isPhh)
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.person_add_alt_1_rounded,
+                                                  color: AppColors.success,
+                                                ),
+                                                onPressed: () =>
+                                                    _showCreateOwnerForm(house),
+                                                tooltip: 'Create owner login',
+                                              ),
                                             IconButton(
                                               icon: const Icon(
                                                 Icons.edit_rounded,
@@ -802,6 +994,30 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                 onPressed: () => _showDetails(house),
                 tooltip: 'View Details',
               ),
+              if (!Brand.isPhh)
+                IconButton(
+                  icon: const Icon(
+                    Icons.local_parking_rounded,
+                    color: AppColors.accentSky,
+                    size: 20,
+                  ),
+                  onPressed: () => showAdminParkingSheet(
+                    context,
+                    house.id,
+                    house.houseNumber,
+                  ),
+                  tooltip: 'Parking bays',
+                ),
+              if (!Brand.isPhh)
+                IconButton(
+                  icon: const Icon(
+                    Icons.person_add_alt_1_rounded,
+                    color: AppColors.success,
+                    size: 20,
+                  ),
+                  onPressed: () => _showCreateOwnerForm(house),
+                  tooltip: 'Create owner login',
+                ),
               IconButton(
                 icon: const Icon(
                   Icons.edit_rounded,

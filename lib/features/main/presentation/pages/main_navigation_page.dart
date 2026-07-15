@@ -4,12 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:hcm_app/core/config/brand.dart';
+import 'package:hcm_app/core/repositories/profile_repository.dart';
 import 'package:hcm_app/theme/app_colors.dart';
 import '../../../emergency/presentation/widgets/emergency_bottom_sheet.dart';
 import '../../../../l10n/app_strings.dart';
 import '../widgets/app_drawer.dart';
 
 final GlobalKey<ScaffoldState> mainScaffoldKey = GlobalKey<ScaffoldState>();
+
+/// HCA point 17: a Tenant resident cannot see or reach billing anywhere.
+/// Owners and all PHH users are unaffected. Shared by the nav bar, dashboard
+/// and quick-access grid.
+bool hideBillsForTenant(WidgetRef ref) {
+  if (Brand.isPhh) return false;
+  return ref.watch(currentProfileProvider).valueOrNull?.isTenant ?? false;
+}
 
 class MainNavigationPage extends ConsumerWidget {
   final Widget child;
@@ -156,16 +165,18 @@ class MainNavigationPage extends ConsumerWidget {
                   label: ref.tr('nav.access'),
                 ),
               ),
-              Expanded(
-                child: _buildNavItem(
-                  context,
-                  index: 2,
-                  currentIndex: currentIndex,
-                  icon: PhosphorIconsRegular.receipt,
-                  activeIcon: PhosphorIconsFill.receipt,
-                  label: ref.tr('nav.bills'),
+              // Point 17: tenants don't see billing. Owners & PHH keep it.
+              if (!hideBillsForTenant(ref))
+                Expanded(
+                  child: _buildNavItem(
+                    context,
+                    index: 2,
+                    currentIndex: currentIndex,
+                    icon: PhosphorIconsRegular.receipt,
+                    activeIcon: PhosphorIconsFill.receipt,
+                    label: ref.tr('nav.bills'),
+                  ),
                 ),
-              ),
               Expanded(
                 child: _buildNavItem(
                   context,

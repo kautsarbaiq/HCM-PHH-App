@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/repositories/event_repository.dart';
+import '../../../../core/widgets/status_pill.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -537,6 +538,70 @@ class _EventsAdminPageState extends ConsumerState<EventsAdminPage> {
     );
   }
 
+  /// Point 8: approve (publish) or reject a resident-proposed event. Rejection
+  /// asks for remarks the proposer will see.
+  Future<void> _reviewEvent(CommunityEvent event, bool approve) async {
+    String? remarks;
+    if (!approve) {
+      final ctrl = TextEditingController();
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (dctx) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Reject Event',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
+          content: TextField(
+            controller: ctrl,
+            maxLines: 3,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Reason (shown to the resident)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+              onPressed: () => Navigator.pop(dctx, true),
+              child: const Text('Reject'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+      remarks = ctrl.text.trim();
+    }
+    try {
+      await ref
+          .read(eventRepositoryProvider)
+          .setEventStatus(
+            event.id,
+            approve ? 'approved' : 'rejected',
+            remarks: remarks,
+          );
+      ref.invalidate(adminEventsProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(approve ? 'Event approved & published' : 'Event rejected'),
+            backgroundColor: approve ? AppColors.success : AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      _showError(e);
+    }
+  }
+
   void _deleteEvent(CommunityEvent event) {
     showDialog(
       context: context,
@@ -659,12 +724,28 @@ class _EventsAdminPageState extends ConsumerState<EventsAdminPage> {
                             gradient: AppColors.sunsetGradient,
                             size: 46,
                           ),
-                          title: Text(
-                            e.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                            ),
+                          title: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  e.title,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              if (e.status != 'approved') ...[
+                                const SizedBox(width: 8),
+                                StatusPill(
+                                  label: e.status.toUpperCase(),
+                                  color: e.status == 'pending'
+                                      ? AppColors.accentAmber
+                                      : AppColors.error,
+                                  dense: true,
+                                ),
+                              ],
+                            ],
                           ),
                           subtitle: Padding(
                             padding: const EdgeInsets.only(top: 8.0),
@@ -740,6 +821,25 @@ class _EventsAdminPageState extends ConsumerState<EventsAdminPage> {
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              // Point 8: approve/reject a resident's proposal.
+                              if (e.status == 'pending') ...[
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.success,
+                                  ),
+                                  onPressed: () => _reviewEvent(e, true),
+                                  tooltip: 'Approve',
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.cancel,
+                                    color: AppColors.error,
+                                  ),
+                                  onPressed: () => _reviewEvent(e, false),
+                                  tooltip: 'Reject',
+                                ),
+                              ],
                               IconButton(
                                 icon: const Icon(
                                   Icons.visibility,

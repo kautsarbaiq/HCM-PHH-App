@@ -100,4 +100,42 @@ class HouseRepository {
   Future<void> deleteHouse(String id) async {
     await _supabase.from('houses').delete().eq('id', id);
   }
+
+  /// HCA point 16: an admin creates a login account for a house owner. The
+  /// heavy lifting (creating the auth user with service_role, then wiring the
+  /// profile to the house/community) happens in the `admin-create-owner` Edge
+  /// Function — the anon client can't create auth users. This just invokes it.
+  Future<void> createOwnerAccount({
+    required String houseId,
+    required String fullName,
+    required String email,
+    required String password,
+    String? phone,
+    String? icNumber,
+  }) async {
+    try {
+      final res = await _supabase.functions.invoke(
+        'admin-create-owner',
+        body: {
+          'house_id': houseId,
+          'full_name': fullName,
+          'email': email.trim(),
+          'password': password,
+          'phone': phone,
+          'ic_number': icNumber,
+        },
+      );
+      final data = res.data;
+      if (data is Map && data['error'] != null) {
+        throw Exception(data['error'].toString());
+      }
+    } on FunctionException catch (e) {
+      // Non-2xx from the function — surface the server's own error message.
+      final details = e.details;
+      final msg = details is Map && details['error'] != null
+          ? details['error'].toString()
+          : 'Failed to create owner account (${e.status})';
+      throw Exception(msg);
+    }
+  }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import '../../../main/presentation/pages/main_navigation_page.dart' show hideBillsForTenant;
 
 import '../../../../core/repositories/billing_repository.dart';
 import '../../../../core/widgets/app_states.dart';
@@ -65,6 +66,53 @@ class BillingPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tabIndex = ref.watch(billingTabIndexProvider);
+
+    // Point 17: a tenant who reaches /bills directly still sees no billing.
+    if (hideBillsForTenant(ref)) {
+      return Scaffold(
+        backgroundColor: AppColors.backgroundGrey,
+        body: GradientBackground(
+          child: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      PhosphorIconsRegular.receipt,
+                      size: 48,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Billing is managed by the unit owner',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'As a tenant you don\'t have access to bills and payments.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 20),
+                    TextButton(
+                      onPressed: () => context.go('/home'),
+                      child: const Text('Back to Home'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.backgroundGrey,

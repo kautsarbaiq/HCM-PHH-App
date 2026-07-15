@@ -92,11 +92,14 @@ class DashboardPage extends ConsumerWidget {
                 const SizedBox(height: 18),
                 // Live emergency broadcasts (from admin/guard) appear here.
                 const ActiveEmergencyBanner(),
-                _hero(context, ref)
-                    .animate()
-                    .fadeIn(duration: 400.ms)
-                    .slideY(begin: 0.10, end: 0),
-                const SizedBox(height: 16),
+                // Point 17: the account-status / outstanding-bills hero card is
+                // hidden for tenants (billing is the owner's concern).
+                if (!hideBillsForTenant(ref))
+                  _hero(context, ref)
+                      .animate()
+                      .fadeIn(duration: 400.ms)
+                      .slideY(begin: 0.10, end: 0),
+                if (!hideBillsForTenant(ref)) const SizedBox(height: 16),
                 const HomeBannerCarousel(),
                 _upcoming(
                   context,

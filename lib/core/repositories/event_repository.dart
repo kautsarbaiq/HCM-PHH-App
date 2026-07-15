@@ -14,6 +14,9 @@ class CommunityEvent {
   final String? imageUrl;
   final String? createdBy;
   final String createdAt;
+  // HCA point 8: resident-proposed events go through management approval.
+  final String status; // approved | pending | rejected
+  final String? adminRemarks;
 
   CommunityEvent({
     required this.id,
@@ -28,6 +31,8 @@ class CommunityEvent {
     this.imageUrl,
     this.createdBy,
     required this.createdAt,
+    this.status = 'approved',
+    this.adminRemarks,
   });
 
   bool isAttending(String userId) => attendees.contains(userId);
@@ -49,6 +54,8 @@ class CommunityEvent {
       imageUrl: json['image_url'] as String?,
       createdBy: json['created_by']?.toString(),
       createdAt: (json['created_at'] ?? '').toString(),
+      status: json['status'] as String? ?? 'approved',
+      adminRemarks: json['admin_remarks'] as String?,
     );
   }
 }
@@ -104,6 +111,41 @@ class EventRepository {
       'image_url': imageUrl,
       'created_by': uid,
     });
+  }
+
+  /// Resident (HCA point 8): propose an event. It is created as 'pending' and
+  /// only appears to the community once management approves it.
+  Future<void> createEventByResident({
+    required String title,
+    String? description,
+    String? location,
+    required DateTime eventDate,
+  }) async {
+    final uid = _supabase.auth.currentUser?.id;
+    if (uid == null) throw Exception('You must be signed in.');
+    await _supabase.from('events').insert({
+      'title': title,
+      'description': description,
+      'location': location,
+      'event_date': eventDate.toUtc().toIso8601String(),
+      'created_by': uid,
+      'status': 'pending',
+    });
+  }
+
+  /// Admin (point 8): approve or reject a proposed event, with optional remarks.
+  Future<void> setEventStatus(
+    String id,
+    String status, {
+    String? remarks,
+  }) async {
+    await _supabase
+        .from('events')
+        .update({
+          'status': status,
+          if (remarks != null) 'admin_remarks': remarks,
+        })
+        .eq('id', id);
   }
 
   /// Admin: update an existing event with snake_case DB column keys.

@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../emergency/presentation/widgets/emergency_bottom_sheet.dart';
+import '../../../main/presentation/pages/main_navigation_page.dart' show hideBillsForTenant;
 
 /// One entry in the Quick Access catalog (HCA home grid).
 class QuickAccessItem {
@@ -200,8 +201,11 @@ class QuickAccessSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final visibleIds = ref.watch(quickAccessVisibleProvider);
+    // Point 17: tenants never see the billing tile.
+    final hideBilling = hideBillsForTenant(ref);
     final items = quickAccessCatalog
         .where((i) => visibleIds.contains(i.id))
+        .where((i) => !(hideBilling && i.id == 'billing'))
         .toList();
 
     return Column(
@@ -256,7 +260,7 @@ class QuickAccessSection extends ConsumerWidget {
                   fillIcon: PhosphorIconsFill.circlesFour,
                   color: AppColors.accentAmber,
                 ),
-                onTapOverride: () => _showMoreSheet(context),
+                onTapOverride: () => _showMoreSheet(context, hideBilling),
               ),
             ],
           ),
@@ -265,7 +269,7 @@ class QuickAccessSection extends ConsumerWidget {
     );
   }
 
-  static void _showMoreSheet(BuildContext context) {
+  static void _showMoreSheet(BuildContext context, bool hideBilling) {
     showModalBottomSheet(
       context: context,
       // Root navigator: render ABOVE the floating bottom nav and SOS button.
@@ -301,13 +305,14 @@ class QuickAccessSection extends ConsumerWidget {
                 childAspectRatio: 0.82,
                 children: [
                   for (final item in quickAccessCatalog)
-                    _GridTile(
-                      item: item,
-                      onTapOverride: () {
-                        Navigator.pop(ctx);
-                        _open(context, item);
-                      },
-                    ),
+                    if (!(hideBilling && item.id == 'billing'))
+                      _GridTile(
+                        item: item,
+                        onTapOverride: () {
+                          Navigator.pop(ctx);
+                          _open(context, item);
+                        },
+                      ),
                 ],
               ),
             ],

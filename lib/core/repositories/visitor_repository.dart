@@ -24,6 +24,15 @@ class Visitor {
   // Data auto-extracted from the visitor's ID/license by the scan-id function.
   final String? idNumber;
   final Map<String, dynamic>? idDetails;
+  // HCA point 7: visitor pass validity.
+  //   single    → one visit (expectedAt)
+  //   multiple  → several days (visitDays) within timeWindow
+  //   long-term → a date range (validFrom .. validTo)
+  final String entryType;
+  final String? validFrom;
+  final String? validTo;
+  final List<String>? visitDays;
+  final String? timeWindow;
 
   // Joined fields
   final House? house;
@@ -48,6 +57,11 @@ class Visitor {
     this.licensePhotoUrl,
     this.idNumber,
     this.idDetails,
+    this.entryType = 'single',
+    this.validFrom,
+    this.validTo,
+    this.visitDays,
+    this.timeWindow,
     this.house,
     this.creator,
   });
@@ -72,6 +86,11 @@ class Visitor {
       licensePhotoUrl: json['license_photo_url'] as String?,
       idNumber: json['id_number'] as String?,
       idDetails: json['id_details'] as Map<String, dynamic>?,
+      entryType: json['entry_type'] as String? ?? 'single',
+      validFrom: json['valid_from'] as String?,
+      validTo: json['valid_to'] as String?,
+      visitDays: (json['visit_days'] as List?)?.map((e) => '$e').toList(),
+      timeWindow: json['time_window'] as String?,
       house: json['houses'] != null
           ? House.fromJson(json['houses'] as Map<String, dynamic>)
           : null,
@@ -82,7 +101,7 @@ class Visitor {
   }
 
   Map<String, dynamic> toJson() {
-    final data = {
+    final data = <String, dynamic>{
       'visitor_name': visitorName,
       'purpose': purpose,
       'vehicle_plate': vehiclePlate,
@@ -97,6 +116,11 @@ class Visitor {
     if (expectedAt != null) {
       data['expected_at'] = expectedAt;
     }
+    data['entry_type'] = entryType;
+    if (validFrom != null) data['valid_from'] = validFrom;
+    if (validTo != null) data['valid_to'] = validTo;
+    if (visitDays != null) data['visit_days'] = visitDays;
+    if (timeWindow != null) data['time_window'] = timeWindow;
     return data;
   }
 }

@@ -14,7 +14,7 @@ class Brand {
   static const String id = String.fromEnvironment('BRAND', defaultValue: 'phh');
   static const bool isPhh = id == 'phh';
 
-  static const String appName = isPhh ? 'PHH Housing' : 'Home Cloud Asia';
+  static const String appName = isPhh ? 'PHH Housing' : 'HomeCloudAsia';
   static const String envFile = isPhh ? '.env.phh' : '.env.hca';
   static const String logoAsset = isPhh
       ? 'assets/branding/logo_phh.png'

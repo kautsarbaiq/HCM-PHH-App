@@ -10,7 +10,9 @@ import '../../../../core/widgets/gradient_background.dart';
 import '../../../../theme/app_colors.dart';
 
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/config/brand.dart';
 import '../../../../core/repositories/event_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
 
@@ -34,7 +36,15 @@ class EventsNotifier extends AsyncNotifier<List<CommunityEvent>> {
   @override
   Future<List<CommunityEvent>> build() async {
     final repo = ref.read(eventRepositoryProvider);
-    final all = await repo.getAllEvents();
+    final raw = await repo.getAllEvents();
+    // Point 8: residents only see APPROVED events, plus their own proposals
+    // (so a proposer can track pending/rejected). PHH shows everything.
+    final myId = Supabase.instance.client.auth.currentUser?.id;
+    final all = Brand.isPhh
+        ? raw
+        : raw
+              .where((e) => e.status == 'approved' || e.createdBy == myId)
+              .toList();
     // Upcoming events first (soonest on top), past ones pushed to the bottom —
     // a freshly created event is immediately visible, not buried under old
     // ones.
@@ -81,6 +91,135 @@ class _EventsPageState extends ConsumerState<EventsPage> {
     }
   }
 
+  Future<void> _proposeEvent() async {
+    final titleCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    final locCtrl = TextEditingController();
+    DateTime? when;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dctx) => StatefulBuilder(
+        builder: (dctx, setD) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Propose an Event',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleCtrl,
+                  decoration: const InputDecoration(labelText: 'Event title'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: descCtrl,
+                  maxLines: 2,
+                  decoration: const InputDecoration(labelText: 'Description'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: locCtrl,
+                  decoration: const InputDecoration(labelText: 'Location'),
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.calendar_today, size: 16),
+                    label: Text(
+                      when == null
+                          ? 'Pick date & time'
+                          : DateFormat('MMM d, yyyy • HH:mm').format(when!),
+                    ),
+                    onPressed: () async {
+                      final now = DateTime.now();
+                      final d = await showDatePicker(
+                        context: dctx,
+                        initialDate: now,
+                        firstDate: now,
+                        lastDate: now.add(const Duration(days: 365)),
+                      );
+                      if (d == null) return;
+                      final t = await showTimePicker(
+                        context: dctx,
+                        initialTime: TimeOfDay.now(),
+                      );
+                      setD(
+                        () => when = DateTime(
+                          d.year,
+                          d.month,
+                          d.day,
+                          t?.hour ?? 9,
+                          t?.minute ?? 0,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Your event will be reviewed by management before it appears.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.brand),
+              onPressed: () {
+                if (titleCtrl.text.trim().isEmpty || when == null) return;
+                Navigator.pop(dctx, true);
+              },
+              child: const Text('Submit'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await ref
+          .read(eventRepositoryProvider)
+          .createEventByResident(
+            title: titleCtrl.text.trim(),
+            description: descCtrl.text.trim(),
+            location: locCtrl.text.trim(),
+            eventDate: when!,
+          );
+      ref.invalidate(eventsProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Event submitted for management approval.'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final eventsAsync = ref.watch(eventsProvider);
@@ -88,6 +227,18 @@ class _EventsPageState extends ConsumerState<EventsPage> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundGrey,
+      // Point 8 (HCA): residents can propose an event for admin approval.
+      floatingActionButton: Brand.isPhh
+          ? null
+          : FloatingActionButton.extended(
+              backgroundColor: AppColors.brand,
+              onPressed: _proposeEvent,
+              icon: const Icon(PhosphorIconsRegular.plus, color: Colors.white),
+              label: const Text(
+                'Propose event',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
       body: GradientBackground(
         child: CustomScrollView(
           slivers: [

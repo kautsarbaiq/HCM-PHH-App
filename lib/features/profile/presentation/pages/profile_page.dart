@@ -11,6 +11,8 @@ import 'package:path/path.dart' as p;
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../../core/config/brand.dart';
+import '../../../parking/parking_ui.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/repositories/profile_repository.dart';
 import '../../../../core/repositories/storage_repository.dart';
@@ -385,6 +387,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ),
                     const SizedBox(height: 16),
                     _buildDocumentGrid(),
+                    if (!Brand.isPhh) const MyParkingSection(),
                     const SizedBox(height: 32),
                     _buildSectionHeader(
                       'Financial Records',
