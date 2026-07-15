@@ -9,6 +9,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/brand.dart';
 import '../repositories/contact_repository.dart' show adminContactsProvider;
 import '../repositories/profile_repository.dart' show currentProfileProvider;
+import '../repositories/parking_repository.dart'
+    show myParkingProvider, allParkingBaysProvider, houseParkingProvider;
 import '../repositories/admin_repository.dart'
     show adminResidentsProvider, adminGuardsProvider;
 import '../repositories/emergency_repository.dart' show alertHistoryProvider;
@@ -139,9 +141,15 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
     adminFormSubmissionsProvider,
     adminIdScansProvider,
   ],
-  // communities table exists only on HCA — binding it on a PHH build would
-  // CHANNEL_ERROR the shared realtime channel and kill ALL live sync.
+  // communities/parking_bays tables exist only on HCA — binding them on a PHH
+  // build would CHANNEL_ERROR the shared realtime channel and kill ALL sync.
   if (!Brand.isPhh) 'communities': [adminCommunitiesProvider],
+  if (!Brand.isPhh)
+    'parking_bays': [
+      myParkingProvider,
+      allParkingBaysProvider,
+      houseParkingProvider,
+    ],
   'emergencies': [alertHistoryProvider],
   'resident_documents': [myResidentDocsProvider],
   'resident_id_scans': [myIdScansProvider, adminIdScansProvider],

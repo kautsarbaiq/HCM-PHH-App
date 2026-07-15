@@ -226,6 +226,36 @@ async function buildNotification(
       return null;
     }
 
+    case "events": {
+      // HCA: resident-proposed events go through management review.
+      if (p.type === "INSERT" && (r.status ?? "approved") === "pending") {
+        return {
+          userIds: await userIdsByRole("admin"),
+          title: "New event proposal",
+          body: `"${r.title ?? "An event"}" — review it in the admin portal.`,
+        };
+      }
+      if (p.type === "UPDATE" && old.status !== r.status && r.created_by) {
+        if (r.status === "approved") {
+          return {
+            userIds: [r.created_by],
+            title: "Event approved ✓",
+            body: `"${r.title ?? "Your event"}" is now published to the community.`,
+          };
+        }
+        if (r.status === "rejected") {
+          return {
+            userIds: [r.created_by],
+            title: "Event rejected",
+            body: r.admin_remarks
+              ? `"${r.title ?? "Your event"}" — ${r.admin_remarks}`
+              : `"${r.title ?? "Your event"}" was not approved.`,
+          };
+        }
+      }
+      return null;
+    }
+
     case "form_submissions": {
       if (p.type === "INSERT") {
         return {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -95,6 +96,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
     final titleCtrl = TextEditingController();
     final descCtrl = TextEditingController();
     final locCtrl = TextEditingController();
+    final capacityCtrl = TextEditingController(text: '100');
     DateTime? when;
     final ok = await showDialog<bool>(
       context: context,
@@ -126,6 +128,15 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                 TextField(
                   controller: locCtrl,
                   decoration: const InputDecoration(labelText: 'Location'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: capacityCtrl,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(
+                    labelText: 'Capacity (max attendees)',
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Align(
@@ -201,6 +212,10 @@ class _EventsPageState extends ConsumerState<EventsPage> {
             description: descCtrl.text.trim(),
             location: locCtrl.text.trim(),
             eventDate: when!,
+            capacity: (int.tryParse(capacityCtrl.text.trim()) ?? 100).clamp(
+              1,
+              100000,
+            ),
           );
       ref.invalidate(eventsProvider);
       if (mounted) {
@@ -218,6 +233,77 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         );
       }
     }
+  }
+
+  /// HCA: popup listing who has RSVP'd to an event.
+  Future<void> _showAttendees(CommunityEvent event) async {
+    List<String> names = [];
+    try {
+      names = await ref
+          .read(eventRepositoryProvider)
+          .getAttendeeNames(event.id);
+    } catch (_) {}
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (dctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Attendees — ${event.title}',
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+        ),
+        content: SizedBox(
+          width: 360,
+          child: event.attendees.isEmpty
+              ? const Text(
+                  'No one has RSVP\'d yet.',
+                  style: TextStyle(color: AppColors.textSecondary),
+                )
+              : SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final n in names)
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(
+                            PhosphorIconsRegular.userCircle,
+                            color: AppColors.brand,
+                          ),
+                          title: Text(
+                            n,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      if (names.length < event.attendees.length)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            '+ ${event.attendees.length - names.length} other'
+                            '${event.attendees.length - names.length == 1 ? '' : 's'}',
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dctx),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -325,7 +411,21 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                     ),
                                   ),
                                 ),
-                                if (isRsvpd) ...[
+                                // HCA point 8: the proposer tracks their
+                                // event's review status, like the web portal.
+                                if (!Brand.isPhh &&
+                                    event.status != 'approved') ...[
+                                  const SizedBox(width: 8),
+                                  StatusPill(
+                                    label: event.status == 'pending'
+                                        ? 'PENDING'
+                                        : 'REJECTED',
+                                    color: event.status == 'pending'
+                                        ? AppColors.warning
+                                        : AppColors.error,
+                                    dense: true,
+                                  ),
+                                ] else if (isRsvpd) ...[
                                   const SizedBox(width: 8),
                                   const StatusPill(
                                     label: 'GOING',
@@ -377,40 +477,98 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                 ),
                               ],
                             ),
+                            // HCA: a rejected proposal shows management's
+                            // remarks so the resident knows why.
+                            if (!Brand.isPhh &&
+                                event.status == 'rejected' &&
+                                (event.adminRemarks?.isNotEmpty ??
+                                    false)) ...[
+                              const SizedBox(height: 8),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(
+                                    PhosphorIconsRegular.chatCircleText,
+                                    size: 16,
+                                    color: AppColors.error,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Management: ${event.adminRemarks}',
+                                      style: const TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.error,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                             const SizedBox(height: 16),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Flexible(
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        PhosphorIconsRegular.users,
-                                        size: 16,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Flexible(
-                                        child: Text(
-                                          '${event.attending}/${event.capacity} attending',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textPrimary,
+                                  // HCA: tap the count to see who's coming.
+                                  child: InkWell(
+                                    onTap: Brand.isPhh
+                                        ? null
+                                        : () => _showAttendees(event),
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          PhosphorIconsRegular.users,
+                                          size: 16,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: Text(
+                                            '${event.attending}/${event.capacity} attending',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: Brand.isPhh
+                                                  ? AppColors.textPrimary
+                                                  : AppColors.brand,
+                                              decoration: Brand.isPhh
+                                                  ? null
+                                                  : TextDecoration.underline,
+                                              decorationColor: AppColors.brand,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                _RsvpButton(
-                                  isRsvpd: isRsvpd,
-                                  isPending: isPending,
-                                  onPressed: () => _toggleRsvp(event.id),
-                                ),
+                                // HCA: only an approved event accepts RSVPs —
+                                // pending/rejected proposals don't collect
+                                // attendees — and a full event shows FULL
+                                // instead of the RSVP button.
+                                if (!Brand.isPhh &&
+                                    event.status == 'approved' &&
+                                    !isRsvpd &&
+                                    event.capacity > 0 &&
+                                    event.attending >= event.capacity)
+                                  const StatusPill(
+                                    label: 'FULL',
+                                    color: AppColors.textSecondary,
+                                    dense: true,
+                                  )
+                                else if (Brand.isPhh ||
+                                    event.status == 'approved')
+                                  _RsvpButton(
+                                    isRsvpd: isRsvpd,
+                                    isPending: isPending,
+                                    onPressed: () => _toggleRsvp(event.id),
+                                  ),
                               ],
                             ),
                           ],

@@ -403,14 +403,16 @@ class AdminLayout extends StatelessWidget {
                     location.startsWith('/admin/bookings'),
                     isDesktop,
                   ),
-                  _item(
-                    context,
-                    Icons.badge_rounded,
-                    'Resident IDs',
-                    '/admin/id-scans',
-                    location.startsWith('/admin/id-scans'),
-                    isDesktop,
-                  ),
+                  // Boss feedback 15/07: HCA doesn't use the ID-scan module.
+                  if (Brand.isPhh)
+                    _item(
+                      context,
+                      Icons.badge_rounded,
+                      'Resident IDs',
+                      '/admin/id-scans',
+                      location.startsWith('/admin/id-scans'),
+                      isDesktop,
+                    ),
                 ],
               ),
             ),

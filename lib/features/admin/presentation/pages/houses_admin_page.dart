@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/repositories/admin_repository.dart';
 import '../../../../core/repositories/house_repository.dart';
 import '../../../../core/config/brand.dart';
+import '../../../../core/repositories/parking_repository.dart';
 import '../../../parking/parking_ui.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
@@ -70,6 +71,15 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
     // No resident assigned. Don't fall back to a possibly-stale owner_id join —
     // that caused every house to show the same person ("Demo").
     return '-';
+  }
+
+  // HCA: the house's bay numbers for the Parking column (realtime-refreshed
+  // via allParkingBaysProvider).
+  String _bayNumbers(House house) {
+    final byHouse = ref.watch(allParkingBaysProvider).valueOrNull;
+    final bays = byHouse?[house.id];
+    if (bays == null || bays.isEmpty) return '-';
+    return bays.map((b) => b.bayNumber).join(', ');
   }
 
   List<House> _filterHouses(List<House> houses) {
@@ -714,17 +724,20 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                     // three text columns share the remaining width evenly.
                     const horizontalMargin = 20.0;
                     const columnSpacing = 24.0;
-                    const actionsColWidth = 168.0;
+                    // HCA has two extra action buttons (parking + owner login)
+                    // and an extra Parking column.
+                    final actionsColWidth = Brand.isPhh ? 168.0 : 268.0;
                     const statusColWidth = 120.0;
+                    final flexCols = Brand.isPhh ? 3 : 4;
                     final fullWidth = constraints.maxWidth;
                     // Width consumed by fixed chrome: outer margins, the spacing
-                    // between the 5 columns, and the fixed status/actions columns.
+                    // between the columns, and the fixed status/actions columns.
                     final fixed =
                         horizontalMargin * 2 +
-                        columnSpacing * 4 +
+                        columnSpacing * (flexCols + 1) +
                         statusColWidth +
                         actionsColWidth;
-                    final flexColWidth = ((fullWidth - fixed) / 3).clamp(
+                    final flexColWidth = ((fullWidth - fixed) / flexCols).clamp(
                       120.0,
                       double.infinity,
                     );
@@ -751,8 +764,8 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                               headingRowColor: MaterialStateProperty.all(
                                 AppColors.surfaceTint,
                               ),
-                              columns: const [
-                                DataColumn(
+                              columns: [
+                                const DataColumn(
                                   label: Text(
                                     'House No.',
                                     style: TextStyle(
@@ -761,7 +774,7 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                                     ),
                                   ),
                                 ),
-                                DataColumn(
+                                const DataColumn(
                                   label: Text(
                                     'Type',
                                     style: TextStyle(
@@ -770,7 +783,7 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                                     ),
                                   ),
                                 ),
-                                DataColumn(
+                                const DataColumn(
                                   label: Text(
                                     'Owner',
                                     style: TextStyle(
@@ -779,7 +792,17 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                                     ),
                                   ),
                                 ),
-                                DataColumn(
+                                if (!Brand.isPhh)
+                                  const DataColumn(
+                                    label: Text(
+                                      'Parking',
+                                      style: TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                const DataColumn(
                                   label: Text(
                                     'Status',
                                     style: TextStyle(
@@ -788,7 +811,7 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                                     ),
                                   ),
                                 ),
-                                DataColumn(
+                                const DataColumn(
                                   label: Text(
                                     'Actions',
                                     style: TextStyle(
@@ -836,6 +859,19 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                                         ),
                                       ),
                                     ),
+                                    if (!Brand.isPhh)
+                                      DataCell(
+                                        SizedBox(
+                                          width: flexColWidth,
+                                          child: Text(
+                                            _bayNumbers(house),
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              color: AppColors.textPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     DataCell(
                                       SizedBox(
                                         width: statusColWidth,
@@ -981,6 +1017,16 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
               fontSize: 13,
             ),
           ),
+          if (!Brand.isPhh) ...[
+            const SizedBox(height: 2),
+            Text(
+              'Parking: ${_bayNumbers(house)}',
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+              ),
+            ),
+          ],
           const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,

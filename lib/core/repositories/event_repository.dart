@@ -120,6 +120,7 @@ class EventRepository {
     String? description,
     String? location,
     required DateTime eventDate,
+    int capacity = 100,
   }) async {
     final uid = _supabase.auth.currentUser?.id;
     if (uid == null) throw Exception('You must be signed in.');
@@ -128,9 +129,24 @@ class EventRepository {
       'description': description,
       'location': location,
       'event_date': eventDate.toUtc().toIso8601String(),
+      'capacity': capacity,
       'created_by': uid,
       'status': 'pending',
     });
+  }
+
+  /// Names of the residents attending an event. Uses the
+  /// `event_attendee_names` SECURITY DEFINER RPC (security/17) because
+  /// resident RLS can't read other residents' profiles directly.
+  Future<List<String>> getAttendeeNames(String eventId) async {
+    final rows = await _supabase.rpc(
+      'event_attendee_names',
+      params: {'p_event_id': eventId},
+    );
+    return (rows as List)
+        .map((r) => (r is Map ? r['full_name'] : r).toString())
+        .where((s) => s.isNotEmpty)
+        .toList();
   }
 
   /// Admin (point 8): approve or reject a proposed event, with optional remarks.

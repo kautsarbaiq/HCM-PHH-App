@@ -95,7 +95,12 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
           'typed correctly (for example: name@gmail.com).';
     }
     if (m.contains('email not confirmed')) {
-      return 'This email has not been confirmed yet. Please check your inbox.';
+      // HCA: accounts are activated by the management office, so point the
+      // resident there instead of at their email inbox.
+      return Brand.isPhh
+          ? 'This email has not been confirmed yet. Please check your inbox.'
+          : 'Please contact the management office for approval of your '
+                'account.';
     }
     if (m.contains('already registered')) {
       return 'This email is already registered — please log in instead.';
@@ -384,56 +389,6 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                                   ),
                                 ),
                               const SizedBox(height: 16),
-                              // Owner / Tenant selector (point 17).
-                              Row(
-                                children: [
-                                  for (final t in const [
-                                    ('owner', 'Owner'),
-                                    ('tenant', 'Tenant'),
-                                  ]) ...[
-                                    Expanded(
-                                      child: GestureDetector(
-                                        onTap: () => setState(
-                                          () => _residentType = t.$1,
-                                        ),
-                                        child: AnimatedContainer(
-                                          duration: const Duration(
-                                            milliseconds: 180,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 12,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            gradient: _residentType == t.$1
-                                                ? AppColors.brandGradient
-                                                : null,
-                                            color: _residentType == t.$1
-                                                ? null
-                                                : AppColors.surfaceTint,
-                                            borderRadius: BorderRadius.circular(
-                                              14,
-                                            ),
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              t.$2,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w700,
-                                                color: _residentType == t.$1
-                                                    ? Colors.white
-                                                    : AppColors.textSecondary,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    if (t.$1 == 'owner')
-                                      const SizedBox(width: 10),
-                                  ],
-                                ],
-                              ),
-                              const SizedBox(height: 16),
                             ],
                           ],
                           GlassTextField(
@@ -448,6 +403,59 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                             isPassword: true,
                             controller: _passwordController,
                           ),
+                          // Owner / Tenant selector (point 17) — last thing
+                          // before the Sign Up button, per boss feedback.
+                          if (_isSignUp && !Brand.isPhh) ...[
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                for (final t in const [
+                                  ('owner', 'Owner'),
+                                  ('tenant', 'Tenant'),
+                                ]) ...[
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () => setState(
+                                        () => _residentType = t.$1,
+                                      ),
+                                      child: AnimatedContainer(
+                                        duration: const Duration(
+                                          milliseconds: 180,
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          gradient: _residentType == t.$1
+                                              ? AppColors.brandGradient
+                                              : null,
+                                          color: _residentType == t.$1
+                                              ? null
+                                              : AppColors.surfaceTint,
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            t.$2,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              color: _residentType == t.$1
+                                                  ? Colors.white
+                                                  : AppColors.textSecondary,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (t.$1 == 'owner')
+                                    const SizedBox(width: 10),
+                                ],
+                              ],
+                            ),
+                          ],
                           const SizedBox(height: 24),
                           // Bold gradient primary button
                           _GradientButton(

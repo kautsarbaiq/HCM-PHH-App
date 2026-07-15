@@ -3,15 +3,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/repositories/parking_repository.dart';
+import '../../core/widgets/premium_card.dart';
 import '../../theme/app_colors.dart';
 
 /// ADMIN (point 14): manage a house's parking bays — add numbered bays,
-/// delete them. Opened from the houses admin page.
+/// delete them. Opened from the houses admin page. Bottom sheet on phones,
+/// centered dialog on laptop/desktop widths.
 Future<void> showAdminParkingSheet(
   BuildContext context,
   String houseId,
   String houseNumber,
 ) {
+  final isWide = MediaQuery.of(context).size.width >= 700;
+  if (isWide) {
+    return showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: _AdminParkingSheet(houseId: houseId, houseNumber: houseNumber),
+        ),
+      ),
+    );
+  }
   return showModalBottomSheet(
     context: context,
     useRootNavigator: true,
@@ -20,7 +36,8 @@ Future<void> showAdminParkingSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => _AdminParkingSheet(houseId: houseId, houseNumber: houseNumber),
+    builder: (_) =>
+        _AdminParkingSheet(houseId: houseId, houseNumber: houseNumber),
   );
 }
 
@@ -40,7 +57,8 @@ class _AdminParkingSheet extends ConsumerWidget {
           top: 18,
           bottom: MediaQuery.of(context).viewInsets.bottom + 20,
         ),
-        child: Column(
+        child: SingleChildScrollView(
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -81,9 +99,12 @@ class _AdminParkingSheet extends ConsumerWidget {
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                       subtitle: Text(
-                        b.plate == null
+                        b.plate == null && b.vehicleSummary == null
                             ? 'Unassigned'
-                            : '${b.plate}${b.vehicleDetails != null ? ' • ${b.vehicleDetails}' : ''}',
+                            : [
+                                b.plate,
+                                b.vehicleSummary,
+                              ].whereType<String>().join(' — '),
                       ),
                       trailing: IconButton(
                         icon: const Icon(
@@ -91,10 +112,18 @@ class _AdminParkingSheet extends ConsumerWidget {
                           color: AppColors.error,
                         ),
                         onPressed: () async {
+                          // Root container: survives the sheet being
+                          // dismissed while the request is in flight, so the
+                          // houses-page Parking column still refreshes.
+                          final container = ProviderScope.containerOf(
+                            context,
+                            listen: false,
+                          );
                           await ref
                               .read(parkingRepositoryProvider)
                               .deleteBay(b.id);
-                          ref.invalidate(houseParkingProvider(houseId));
+                          container.invalidate(houseParkingProvider(houseId));
+                          container.invalidate(allParkingBaysProvider);
                         },
                       ),
                     ),
@@ -107,6 +136,10 @@ class _AdminParkingSheet extends ConsumerWidget {
               icon: const Icon(Icons.add),
               label: const Text('Add bay'),
               onPressed: () async {
+                final container = ProviderScope.containerOf(
+                  context,
+                  listen: false,
+                );
                 final ctrl = TextEditingController();
                 final ok = await showDialog<bool>(
                   context: context,
@@ -133,105 +166,88 @@ class _AdminParkingSheet extends ConsumerWidget {
                   ),
                 );
                 if (ok == true && ctrl.text.trim().isNotEmpty) {
-                  await ref
+                  await container
                       .read(parkingRepositoryProvider)
                       .addBay(houseId, ctrl.text.trim());
-                  ref.invalidate(houseParkingProvider(houseId));
+                  container.invalidate(houseParkingProvider(houseId));
+                  container.invalidate(allParkingBaysProvider);
                 }
               },
             ),
           ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// RESIDENT (point 15): the resident's parking bays on their profile, tap a
-/// bay to assign/edit their car plate.
-class MyParkingSection extends ConsumerWidget {
-  const MyParkingSection({super.key});
+/// RESIDENT (point 15): the resident's parking bays, rendered as extra rows
+/// INSIDE the profile info card (below House Address). Tap the pencil to
+/// assign/edit the car on that bay.
+class MyParkingRows extends ConsumerWidget {
+  const MyParkingRows({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final baysAsync = ref.watch(myParkingProvider);
-    return baysAsync.maybeWhen(
-      orElse: () => const SizedBox.shrink(),
-      data: (bays) {
-        if (bays.isEmpty) return const SizedBox.shrink();
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 24),
-            Row(
-              children: const [
-                Icon(PhosphorIconsFill.car, color: AppColors.brand, size: 18),
-                SizedBox(width: 8),
-                Text(
-                  'My Parking',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF6A7BA8).withOpacity(0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
+    final bays = baysAsync.valueOrNull ?? const <ParkingBay>[];
+    return Column(
+      children: [
+        for (final b in bays) ...[
+          const Divider(height: 32, thickness: 0.5),
+          Row(
+            children: [
+              const GradientIconBadge(
+                icon: PhosphorIconsRegular.car,
+                gradient: AppColors.skyGradient,
+                size: 44,
+                iconSize: 20,
+                radius: 13,
               ),
-              child: Column(
-                children: [
-                  for (final b in bays)
-                    ListTile(
-                      leading: Container(
-                        width: 46,
-                        height: 46,
-                        decoration: BoxDecoration(
-                          color: AppColors.brand.withOpacity(0.10),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          PhosphorIconsRegular.car,
-                          color: AppColors.brand,
-                        ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Parking Bay ${b.bayNumber}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
                       ),
-                      title: Text(
-                        'Bay ${b.bayNumber}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      subtitle: Text(
-                        b.plate == null
-                            ? 'Tap to assign your car'
-                            : '${b.plate}${b.vehicleDetails != null ? ' • ${b.vehicleDetails}' : ''}',
-                        style: const TextStyle(color: AppColors.textSecondary),
-                      ),
-                      trailing: const Icon(
-                        Icons.edit_outlined,
-                        color: AppColors.brand,
-                        size: 18,
-                      ),
-                      onTap: () => _assign(context, ref, b),
                     ),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      b.plate == null && b.vehicleSummary == null
+                          ? 'Tap to assign your car'
+                          : [
+                              b.plate,
+                              b.vehicleSummary,
+                            ].whereType<String>().join(' — '),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        );
-      },
+              IconButton(
+                icon: const Icon(
+                  PhosphorIconsRegular.pencilSimple,
+                  size: 18,
+                  color: AppColors.brand,
+                ),
+                tooltip: 'Assign car',
+                visualDensity: VisualDensity.compact,
+                onPressed: () => _assign(context, ref, b),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 
@@ -241,31 +257,65 @@ class MyParkingSection extends ConsumerWidget {
     ParkingBay bay,
   ) async {
     final plateCtrl = TextEditingController(text: bay.plate ?? '');
-    final detailCtrl = TextEditingController(text: bay.vehicleDetails ?? '');
+    final makeCtrl = TextEditingController(text: bay.vehicleMake ?? '');
+    final modelCtrl = TextEditingController(text: bay.vehicleModel ?? '');
+    final yearCtrl = TextEditingController(text: bay.vehicleYear ?? '');
+    final colorCtrl = TextEditingController(text: bay.vehicleColor ?? '');
+
+    InputDecoration deco(String label) => InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: const Color(0xFFF4F6FB),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide.none,
+      ),
+    );
+
     final ok = await showDialog<bool>(
       context: context,
       builder: (dctx) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('Bay ${bay.bayNumber} — my car'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: plateCtrl,
-              textCapitalization: TextCapitalization.characters,
-              decoration: const InputDecoration(
-                labelText: 'Car plate (e.g. WXY 1234)',
-              ),
+        content: SizedBox(
+          width: 400,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: plateCtrl,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: deco('Plate no. (e.g. WXY 1234)'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: makeCtrl,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: deco('Make (e.g. Honda)'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: modelCtrl,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: deco('Model (e.g. Civic)'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: yearCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: deco('Year (e.g. 2020)'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: colorCtrl,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: deco('Color (e.g. Red)'),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: detailCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Car details — optional (e.g. Red Honda)',
-              ),
-            ),
-          ],
+          ),
         ),
         actions: [
           TextButton(
@@ -284,8 +334,16 @@ class MyParkingSection extends ConsumerWidget {
     try {
       await ref
           .read(parkingRepositoryProvider)
-          .assignPlate(bay.id, plateCtrl.text, detailCtrl.text);
+          .assignVehicle(
+            bay.id,
+            plate: plateCtrl.text,
+            make: makeCtrl.text,
+            model: modelCtrl.text,
+            year: yearCtrl.text,
+            color: colorCtrl.text,
+          );
       ref.invalidate(myParkingProvider);
+      ref.invalidate(allParkingBaysProvider);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

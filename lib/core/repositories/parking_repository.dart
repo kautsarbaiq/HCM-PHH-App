@@ -2,19 +2,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// A parking bay belonging to a house (HCA points 14-15). Admins create bays
-/// with numbers; the resident assigns their car plate to a bay.
+/// with numbers; the resident assigns their car to a bay.
 class ParkingBay {
   final String id;
   final String houseId;
   final String bayNumber;
   final String? plate;
-  final String? vehicleDetails;
+  final String? vehicleMake;
+  final String? vehicleModel;
+  final String? vehicleYear;
+  final String? vehicleColor;
+  final String? vehicleDetails; // legacy free-text, kept for old rows
 
   ParkingBay({
     required this.id,
     required this.houseId,
     required this.bayNumber,
     this.plate,
+    this.vehicleMake,
+    this.vehicleModel,
+    this.vehicleYear,
+    this.vehicleColor,
     this.vehicleDetails,
   });
 
@@ -23,8 +31,23 @@ class ParkingBay {
     houseId: json['house_id'] as String,
     bayNumber: json['bay_number'] as String,
     plate: json['plate'] as String?,
+    vehicleMake: json['vehicle_make'] as String?,
+    vehicleModel: json['vehicle_model'] as String?,
+    vehicleYear: json['vehicle_year'] as String?,
+    vehicleColor: json['vehicle_color'] as String?,
     vehicleDetails: json['vehicle_details'] as String?,
   );
+
+  /// "Honda • Civic • 2020 • Red" from whichever fields are filled, falling
+  /// back to the legacy free-text details for rows saved before the split.
+  String? get vehicleSummary {
+    final parts = [vehicleMake, vehicleModel, vehicleYear, vehicleColor]
+        .whereType<String>()
+        .where((s) => s.trim().isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return vehicleDetails;
+    return parts.join(' • ');
+  }
 }
 
 final parkingRepositoryProvider = Provider<ParkingRepository>((ref) {
@@ -42,6 +65,18 @@ final myParkingProvider = FutureProvider.autoDispose<List<ParkingBay>>((ref) {
   return ref.read(parkingRepositoryProvider).myBays();
 });
 
+/// Every bay grouped by house — the admin houses table shows each house's bay
+/// numbers in a column.
+final allParkingBaysProvider =
+    FutureProvider.autoDispose<Map<String, List<ParkingBay>>>((ref) async {
+      final bays = await ref.read(parkingRepositoryProvider).allBays();
+      final byHouse = <String, List<ParkingBay>>{};
+      for (final b in bays) {
+        (byHouse[b.houseId] ??= []).add(b);
+      }
+      return byHouse;
+    });
+
 class ParkingRepository {
   final SupabaseClient _supabase;
   ParkingRepository(this._supabase);
@@ -51,7 +86,15 @@ class ParkingRepository {
         .from('parking_bays')
         .select()
         .eq('house_id', houseId)
-        .order('bay_number');
+        .order('bay_number', ascending: true);
+    return (rows as List).map((j) => ParkingBay.fromJson(j)).toList();
+  }
+
+  Future<List<ParkingBay>> allBays() async {
+    final rows = await _supabase
+        .from('parking_bays')
+        .select()
+        .order('bay_number', ascending: true);
     return (rows as List).map((j) => ParkingBay.fromJson(j)).toList();
   }
 
@@ -80,15 +123,28 @@ class ParkingRepository {
     await _supabase.from('parking_bays').delete().eq('id', id);
   }
 
-  // --- resident: assign their plate to a bay ---
-  Future<void> assignPlate(String bayId, String? plate, String? details) async {
+  // --- resident: assign their car to a bay ---
+  Future<void> assignVehicle(
+    String bayId, {
+    String? plate,
+    String? make,
+    String? model,
+    String? year,
+    String? color,
+  }) async {
+    String? clean(String? v) =>
+        (v == null || v.trim().isEmpty) ? null : v.trim();
     await _supabase
         .from('parking_bays')
         .update({
-          'plate': (plate?.trim().isEmpty ?? true) ? null : plate!.trim(),
-          'vehicle_details': (details?.trim().isEmpty ?? true)
-              ? null
-              : details!.trim(),
+          'plate': clean(plate),
+          'vehicle_make': clean(make),
+          'vehicle_model': clean(model),
+          'vehicle_year': clean(year),
+          'vehicle_color': clean(color),
+          // Saving via the structured form supersedes the legacy free-text —
+          // otherwise a cleared bay would keep showing the old car forever.
+          'vehicle_details': null,
         })
         .eq('id', bayId);
   }

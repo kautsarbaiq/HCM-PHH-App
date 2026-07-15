@@ -92,12 +92,36 @@ class _AccessPageState extends ConsumerState<AccessPage> {
     });
   }
 
+  /// HCA multiple-entry passes: pick the daily time window from the clock
+  /// (start time, then end time) instead of typing it.
+  Future<void> _pickTimeWindow() async {
+    final start = await showTimePicker(
+      context: context,
+      initialTime: const TimeOfDay(hour: 9, minute: 0),
+      helpText: 'Select start time',
+    );
+    if (start == null || !mounted) return;
+
+    final end = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: (start.hour + 3) % 24, minute: start.minute),
+      helpText: 'Select end time',
+    );
+    if (end == null || !mounted) return;
+
+    setState(() {
+      _timeWindowController.text =
+          '${start.format(context)} - ${end.format(context)}';
+    });
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
     _typeController.dispose();
     _dateController.dispose();
     _plateController.dispose();
+    _timeWindowController.dispose();
     super.dispose();
   }
 
@@ -161,11 +185,20 @@ class _AccessPageState extends ConsumerState<AccessPage> {
       await ref.read(myVisitorsProvider.notifier).refresh();
 
       if (mounted) {
-        _nameController.clear();
-        _typeController.clear();
-        _dateController.clear();
-        _plateController.clear();
-        _selectedDateTime = null;
+        // Boss feedback 15/07: once the pass is created, the form starts
+        // fresh — no leftover data from the previous visitor.
+        setState(() {
+          _nameController.clear();
+          _typeController.clear();
+          _dateController.clear();
+          _plateController.clear();
+          _timeWindowController.clear();
+          _selectedDateTime = null;
+          _entryType = 'single';
+          _validFrom = null;
+          _validTo = null;
+          _visitDays.clear();
+        });
         ref.read(accessTabIndexProvider.notifier).state =
             1; // Switch to passes tab
       }
@@ -546,10 +579,16 @@ class _AccessPageState extends ConsumerState<AccessPage> {
                 if (!Brand.isPhh && _entryType == 'multiple') ...[
                   _buildMultiDayPicker(),
                   const SizedBox(height: 16),
-                  GlassTextField(
-                    controller: _timeWindowController,
-                    hintText: 'Time window (e.g. 9:00 AM - 5:00 PM)',
-                    prefixIcon: PhosphorIconsRegular.clock,
+                  GestureDetector(
+                    onTap: _pickTimeWindow,
+                    behavior: HitTestBehavior.opaque,
+                    child: AbsorbPointer(
+                      child: GlassTextField(
+                        controller: _timeWindowController,
+                        hintText: 'Time window — tap to pick',
+                        prefixIcon: PhosphorIconsRegular.clock,
+                      ),
+                    ),
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -615,12 +654,44 @@ class _AccessPageState extends ConsumerState<AccessPage> {
                   ).format(DateTime.parse(visitor.expectedAt!).toLocal())
                 : 'Walk-in';
 
+            // HCA: describe the pass validity on the card (boss feedback).
+            String? passType;
+            if (!Brand.isPhh) {
+              String day(String iso) {
+                try {
+                  return DateFormat('MMM d').format(DateTime.parse(iso));
+                } catch (_) {
+                  return iso;
+                }
+              }
+
+              switch (visitor.entryType) {
+                case 'multiple':
+                  final days = (visitor.visitDays ?? []).map(day).join(', ');
+                  passType =
+                      'Multiple days${days.isEmpty ? '' : ': $days'}'
+                      '${visitor.timeWindow == null ? '' : ' • ${visitor.timeWindow}'}';
+                  break;
+                case 'long_term':
+                  final from = visitor.validFrom;
+                  final to = visitor.validTo;
+                  passType =
+                      'Long term'
+                      '${from != null ? ': ${day(from)}' : ''}'
+                      '${to != null ? ' – ${day(to)}' : ''}';
+                  break;
+                default:
+                  passType = 'Single entry';
+              }
+            }
+
             return VisitorPassCard(
               name: visitor.visitorName,
               type: visitor.purpose,
               time: dateStr,
               qrData: visitor.qrToken!,
               status: visitor.status,
+              passType: passType,
             );
           },
         );

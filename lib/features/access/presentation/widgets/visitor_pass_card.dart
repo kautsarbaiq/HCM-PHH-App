@@ -25,7 +25,12 @@ class VisitorPassCard extends StatefulWidget {
     required this.time,
     required this.qrData,
     this.status = 'expected',
+    this.passType,
   });
+
+  /// HCA: human-readable pass validity, e.g. "Single entry" or
+  /// "Multiple days: Jul 17, Jul 19 • 9:00 AM - 12:00 PM".
+  final String? passType;
 
   @override
   State<VisitorPassCard> createState() => _VisitorPassCardState();
@@ -67,6 +72,7 @@ class _VisitorPassCardState extends State<VisitorPassCard> {
 
       final text =
           'Visitor pass for ${widget.name}\n${widget.type} • ${widget.time}\n'
+          '${widget.passType != null ? '${widget.passType}\n' : ''}'
           'Show this QR code at the main gate.';
       await SharePlus.instance.share(
         ShareParams(text: text, files: [XFile(file.path)]),
@@ -185,6 +191,27 @@ class _VisitorPassCardState extends State<VisitorPassCard> {
               color: AppColors.textPrimary,
             ),
           ),
+          // HCA: the pass type (Single / Multiple days / Long term) with its
+          // validity details.
+          if (widget.passType != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.brand.withOpacity(0.10),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                widget.passType!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.brand,
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 4),
           const Text(
             'Scan this QR code at the main gate',

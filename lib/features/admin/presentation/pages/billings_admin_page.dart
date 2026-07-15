@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/config/brand.dart';
 import '../../../../core/repositories/billing_repository.dart';
 import '../../../../core/repositories/house_repository.dart';
 import '../../../../core/repositories/admin_repository.dart';
@@ -131,7 +132,10 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                   'Period',
                   billing.period?.isNotEmpty == true ? billing.period! : '-',
                 ),
-                _buildDetailItem('Due Date', _formatDate(billing.dueDate)),
+                _buildDetailItem(
+                  Brand.isPhh ? 'Due Date' : 'Payment Due Date',
+                  _formatDate(billing.dueDate),
+                ),
                 _buildDetailItem(
                   'Status',
                   status.label,
@@ -246,6 +250,25 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
         : null;
     String status = billing?.status ?? 'unpaid';
     bool isSaving = false;
+    // HCA: the billing period is a start date + end date; the two picks are
+    // stored in the existing `period` text column as one range string. When
+    // editing, seed both dates from the saved string — otherwise re-picking
+    // just one endpoint would silently drop the other from the saved value.
+    DateTime? periodStart;
+    DateTime? periodEnd;
+    if (!Brand.isPhh && (billing?.period?.isNotEmpty ?? false)) {
+      DateTime? parse(String s) {
+        try {
+          return DateFormat('MMM d, yyyy').parseStrict(s.trim());
+        } catch (_) {
+          return null;
+        }
+      }
+
+      final parts = billing!.period!.split(' - ');
+      periodStart = parse(parts.first);
+      if (parts.length > 1) periodEnd = parse(parts.last);
+    }
     DateTime dueDate = () {
       if (billing?.dueDate != null) {
         try {
@@ -319,30 +342,126 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                         Icons.payments_outlined,
                         isNumeric: true,
                       ),
-                      // Billing period via calendar (point 5): tap → pick a
-                      // month, stored as e.g. "July 2026".
-                      _buildTextField(
-                        periodController,
-                        'Billing period — tap to pick month',
-                        Icons.calendar_month,
-                        readOnly: true,
-                        onTap: () async {
-                          final now = DateTime.now();
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: now,
-                            firstDate: DateTime(now.year - 2),
-                            lastDate: DateTime(now.year + 2),
-                            initialDatePickerMode: DatePickerMode.year,
-                            helpText: 'Select billing period',
-                          );
-                          if (picked != null) {
-                            periodController.text = DateFormat(
-                              'MMMM yyyy',
-                            ).format(picked);
-                          }
-                        },
-                      ),
+                      if (Brand.isPhh)
+                        // PHH keeps the single month picker.
+                        _buildTextField(
+                          periodController,
+                          'Billing period — tap to pick month',
+                          Icons.calendar_month,
+                          readOnly: true,
+                          onTap: () async {
+                            final now = DateTime.now();
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: now,
+                              firstDate: DateTime(now.year - 2),
+                              lastDate: DateTime(now.year + 2),
+                              initialDatePickerMode: DatePickerMode.year,
+                              helpText: 'Select billing period',
+                            );
+                            if (picked != null) {
+                              periodController.text = DateFormat(
+                                'MMMM yyyy',
+                              ).format(picked);
+                            }
+                          },
+                        )
+                      else ...[
+                        // HCA (boss feedback 15/07): the billing period is a
+                        // start date + end date.
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () async {
+                                  final now = DateTime.now();
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: periodStart ?? now,
+                                    firstDate: DateTime(now.year - 2),
+                                    lastDate: DateTime(now.year + 2),
+                                    helpText: 'Billing period start date',
+                                  );
+                                  if (picked != null) {
+                                    setDialogState(() {
+                                      periodStart = picked;
+                                      if (periodEnd != null &&
+                                          periodEnd!.isBefore(picked)) {
+                                        periodEnd = null;
+                                      }
+                                      final fmt = DateFormat('MMM d, yyyy');
+                                      periodController.text = periodEnd == null
+                                          ? fmt.format(picked)
+                                          : '${fmt.format(picked)} - ${fmt.format(periodEnd!)}';
+                                    });
+                                  }
+                                },
+                                child: InputDecorator(
+                                  decoration: _inputDecoration(
+                                    'Period start',
+                                    Icons.calendar_month,
+                                  ),
+                                  child: Text(
+                                    periodStart == null
+                                        ? 'Pick date'
+                                        : DateFormat(
+                                            'MMM d, yyyy',
+                                          ).format(periodStart!),
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 13.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () async {
+                                  final now = DateTime.now();
+                                  final base = periodStart ?? now;
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: periodEnd ?? base,
+                                    firstDate: base,
+                                    lastDate: DateTime(now.year + 2),
+                                    helpText: 'Billing period end date',
+                                  );
+                                  if (picked != null) {
+                                    setDialogState(() {
+                                      periodEnd = picked;
+                                      final fmt = DateFormat('MMM d, yyyy');
+                                      periodController.text =
+                                          periodStart == null
+                                          ? fmt.format(picked)
+                                          : '${fmt.format(periodStart!)} - ${fmt.format(picked)}';
+                                    });
+                                  }
+                                },
+                                child: InputDecorator(
+                                  decoration: _inputDecoration(
+                                    'Period end',
+                                    Icons.event,
+                                  ),
+                                  child: Text(
+                                    periodEnd == null
+                                        ? 'Pick date'
+                                        : DateFormat(
+                                            'MMM d, yyyy',
+                                          ).format(periodEnd!),
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 13.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       InkWell(
                         onTap: () async {
@@ -358,7 +477,7 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                         },
                         child: InputDecorator(
                           decoration: _inputDecoration(
-                            'Due Date',
+                            Brand.isPhh ? 'Due Date' : 'Payment Due Date',
                             Icons.calendar_today,
                           ),
                           child: Text(
@@ -768,8 +887,10 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                                       Expanded(
                                         flex: 2,
                                         child: Text(
-                                          'Due Date',
-                                          style: TextStyle(
+                                          Brand.isPhh
+                                              ? 'Due Date'
+                                              : 'Payment Due Date',
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.w700,
                                             color: AppColors.textSecondary,
                                           ),

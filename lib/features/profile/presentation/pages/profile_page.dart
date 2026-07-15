@@ -12,6 +12,8 @@ import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/config/brand.dart';
+import '../../../main/presentation/pages/main_navigation_page.dart'
+    show hideBillsForTenant;
 import '../../../parking/parking_ui.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/repositories/profile_repository.dart';
@@ -387,14 +389,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ),
                     const SizedBox(height: 16),
                     _buildDocumentGrid(),
-                    if (!Brand.isPhh) const MyParkingSection(),
-                    const SizedBox(height: 32),
-                    _buildSectionHeader(
-                      'Financial Records',
-                      onTap: () => context.go('/bills'),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildFinanceList(),
+                    // HCA: tenants don't handle billing (point 17), so the
+                    // financial section is owner-only.
+                    if (!hideBillsForTenant(ref)) ...[
+                      const SizedBox(height: 32),
+                      _buildSectionHeader(
+                        'Financial Records',
+                        onTap: () => context.go('/bills'),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildFinanceList(),
+                    ],
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -565,8 +570,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             'House Address',
             houseAddress,
             AppColors.mintGradient,
-            onEdit: () => _editHouseAddress(house?.address),
+            // HCA: the house is assigned by the management office — residents
+            // can't edit it themselves.
+            onEdit: Brand.isPhh
+                ? () => _editHouseAddress(house?.address)
+                : null,
           ),
+          // HCA: the house's parking bays live in this same card, right under
+          // the address (boss feedback 15/07).
+          if (!Brand.isPhh) const MyParkingRows(),
         ],
       ),
     );

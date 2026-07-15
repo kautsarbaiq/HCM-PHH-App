@@ -129,14 +129,8 @@ const List<QuickAccessItem> quickAccessCatalog = [
     color: AppColors.accentMint,
     route: '/security-guard',
   ),
-  QuickAccessItem(
-    id: 'scanid',
-    label: 'Scan ID',
-    icon: PhosphorIconsRegular.identificationBadge,
-    fillIcon: PhosphorIconsFill.identificationBadge,
-    color: AppColors.accentCyan,
-    route: '/scan-id',
-  ),
+  // 'scanid' (Scan ID) removed per boss feedback 15/07 — HCA doesn't use the
+  // ID-scan module. (This grid only renders on HCA; PHH keeps its drawer.)
 ];
 
 const List<String> _defaultVisible = [
