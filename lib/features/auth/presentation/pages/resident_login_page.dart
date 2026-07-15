@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -38,8 +40,43 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
     }
   }
   final _nameController = TextEditingController();
+  // HCA multi-community signup fields.
+  final _communityCodeController = TextEditingController();
+  String _residentType = 'owner';
+  // Live community-code lookup: as the user types the code, the community
+  // name appears underneath automatically ("001 – Sunway Apartments").
+  Timer? _codeDebounce;
+  String? _communityName;
+  bool _checkingCode = false;
   bool _isLoading = false;
   bool _isSignUp = false;
+
+  void _onCommunityCodeChanged(String value) {
+    _codeDebounce?.cancel();
+    final code = value.trim();
+    if (!RegExp(r'^\d{3,6}$').hasMatch(code)) {
+      setState(() {
+        _communityName = null;
+        _checkingCode = false;
+      });
+      return;
+    }
+    setState(() => _checkingCode = true);
+    _codeDebounce = Timer(const Duration(milliseconds: 450), () async {
+      try {
+        final name = await ref
+            .read(authServiceProvider)
+            .checkCommunityCode(code);
+        if (!mounted || _communityCodeController.text.trim() != code) return;
+        setState(() {
+          _communityName = name;
+          _checkingCode = false;
+        });
+      } catch (_) {
+        if (mounted) setState(() => _checkingCode = false);
+      }
+    });
+  }
 
   void _showMessage(String message, {bool error = true}) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -82,6 +119,13 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
         _showMessage('Password must be at least 6 characters.');
         return;
       }
+      if (!Brand.isPhh &&
+          !RegExp(
+            r'^\d{3,6}$',
+          ).hasMatch(_communityCodeController.text.trim())) {
+        _showMessage('Please enter your residence community code (3-6 digit).');
+        return;
+      }
     }
 
     setState(() => _isLoading = true);
@@ -89,10 +133,29 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
       final authService = ref.read(authServiceProvider);
 
       if (_isSignUp) {
+        String? communityName;
+        if (!Brand.isPhh) {
+          // Validate the community code BEFORE creating the account.
+          communityName = await authService.checkCommunityCode(
+            _communityCodeController.text.trim(),
+          );
+          if (communityName == null) {
+            if (!mounted) return;
+            _showMessage(
+              'Community code not found. Please check with your management.',
+            );
+            setState(() => _isLoading = false);
+            return;
+          }
+        }
         final res = await authService.signUpWithEmailPassword(
           email,
           password,
           _nameController.text.trim(),
+          communityCode: Brand.isPhh
+              ? null
+              : _communityCodeController.text.trim(),
+          residentType: Brand.isPhh ? null : _residentType,
         );
         if (!mounted) return;
         if (res.session != null) {
@@ -137,15 +200,19 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
         _emailController.clear();
         _passwordController.clear();
         _nameController.clear();
+        _communityCodeController.clear();
+        _residentType = 'owner';
       }
     });
   }
 
   @override
   void dispose() {
+    _codeDebounce?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
+    _communityCodeController.dispose();
     super.dispose();
   }
 
@@ -257,6 +324,117 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                               controller: _nameController,
                             ),
                             const SizedBox(height: 16),
+                            if (!Brand.isPhh) ...[
+                              GlassTextField(
+                                hintText: 'Residence Community Code',
+                                prefixIcon: Icons.apartment_outlined,
+                                controller: _communityCodeController,
+                                keyboardType: TextInputType.number,
+                                onChanged: _onCommunityCodeChanged,
+                              ),
+                              // Live result: "001 – Sunway Apartments".
+                              if (_checkingCode ||
+                                  _communityCodeController.text
+                                      .trim()
+                                      .isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 8,
+                                    left: 6,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      if (_checkingCode)
+                                        const SizedBox(
+                                          width: 13,
+                                          height: 13,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      else
+                                        Icon(
+                                          _communityName != null
+                                              ? Icons.check_circle
+                                              : Icons.error_outline,
+                                          size: 15,
+                                          color: _communityName != null
+                                              ? AppColors.success
+                                              : AppColors.error,
+                                        ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          _checkingCode
+                                              ? 'Checking code…'
+                                              : _communityName ??
+                                                    'Community code not found',
+                                          style: TextStyle(
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.w700,
+                                            color: _checkingCode
+                                                ? AppColors.textSecondary
+                                                : _communityName != null
+                                                ? AppColors.success
+                                                : AppColors.error,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              const SizedBox(height: 16),
+                              // Owner / Tenant selector (point 17).
+                              Row(
+                                children: [
+                                  for (final t in const [
+                                    ('owner', 'Owner'),
+                                    ('tenant', 'Tenant'),
+                                  ]) ...[
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () => setState(
+                                          () => _residentType = t.$1,
+                                        ),
+                                        child: AnimatedContainer(
+                                          duration: const Duration(
+                                            milliseconds: 180,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            gradient: _residentType == t.$1
+                                                ? AppColors.brandGradient
+                                                : null,
+                                            color: _residentType == t.$1
+                                                ? null
+                                                : AppColors.surfaceTint,
+                                            borderRadius: BorderRadius.circular(
+                                              14,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              t.$2,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                                color: _residentType == t.$1
+                                                    ? Colors.white
+                                                    : AppColors.textSecondary,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    if (t.$1 == 'owner')
+                                      const SizedBox(width: 10),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                            ],
                           ],
                           GlassTextField(
                             hintText: ref.tr('login.email'),

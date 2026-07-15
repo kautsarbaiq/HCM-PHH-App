@@ -315,14 +315,33 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                       ),
                       _buildTextField(
                         amountController,
-                        'Amount (numbers only)',
-                        Icons.attach_money,
+                        'Amount in RM (numbers only)',
+                        Icons.payments_outlined,
                         isNumeric: true,
                       ),
+                      // Billing period via calendar (point 5): tap → pick a
+                      // month, stored as e.g. "July 2026".
                       _buildTextField(
                         periodController,
-                        'Period (e.g. June 2026) — optional',
-                        Icons.event_note,
+                        'Billing period — tap to pick month',
+                        Icons.calendar_month,
+                        readOnly: true,
+                        onTap: () async {
+                          final now = DateTime.now();
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: now,
+                            firstDate: DateTime(now.year - 2),
+                            lastDate: DateTime(now.year + 2),
+                            initialDatePickerMode: DatePickerMode.year,
+                            helpText: 'Select billing period',
+                          );
+                          if (picked != null) {
+                            periodController.text = DateFormat(
+                              'MMMM yyyy',
+                            ).format(picked);
+                          }
+                        },
                       ),
                       const SizedBox(height: 16),
                       InkWell(
@@ -555,11 +574,15 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
     String label,
     IconData icon, {
     bool isNumeric = false,
+    bool readOnly = false,
+    VoidCallback? onTap,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(
         controller: controller,
+        readOnly: readOnly,
+        onTap: onTap,
         keyboardType: isNumeric
             ? const TextInputType.numberWithOptions(decimal: true)
             : TextInputType.text,

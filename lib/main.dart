@@ -24,13 +24,8 @@ void main() async {
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL'] ?? '',
     anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
-    // On WEB, do not persist the session to the browser — every visit must go
-    // through the login screen (no silent auto-login as the last account on a
-    // shared computer). On mobile, keep the default persistent session so the
-    // installed app stays logged in between launches.
-    authOptions: kIsWeb
-        ? const FlutterAuthClientOptions(localStorage: EmptyLocalStorage())
-        : const FlutterAuthClientOptions(),
+    // Sessions persist on BOTH web and mobile: a logged-in user stays logged
+    // in until they explicitly log out (client request, 15/07 point 1).
   );
 
   // Push notifications (mobile only; no-op on web, never blocks startup).

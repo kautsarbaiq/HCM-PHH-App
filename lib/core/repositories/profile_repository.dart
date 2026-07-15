@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../config/brand.dart';
+
 // --- Model ---
 class Profile {
   final String id;
@@ -16,6 +18,13 @@ class Profile {
   final String? shift;
   final String? post;
   final bool onDuty;
+  // Multi-community (HCA): which community this profile belongs to, and
+  // whether the resident is the house owner or a tenant.
+  final String? communityId;
+  final String? communityName;
+  final String residentType; // 'owner' | 'tenant'
+
+  bool get isTenant => residentType == 'tenant';
 
   Profile({
     required this.id,
@@ -30,6 +39,9 @@ class Profile {
     this.shift,
     this.post,
     this.onDuty = false,
+    this.communityId,
+    this.communityName,
+    this.residentType = 'owner',
   });
 
   factory Profile.fromJson(Map<String, dynamic> json) {
@@ -46,6 +58,11 @@ class Profile {
       shift: json['shift'] as String?,
       post: json['post'] as String?,
       onDuty: json['on_duty'] as bool? ?? false,
+      communityId: json['community_id'] as String?,
+      communityName: (json['communities'] is Map)
+          ? (json['communities']['name'] as String?)
+          : null,
+      residentType: json['resident_type'] as String? ?? 'owner',
     );
   }
 }
@@ -76,7 +93,8 @@ class ProfileRepository {
     try {
       final response = await _supabase
           .from('profiles')
-          .select()
+          // HCA joins the community name; PHH has no communities table.
+          .select(Brand.isPhh ? '*' : '*, communities(name)')
           .eq('id', id)
           .single();
       return Profile.fromJson(response);

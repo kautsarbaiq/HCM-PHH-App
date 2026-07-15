@@ -72,6 +72,8 @@ import '../../features/admin/presentation/pages/visitors_admin_page.dart'
     show adminVisitorsProvider;
 import '../../features/admin/presentation/pages/marketplace_admin_page.dart'
     show adminMarketplaceProvider;
+import '../../features/admin/presentation/pages/communities_admin_page.dart'
+    show adminCommunitiesProvider;
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart'
     show adminDashboardStatsProvider;
 
@@ -135,6 +137,7 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
     adminFormSubmissionsProvider,
     adminIdScansProvider,
   ],
+  'communities': [adminCommunitiesProvider],
   'resident_documents': [myResidentDocsProvider],
   'resident_id_scans': [myIdScansProvider, adminIdScansProvider],
   'tickets': [myTicketsProvider],

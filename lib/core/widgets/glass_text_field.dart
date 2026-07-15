@@ -9,6 +9,7 @@ class GlassTextField extends StatefulWidget {
   final TextInputType keyboardType;
   final int maxLines;
   final bool isPassword;
+  final ValueChanged<String>? onChanged;
 
   const GlassTextField({
     super.key,
@@ -18,6 +19,7 @@ class GlassTextField extends StatefulWidget {
     this.keyboardType = TextInputType.text,
     this.maxLines = 1,
     this.isPassword = false,
+    this.onChanged,
   });
 
   @override
@@ -81,6 +83,7 @@ class _GlassTextFieldState extends State<GlassTextField> {
             keyboardType: widget.keyboardType,
             maxLines: widget.isPassword ? 1 : widget.maxLines,
             obscureText: widget.isPassword,
+            onChanged: widget.onChanged,
             style: const TextStyle(
               fontSize: 15,
               color: AppColors.textPrimary,

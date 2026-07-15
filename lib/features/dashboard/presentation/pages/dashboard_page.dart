@@ -188,6 +188,19 @@ class DashboardPage extends ConsumerWidget {
                   letterSpacing: -0.4,
                 ),
               ),
+              // HCA: the resident's community name (point 3).
+              if (!Brand.isPhh &&
+                  (profile?.communityName?.isNotEmpty ?? false))
+                Text(
+                  profile!.communityName!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primaryBlue,
+                  ),
+                ),
             ],
           ),
         ),

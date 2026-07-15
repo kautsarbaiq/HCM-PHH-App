@@ -111,6 +111,8 @@ class AdminLayout extends StatelessWidget {
     String title = 'Dashboard';
     if (location.contains('residents')) {
       title = 'Residents';
+    } else if (location.contains('communities')) {
+      title = 'Communities';
     } else if (location.contains('houses')) {
       title = 'Houses';
     } else if (location.contains('announcements')) {
@@ -285,6 +287,15 @@ class AdminLayout extends StatelessWidget {
                     location.startsWith('/admin/houses'),
                     isDesktop,
                   ),
+                  if (!Brand.isPhh)
+                    _item(
+                      context,
+                      Icons.apartment_rounded,
+                      'Communities',
+                      '/admin/communities',
+                      location.startsWith('/admin/communities'),
+                      isDesktop,
+                    ),
                   _item(
                     context,
                     Icons.campaign_rounded,

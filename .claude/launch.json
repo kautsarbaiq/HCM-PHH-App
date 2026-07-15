@@ -4,7 +4,7 @@
     {
       "name": "hcm-web",
       "runtimeExecutable": "/usr/local/bin/npx",
-      "runtimeArgs": ["-y", "serve", "-l", "8797", "build/web"],
+      "runtimeArgs": ["-y", "serve", "-s", "-l", "8797", "build/web"],
       "port": 8797
     }
   ]
