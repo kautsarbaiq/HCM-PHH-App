@@ -242,16 +242,23 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
               fit: BoxFit.cover,
               alignment: Alignment.bottomCenter,
             ),
-            // Soft veil so the form stays readable over the illustration.
+            // Soft veil so the form stays readable over the illustration. On
+            // wide screens the portrait wallpaper crops to its busy building
+            // area, so the veil is stronger there.
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white.withOpacity(0.30),
-                    Colors.white.withOpacity(0.05),
-                  ],
+                  colors: MediaQuery.of(context).size.width >= 700
+                      ? [
+                          Colors.white.withOpacity(0.60),
+                          Colors.white.withOpacity(0.18),
+                        ]
+                      : [
+                          Colors.white.withOpacity(0.30),
+                          Colors.white.withOpacity(0.05),
+                        ],
                 ),
               ),
             ),

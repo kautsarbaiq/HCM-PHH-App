@@ -41,3 +41,9 @@ $function$;
 
 -- Registration itself goes through the `event-guest-register` Edge Function
 -- (service role) — no anon INSERT policy is opened on visitors.
+
+-- 3) The legacy CHECK only allowed pre-registered/walk-in — guest passes use
+--    their own registration_type so they're distinguishable in reports.
+ALTER TABLE public.visitors DROP CONSTRAINT IF EXISTS visitors_registration_type_check;
+ALTER TABLE public.visitors ADD CONSTRAINT visitors_registration_type_check
+  CHECK (registration_type = ANY (ARRAY['pre-registered'::text, 'walk-in'::text, 'event_guest'::text]));
