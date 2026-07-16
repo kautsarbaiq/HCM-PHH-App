@@ -9,6 +9,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/brand.dart';
 import '../repositories/contact_repository.dart' show adminContactsProvider;
 import '../repositories/profile_repository.dart' show currentProfileProvider;
+import '../repositories/admin_attention_repository.dart'
+    show adminAttentionProvider;
 import '../repositories/parking_repository.dart'
     show myParkingProvider, allParkingBaysProvider, houseParkingProvider;
 import '../repositories/admin_repository.dart'
@@ -100,8 +102,13 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
     dashboardBookingsProvider,
     myBookingsProvider,
     adminBookingsProvider,
+    if (!Brand.isPhh) adminAttentionProvider,
   ],
-  'events': [eventsProvider, adminEventsProvider],
+  'events': [
+    eventsProvider,
+    adminEventsProvider,
+    if (!Brand.isPhh) adminAttentionProvider,
+  ],
   'polls': [pollsProvider, adminPollsProvider],
   'visitors': [
     myVisitorsProvider,
@@ -111,7 +118,11 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
   ],
   'documents': [eDocumentsProvider, adminDocumentsProvider],
   'forms': [eFormsProvider, adminFormsProvider],
-  'form_submissions': [mySubmittedFormsProvider, adminFormSubmissionsProvider],
+  'form_submissions': [
+    mySubmittedFormsProvider,
+    adminFormSubmissionsProvider,
+    if (!Brand.isPhh) adminAttentionProvider,
+  ],
   'marketplace_services': [servicesProvider, adminMarketplaceProvider],
   'emergency_contacts': [contactsProvider, adminContactsProvider],
   'facilities': [facilitiesProvider, adminFacilitiesProvider],

@@ -312,7 +312,16 @@ Deno.serve(async (req: Request) => {
             message: {
               token: t,
               notification: { title: note.title, body: note.body },
-              android: { priority: "HIGH" },
+              android: {
+                priority: "HIGH",
+                // HCA's channel plays the app's signature tone (created in
+                // MainActivity). Devices without the channel fall back to the
+                // FCM default channel, so older installs keep working.
+                notification: {
+                  channel_id: "hca_alerts",
+                  sound: "hca_notify",
+                },
+              },
             },
           }),
         },

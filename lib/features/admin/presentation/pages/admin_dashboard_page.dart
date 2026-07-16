@@ -9,6 +9,7 @@ import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../emergency/presentation/widgets/active_emergency_banner.dart';
 import '../../../emergency/presentation/widgets/emergency_broadcast_sheet.dart';
+import '../widgets/admin_attention_feed.dart';
 
 typedef DashboardStats = ({
   int residents,
@@ -249,49 +250,61 @@ class AdminDashboardPage extends ConsumerWidget {
             },
           ),
           const SizedBox(height: 36),
-          const SectionHeader(
-            title: 'Recent Activities',
-            subtitle: 'Latest community updates',
-          ),
-          const SizedBox(height: 18),
-          PremiumCard(
-            padding: const EdgeInsets.all(24),
-            child: Row(
-              children: [
-                const GradientIconBadge(
-                  icon: Icons.history_rounded,
-                  gradient: AppColors.brandGradient,
-                  size: 50,
-                  iconSize: 24,
-                  radius: 16,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'No recent activities',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'New activity will appear here.',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          // HCA (boss 16/07): a real "needs your attention" feed — pending
+          // signups (approve/reject in-app), event proposals, bookings and
+          // form submissions waiting for review. PHH keeps the placeholder.
+          if (Brand.isPhh) ...[
+            const SectionHeader(
+              title: 'Recent Activities',
+              subtitle: 'Latest community updates',
             ),
-          ),
+            const SizedBox(height: 18),
+            PremiumCard(
+              padding: const EdgeInsets.all(24),
+              child: Row(
+                children: [
+                  const GradientIconBadge(
+                    icon: Icons.history_rounded,
+                    gradient: AppColors.brandGradient,
+                    size: 50,
+                    iconSize: 24,
+                    radius: 16,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'No recent activities',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'New activity will appear here.',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            const SectionHeader(
+              title: 'Needs Your Attention',
+              subtitle: 'Approvals and reviews waiting for you',
+            ),
+            const SizedBox(height: 18),
+            const AdminAttentionFeed(),
+          ],
         ],
       ),
     );
