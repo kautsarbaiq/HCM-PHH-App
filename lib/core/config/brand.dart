@@ -19,4 +19,9 @@ class Brand {
   static const String logoAsset = isPhh
       ? 'assets/branding/logo_phh.png'
       : 'assets/branding/logo.png';
+
+  /// Public web origin used in shareable links (event invitations etc.).
+  static const String webBaseUrl = isPhh
+      ? 'https://adminhousing.vercel.app'
+      : 'https://home-cloudasia.vercel.app';
 }

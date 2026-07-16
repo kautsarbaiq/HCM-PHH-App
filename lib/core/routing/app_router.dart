@@ -10,6 +10,7 @@ import '../../features/community/presentation/pages/community_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/egovernance/presentation/pages/eform_page.dart';
 import '../../features/egovernance/presentation/pages/edocument_page.dart';
+import '../../features/events/presentation/pages/event_invite_page.dart';
 import '../../features/events/presentation/pages/events_page.dart';
 import '../../features/epolling/presentation/pages/epolling_page.dart';
 import '../../features/directory/presentation/pages/committee_page.dart';
@@ -103,6 +104,10 @@ class AppRouter {
       final loc = state.matchedLocation;
       const loginPages = {'/login', '/admin', '/guard'};
 
+      // PUBLIC event-invitation page (HCA): outside guests open a shared link
+      // without any account — never bounce them to splash/login/home.
+      if (loc.startsWith('/event-invite')) return null;
+
       // Cold start: hold on the splash until the first auth + role resolution
       // completes, so we never flash the resident home or bounce through a
       // login screen before landing on the correct destination. Unlike a
@@ -141,6 +146,15 @@ class AppRouter {
       GoRoute(
         path: '/login',
         builder: (context, state) => const ResidentLoginPage(),
+      ),
+      // Public event invitation for outside guests (no login required).
+      GoRoute(
+        path: '/event-invite/:id',
+        builder: (context, state) => EventInvitePage(
+          eventId: state.pathParameters['id'] ?? '',
+          passToken: state.uri.queryParameters['pass'],
+          guestName: state.uri.queryParameters['n'],
+        ),
       ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,

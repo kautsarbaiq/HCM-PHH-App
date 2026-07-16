@@ -11,6 +11,7 @@ import '../../../../core/widgets/gradient_background.dart';
 import '../../../../theme/app_colors.dart';
 
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/config/brand.dart';
@@ -233,6 +234,19 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         );
       }
     }
+  }
+
+  /// HCA (boss 16/07): share the public registration link so people from
+  /// outside the community can register and receive a QR gate pass.
+  Future<void> _shareInvite(CommunityEvent event) async {
+    final url = '${Brand.webBaseUrl}/event-invite/${event.id}';
+    final text =
+        "You're invited to ${event.title}! 🎉\n"
+        '${_fmtDate(event.date)}'
+        '${event.location.isNotEmpty ? ' • ${event.location}' : ''}\n'
+        'Register here to get your gate pass for entry:\n'
+        '$url';
+    await SharePlus.instance.share(ShareParams(text: text));
   }
 
   /// HCA: popup listing who has RSVP'd to an event.
@@ -504,6 +518,37 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                     ),
                                   ),
                                 ],
+                              ),
+                            ],
+                            // HCA (boss 16/07): the host can invite people
+                            // from OUTSIDE the community — share a public
+                            // registration link; guests get a QR gate pass.
+                            if (!Brand.isPhh &&
+                                event.status == 'approved' &&
+                                event.createdBy == userId) ...[
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.brand,
+                                    side: const BorderSide(
+                                      color: AppColors.brand,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  icon: const Icon(
+                                    PhosphorIconsRegular.shareNetwork,
+                                    size: 18,
+                                  ),
+                                  label: const Text('Invite outside guests'),
+                                  onPressed: () => _shareInvite(event),
+                                ),
                               ),
                             ],
                             const SizedBox(height: 16),
