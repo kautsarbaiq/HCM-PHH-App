@@ -239,7 +239,8 @@ class _EventsPageState extends ConsumerState<EventsPage> {
   /// HCA (boss 16/07): share the public registration link so people from
   /// outside the community can register and receive a QR gate pass.
   Future<void> _shareInvite(CommunityEvent event) async {
-    final url = '${Brand.webBaseUrl}/event-invite/${event.id}';
+    // The web app uses hash routing, so the path lives after `#`.
+    final url = '${Brand.webBaseUrl}/#/event-invite/${event.id}';
     final text =
         "You're invited to ${event.title}! 🎉\n"
         '${_fmtDate(event.date)}'

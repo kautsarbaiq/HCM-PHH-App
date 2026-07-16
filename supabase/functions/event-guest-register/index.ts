@@ -132,7 +132,7 @@ Deno.serve(async (req: Request) => {
     const resendFrom = Deno.env.get("RESEND_FROM");
     if (resendKey && resendFrom && email) {
       const passUrl =
-        `https://home-cloudasia.vercel.app/event-invite/${eventId}?pass=${qrToken}&n=${encodeURIComponent(name)}`;
+        `https://home-cloudasia.vercel.app/#/event-invite/${eventId}?pass=${qrToken}&n=${encodeURIComponent(name)}`;
       const qrImg =
         `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(qrToken)}`;
       await fetch("https://api.resend.com/emails", {
