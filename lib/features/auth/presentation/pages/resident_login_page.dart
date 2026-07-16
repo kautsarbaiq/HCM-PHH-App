@@ -257,7 +257,10 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
             ),
           ],
           SafeArea(
-            child: Center(
+            // HCA (boss feedback): content pinned to the top so the wallpaper
+            // artwork at the bottom stays fully visible; PHH stays centered.
+            child: Align(
+              alignment: Brand.isPhh ? Alignment.center : Alignment.topCenter,
               child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: ConstrainedBox(
@@ -316,9 +319,10 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                       ),
                     ],
                     const SizedBox(height: 28),
-                    // White card holding the form
-                    PremiumCard(
-                      padding: const EdgeInsets.all(22),
+                    // PHH keeps the white card around the form; on HCA the
+                    // fields sit straight on the wallpaper (boss feedback) so
+                    // the artwork isn't hidden behind a big white surface.
+                    _FormSurface(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -490,6 +494,21 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
         ],
       ),
     );
+  }
+}
+
+/// PHH: the classic white card behind the login form. HCA: no card at all —
+/// the glass fields sit directly on the wallpaper.
+class _FormSurface extends StatelessWidget {
+  final Widget child;
+  const _FormSurface({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    if (Brand.isPhh) {
+      return PremiumCard(padding: const EdgeInsets.all(22), child: child);
+    }
+    return child;
   }
 }
 

@@ -54,6 +54,10 @@ class MainNavigationPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final int currentIndex = _calculateSelectedIndex(context);
+    // HCA: while the keyboard is open the floating nav/SOS would ride up over
+    // the form fields (boss feedback 15/07) — hide them until typing is done.
+    final bool hideFloatingUi =
+        !Brand.isPhh && MediaQuery.of(context).viewInsets.bottom > 0;
 
     return Scaffold(
       key: mainScaffoldKey,
@@ -63,7 +67,8 @@ class MainNavigationPage extends ConsumerWidget {
         children: [
           child,
           // SOS FAB
-          Positioned(
+          if (!hideFloatingUi)
+            Positioned(
             right: 24,
             bottom: 120,
             child: GestureDetector(
@@ -104,12 +109,13 @@ class MainNavigationPage extends ConsumerWidget {
             ),
           ),
           // Floating Nav Bar
-          Positioned(
-            left: 24,
-            right: 24,
-            bottom: 32,
-            child: _buildFloatingNavBar(context, ref, currentIndex),
-          ),
+          if (!hideFloatingUi)
+            Positioned(
+              left: 24,
+              right: 24,
+              bottom: 32,
+              child: _buildFloatingNavBar(context, ref, currentIndex),
+            ),
         ],
       ),
     );
