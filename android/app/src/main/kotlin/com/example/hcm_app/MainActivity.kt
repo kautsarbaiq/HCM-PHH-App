@@ -19,7 +19,12 @@ class MainActivity : FlutterActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             packageName == "com.bluesoft.hcm_app"
         ) {
-            val soundUri = Uri.parse("android.resource://$packageName/raw/hca_notify")
+            // Reference the resource by its R id (not just a name string) so
+            // the resource shrinker sees it as USED and keeps it in the APK,
+            // and resolve the sound URI by id (survives name collapsing too).
+            val soundUri = Uri.parse(
+                "android.resource://$packageName/${R.raw.hca_notify}"
+            )
             val attrs = AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)

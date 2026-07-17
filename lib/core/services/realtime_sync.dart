@@ -34,6 +34,7 @@ import '../../features/community/presentation/pages/community_page.dart'
     show noticesProvider, myTicketsProvider;
 import '../../features/events/presentation/pages/events_page.dart'
     show eventsProvider;
+import '../repositories/event_repository.dart' show eventGuestCountsProvider;
 import '../../features/epolling/presentation/pages/epolling_page.dart'
     show pollsProvider;
 import '../../features/egovernance/presentation/pages/eform_page.dart'
@@ -108,6 +109,7 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
     eventsProvider,
     adminEventsProvider,
     if (!Brand.isPhh) adminAttentionProvider,
+    if (!Brand.isPhh) eventGuestCountsProvider,
   ],
   'polls': [pollsProvider, adminPollsProvider],
   'visitors': [
@@ -115,6 +117,8 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
     guardVisitorsProvider,
     adminVisitorsProvider,
     adminDashboardStatsProvider,
+    // A new event guest is a visitor row — refresh the events' guest counts.
+    if (!Brand.isPhh) eventGuestCountsProvider,
   ],
   'documents': [eDocumentsProvider, adminDocumentsProvider],
   'forms': [eFormsProvider, adminFormsProvider],

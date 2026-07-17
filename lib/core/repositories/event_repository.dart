@@ -64,6 +64,14 @@ final eventRepositoryProvider = Provider<EventRepository>((ref) {
   return EventRepository(Supabase.instance.client);
 });
 
+/// HCA: number of outside guests registered (via the WhatsApp invite) per
+/// event, so they show up in the event's attendance count.
+final eventGuestCountsProvider = FutureProvider.autoDispose<Map<String, int>>((
+  ref,
+) {
+  return ref.read(eventRepositoryProvider).guestCounts();
+});
+
 class EventRepository {
   final SupabaseClient _supabase;
 
@@ -85,6 +93,28 @@ class EventRepository {
   /// `attendees` JSONB array (see supabase_realize.sql).
   Future<void> toggleRsvp(String eventId) async {
     await _supabase.rpc('toggle_event_rsvp', params: {'p_event_id': eventId});
+  }
+
+  /// HCA: map of event_id → outside-guest count (security/20 RPC).
+  Future<Map<String, int>> guestCounts() async {
+    final rows = await _supabase.rpc('event_guest_counts');
+    final map = <String, int>{};
+    for (final r in (rows as List)) {
+      map[r['event_id'].toString()] = (r['guest_count'] as num).toInt();
+    }
+    return map;
+  }
+
+  /// HCA: names of the outside guests registered for an event (security/20).
+  Future<List<String>> getGuestNames(String eventId) async {
+    final rows = await _supabase.rpc(
+      'event_guest_names',
+      params: {'p_event_id': eventId},
+    );
+    return (rows as List)
+        .map((r) => (r is Map ? r['visitor_name'] : r).toString())
+        .where((s) => s.isNotEmpty)
+        .toList();
   }
 
   /// Admin: create a new community event. `created_by` is set to the current

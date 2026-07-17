@@ -87,16 +87,29 @@ class _AdminParkingSheet extends ConsumerWidget {
                         style: TextStyle(color: AppColors.textSecondary),
                       ),
                     ),
+                  // Same card format the resident sees (boss 16/07): a soft
+                  // badge tile with the bay number and assigned car.
                   for (final b in bays)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(
-                        PhosphorIconsRegular.car,
-                        color: AppColors.brand,
+                      leading: Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: AppColors.brand.withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          PhosphorIconsRegular.car,
+                          color: AppColors.brand,
+                        ),
                       ),
                       title: Text(
                         'Bay ${b.bayNumber}',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                       subtitle: Text(
                         b.plate == null && b.vehicleSummary == null
@@ -104,7 +117,8 @@ class _AdminParkingSheet extends ConsumerWidget {
                             : [
                                 b.plate,
                                 b.vehicleSummary,
-                              ].whereType<String>().join(' — '),
+                              ].whereType<String>().join(' • '),
+                        style: const TextStyle(color: AppColors.textSecondary),
                       ),
                       trailing: IconButton(
                         icon: const Icon(

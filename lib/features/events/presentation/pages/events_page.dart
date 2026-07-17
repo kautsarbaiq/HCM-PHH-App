@@ -47,17 +47,11 @@ class EventsNotifier extends AsyncNotifier<List<CommunityEvent>> {
         : raw
               .where((e) => e.status == 'approved' || e.createdBy == myId)
               .toList();
-    // Upcoming events first (soonest on top), past ones pushed to the bottom —
-    // a freshly created event is immediately visible, not buried under old
-    // ones.
-    final cutoff = DateTime.now().subtract(const Duration(days: 1));
-    DateTime parse(CommunityEvent e) =>
-        DateTime.tryParse(e.date) ?? DateTime(2000);
-    final upcoming = all.where((e) => parse(e).isAfter(cutoff)).toList()
-      ..sort((a, b) => parse(a).compareTo(parse(b)));
-    final past = all.where((e) => !parse(e).isAfter(cutoff)).toList()
-      ..sort((a, b) => parse(b).compareTo(parse(a)));
-    return [...upcoming, ...past];
+    // Boss 16/07: newest event on top — sort by creation time, latest first.
+    DateTime created(CommunityEvent e) =>
+        DateTime.tryParse(e.createdAt) ?? DateTime(2000);
+    all.sort((a, b) => created(b).compareTo(created(a)));
+    return all;
   }
 
   Future<void> toggleRsvp(String eventId) async {
@@ -250,15 +244,22 @@ class _EventsPageState extends ConsumerState<EventsPage> {
     await SharePlus.instance.share(ShareParams(text: text));
   }
 
-  /// HCA: popup listing who has RSVP'd to an event.
+  /// HCA: popup listing who is attending — community members who RSVP'd plus
+  /// outside guests who registered via the invite link.
   Future<void> _showAttendees(CommunityEvent event) async {
     List<String> names = [];
+    List<String> guests = [];
     try {
-      names = await ref
-          .read(eventRepositoryProvider)
-          .getAttendeeNames(event.id);
+      final repo = ref.read(eventRepositoryProvider);
+      final results = await Future.wait([
+        repo.getAttendeeNames(event.id),
+        repo.getGuestNames(event.id),
+      ]);
+      names = results[0];
+      guests = results[1];
     } catch (_) {}
     if (!mounted) return;
+    final bool empty = event.attendees.isEmpty && guests.isEmpty;
     showDialog(
       context: context,
       builder: (dctx) => AlertDialog(
@@ -270,9 +271,9 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         ),
         content: SizedBox(
           width: 360,
-          child: event.attendees.isEmpty
+          child: empty
               ? const Text(
-                  'No one has RSVP\'d yet.',
+                  'No one has joined yet.',
                   style: TextStyle(color: AppColors.textSecondary),
                 )
               : SingleChildScrollView(
@@ -297,7 +298,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                         ),
                       if (names.length < event.attendees.length)
                         Padding(
-                          padding: const EdgeInsets.only(top: 6),
+                          padding: const EdgeInsets.only(top: 6, bottom: 6),
                           child: Text(
                             '+ ${event.attendees.length - names.length} other'
                             '${event.attendees.length - names.length == 1 ? '' : 's'}',
@@ -305,6 +306,26 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                               color: AppColors.textSecondary,
                               fontSize: 13,
                             ),
+                          ),
+                        ),
+                      // Outside guests (registered via the WhatsApp invite).
+                      for (final g in guests)
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(
+                            PhosphorIconsRegular.userPlus,
+                            color: AppColors.accentAmber,
+                          ),
+                          title: Text(
+                            g,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: const Text(
+                            'Guest (via invite)',
+                            style: TextStyle(fontSize: 11.5),
                           ),
                         ),
                     ],
@@ -396,12 +417,18 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                     );
                   }
                   final userId = profileAsync.value?.id ?? '';
+                  // HCA: outside-guest registrations count toward attendance.
+                  final guestCounts =
+                      ref.watch(eventGuestCountsProvider).valueOrNull ??
+                      const <String, int>{};
 
                   return SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final event = events[index];
                       final bool isRsvpd = event.attendees.contains(userId);
                       final bool isPending = _pendingRsvp.contains(event.id);
+                      final int guests = guestCounts[event.id] ?? 0;
+                      final int totalAttending = event.attending + guests;
                       return PremiumCard(
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(20),
@@ -573,7 +600,8 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                         const SizedBox(width: 6),
                                         Flexible(
                                           child: Text(
-                                            '${event.attending}/${event.capacity} attending',
+                                            '$totalAttending/${event.capacity} attending'
+                                            '${guests > 0 ? ' ($guests guest${guests == 1 ? '' : 's'})' : ''}',
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
@@ -602,7 +630,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                     event.status == 'approved' &&
                                     !isRsvpd &&
                                     event.capacity > 0 &&
-                                    event.attending >= event.capacity)
+                                    totalAttending >= event.capacity)
                                   const StatusPill(
                                     label: 'FULL',
                                     color: AppColors.textSecondary,

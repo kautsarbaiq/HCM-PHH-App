@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The resource shrinker can't see the notification sound (it's referenced by
+     a runtime URI), so keep it explicitly or it gets stripped and the tone
+     silently falls back to the Android default. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/hca_notify"
+    tools:shrinkMode="safe" />
