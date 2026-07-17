@@ -341,6 +341,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     _buildProfileHeader(ref),
                     const SizedBox(height: 32),
                     _buildInfoCard(ref),
+                    // HCA (boss 17/07): parking is its OWN section, directly
+                    // under the info card and above the documents.
+                    if (!Brand.isPhh) const MyParkingSection(),
                     const SizedBox(height: 32),
                     SectionHeader(
                       title: 'Resident Documents',
@@ -576,9 +579,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ? () => _editHouseAddress(house?.address)
                 : null,
           ),
-          // HCA: the house's parking bays live in this same card, right under
-          // the address (boss feedback 15/07).
-          if (!Brand.isPhh) const MyParkingRows(),
         ],
       ),
     );

@@ -196,71 +196,84 @@ class _AdminParkingSheet extends ConsumerWidget {
   }
 }
 
-/// RESIDENT (point 15): the resident's parking bays, rendered as extra rows
-/// INSIDE the profile info card (below House Address). Tap the pencil to
-/// assign/edit the car on that bay.
-class MyParkingRows extends ConsumerWidget {
-  const MyParkingRows({super.key});
+/// RESIDENT (point 15): the resident's parking bays as their OWN section on
+/// the profile — a "My Parking" header plus a card of bays (boss 17/07: it
+/// must stay separate, not mixed into the profile info card). Tap the pencil
+/// to assign/edit the car on that bay.
+class MyParkingSection extends ConsumerWidget {
+  const MyParkingSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final baysAsync = ref.watch(myParkingProvider);
     final bays = baysAsync.valueOrNull ?? const <ParkingBay>[];
+    if (bays.isEmpty) return const SizedBox.shrink();
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final b in bays) ...[
-          const Divider(height: 32, thickness: 0.5),
-          Row(
+        const SizedBox(height: 32),
+        Row(
+          children: const [
+            Icon(PhosphorIconsFill.car, color: AppColors.brand, size: 20),
+            SizedBox(width: 8),
+            Text(
+              'My Parking',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        PremiumCard(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Column(
             children: [
-              const GradientIconBadge(
-                icon: PhosphorIconsRegular.car,
-                gradient: AppColors.skyGradient,
-                size: 44,
-                iconSize: 20,
-                radius: 13,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Parking Bay ${b.bayNumber}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
+              for (final b in bays)
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                  leading: Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEDF0F5),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      b.plate == null && b.vehicleSummary == null
-                          ? 'Tap to assign your car'
-                          : [
-                              b.plate,
-                              b.vehicleSummary,
-                            ].whereType<String>().join(' — '),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
+                    child: const Icon(
+                      PhosphorIconsRegular.car,
+                      color: AppColors.brand,
                     ),
-                  ],
+                  ),
+                  title: Text(
+                    'Bay ${b.bayNumber}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  subtitle: Text(
+                    b.plate == null && b.vehicleSummary == null
+                        ? 'Tap to assign your car'
+                        : [
+                            b.plate,
+                            b.vehicleSummary,
+                          ].whereType<String>().join(' • '),
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                  trailing: const Icon(
+                    PhosphorIconsRegular.pencilSimple,
+                    size: 18,
+                    color: AppColors.brand,
+                  ),
+                  onTap: () => _assign(context, ref, b),
                 ),
-              ),
-              IconButton(
-                icon: const Icon(
-                  PhosphorIconsRegular.pencilSimple,
-                  size: 18,
-                  color: AppColors.brand,
-                ),
-                tooltip: 'Assign car',
-                visualDensity: VisualDensity.compact,
-                onPressed: () => _assign(context, ref, b),
-              ),
             ],
           ),
-        ],
+        ),
       ],
     );
   }
@@ -270,16 +283,47 @@ class MyParkingRows extends ConsumerWidget {
     WidgetRef ref,
     ParkingBay bay,
   ) async {
+    // Cars saved before the structured form live in the legacy free-text
+    // `vehicle_details` (e.g. "Proton x70"). Without this the edit dialog came
+    // up blank and looked like the saved car had been lost (boss 17/07).
+    String legacyMake = '';
+    String legacyModel = '';
+    final hasStructured = [
+      bay.vehicleMake,
+      bay.vehicleModel,
+      bay.vehicleYear,
+      bay.vehicleColor,
+    ].any((v) => (v ?? '').trim().isNotEmpty);
+    if (!hasStructured && (bay.vehicleDetails ?? '').trim().isNotEmpty) {
+      final parts = bay.vehicleDetails!.trim().split(RegExp(r'\s+'));
+      legacyMake = parts.first;
+      if (parts.length > 1) legacyModel = parts.sublist(1).join(' ');
+    }
+
     final plateCtrl = TextEditingController(text: bay.plate ?? '');
-    final makeCtrl = TextEditingController(text: bay.vehicleMake ?? '');
-    final modelCtrl = TextEditingController(text: bay.vehicleModel ?? '');
+    final makeCtrl = TextEditingController(
+      text: bay.vehicleMake ?? (legacyMake.isEmpty ? '' : legacyMake),
+    );
+    final modelCtrl = TextEditingController(
+      text: bay.vehicleModel ?? (legacyModel.isEmpty ? '' : legacyModel),
+    );
     final yearCtrl = TextEditingController(text: bay.vehicleYear ?? '');
     final colorCtrl = TextEditingController(text: bay.vehicleColor ?? '');
 
-    InputDecoration deco(String label) => InputDecoration(
-      labelText: label,
+    // hintText (not labelText) in a light grey, so the examples clearly read
+    // as placeholders instead of looking like already-filled values.
+    InputDecoration deco(String hint) => InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(
+        color: AppColors.textSecondary.withOpacity(0.45),
+        fontWeight: FontWeight.w400,
+      ),
       filled: true,
       fillColor: const Color(0xFFF4F6FB),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 14,
+      ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide.none,

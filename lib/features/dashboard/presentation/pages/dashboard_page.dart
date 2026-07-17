@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hcm_app/theme/app_colors.dart';
 import '../../../../core/repositories/billing_repository.dart';
 import '../../../../core/repositories/facility_repository.dart';
+import '../../../facility/presentation/pages/facility_page.dart' show bookingSlot;
 import '../../../../core/repositories/profile_repository.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -35,19 +36,28 @@ final dashboardBookingsProvider = FutureProvider.autoDispose<List<Booking>>((
   final uid = Supabase.instance.client.auth.currentUser?.id;
   if (uid == null) return [];
   final all = await ref.read(facilityRepositoryProvider).getMyBookings(uid);
-  // The card shows [first] as the next upcoming booking, so drop past and
-  // cancelled/rejected ones (list is already ordered by date ascending).
+  // The card shows [first] as the next upcoming booking, so drop cancelled /
+  // rejected ones and anything already past. Boss 17/07: comparing the DATE
+  // only kept showing a slot booked earlier the same day — compare the full
+  // date+time so a finished slot disappears.
   final now = DateTime.now();
   final todayIso =
       '${now.year.toString().padLeft(4, '0')}-'
       '${now.month.toString().padLeft(2, '0')}-'
       '${now.day.toString().padLeft(2, '0')}';
   return all.where((b) {
-    final s = b.status.toLowerCase();
-    return b.date.compareTo(todayIso) >= 0 &&
-        s != 'cancelled' &&
-        s != 'rejected';
-  }).toList();
+        final s = b.status.toLowerCase();
+        if (s == 'cancelled' || s == 'rejected') return false;
+        final slot = bookingSlot(b);
+        // Unparseable time → fall back to the date-only check.
+        if (slot == null) return b.date.compareTo(todayIso) >= 0;
+        return slot.isAfter(now);
+      }).toList()
+      ..sort((a, b) {
+        final da = bookingSlot(a), db = bookingSlot(b);
+        if (da == null || db == null) return a.date.compareTo(b.date);
+        return da.compareTo(db); // soonest first — the card shows [first]
+      });
 });
 
 final _currency = NumberFormat.currency(
