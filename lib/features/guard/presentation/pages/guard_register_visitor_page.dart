@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -319,12 +318,12 @@ class _GuardRegisterVisitorPageState
     final allCaptured =
         _vehicleFile != null && _visitorFile != null && _licenseFile != null;
     final isNarrow = MediaQuery.of(context).size.width < 600;
-    final cardPadding = isNarrow ? 16.w : 32.w;
+    final double cardPadding = isNarrow ? 16 : 32;
 
     return Container(
       decoration: const BoxDecoration(gradient: AppColors.canvasGradient),
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(16.w),
+        padding: EdgeInsets.all(16),
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
@@ -340,7 +339,7 @@ class _GuardRegisterVisitorPageState
                       iconSize: 25,
                       radius: 16,
                     ),
-                    SizedBox(width: 14.w),
+                    SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,18 +347,18 @@ class _GuardRegisterVisitorPageState
                           Text(
                             'Walk-in Registration',
                             style: TextStyle(
-                              fontSize: 23.sp,
+                              fontSize: 23,
                               fontWeight: FontWeight.w800,
                               color: AppColors.textPrimary,
                               letterSpacing: -0.4,
                             ),
                           ),
-                          SizedBox(height: 4.h),
+                          SizedBox(height: 4),
                           Text(
                             'Register walk-in visitors by capturing required proofs.',
                             style: TextStyle(
                               color: AppColors.textSecondary,
-                              fontSize: 13.sp,
+                              fontSize: 13,
                             ),
                           ),
                         ],
@@ -367,7 +366,7 @@ class _GuardRegisterVisitorPageState
                     ),
                   ],
                 ),
-                SizedBox(height: 22.h),
+                SizedBox(height: 22),
                 PremiumCard(
                   padding: EdgeInsets.all(cardPadding),
                   child: Column(

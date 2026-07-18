@@ -44,7 +44,11 @@ class AdminBillingsNotifier extends AsyncNotifier<List<Billing>> {
 }
 
 final _currencyFormat = NumberFormat('#,##0.00');
-String _formatAmount(double amount) => 'RM ${_currencyFormat.format(amount)}';
+// PHH bills are in Rupiah, HCA in Ringgit — this used to be hardcoded to RM,
+// so the PHH admin portal showed the wrong currency.
+const _currencySymbol = Brand.isPhh ? 'Rp' : 'RM';
+String _formatAmount(double amount) =>
+    '$_currencySymbol ${_currencyFormat.format(amount)}';
 
 String _formatDate(String? iso) {
   if (iso == null || iso.isEmpty) return '-';
@@ -338,7 +342,7 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                       ),
                       _buildTextField(
                         amountController,
-                        'Amount in RM (numbers only)',
+                        'Amount in $_currencySymbol (numbers only)',
                         Icons.payments_outlined,
                         isNumeric: true,
                       ),

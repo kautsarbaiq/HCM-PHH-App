@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -73,10 +72,10 @@ class _GuardLoginPageState extends ConsumerState<GuardLoginPage> {
         decoration: const BoxDecoration(gradient: AppColors.canvasGradient),
         child: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
             child: Container(
               constraints: const BoxConstraints(maxWidth: 420),
-              padding: EdgeInsets.all(28.w),
+              padding: EdgeInsets.all(28),
               decoration: BoxDecoration(
                 color: AppColors.primaryWhite,
                 borderRadius: BorderRadius.circular(28),
@@ -117,31 +116,31 @@ class _GuardLoginPageState extends ConsumerState<GuardLoginPage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 24.h),
+                    SizedBox(height: 24),
                     Text(
                       'Guard Post Alpha',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 25.sp,
+                        fontSize: 25,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary,
                         letterSpacing: -0.4,
                       ),
                     ),
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 8),
                     Text(
                       'Sign in to the security portal',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 14.sp,
+                        fontSize: 14,
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    SizedBox(height: 36.h),
+                    SizedBox(height: 36),
 
                     // Email Field
                     _label('Guard ID / Email'),
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 8),
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -160,11 +159,11 @@ class _GuardLoginPageState extends ConsumerState<GuardLoginPage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 20),
 
                     // Password Field
                     _label('Password'),
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 8),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
@@ -199,7 +198,7 @@ class _GuardLoginPageState extends ConsumerState<GuardLoginPage> {
                             ),
                           ),
                     ),
-                    SizedBox(height: 36.h),
+                    SizedBox(height: 36),
 
                     // Sign In Button
                     DecoratedBox(
@@ -246,7 +245,7 @@ class _GuardLoginPageState extends ConsumerState<GuardLoginPage> {
                             : Text(
                                 'Sign In',
                                 style: TextStyle(
-                                  fontSize: 15.sp,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 0.2,
                                 ),
@@ -266,7 +265,7 @@ class _GuardLoginPageState extends ConsumerState<GuardLoginPage> {
   Widget _label(String text) => Text(
     text,
     style: TextStyle(
-      fontSize: 13.5.sp,
+      fontSize: 13.5,
       fontWeight: FontWeight.w700,
       color: AppColors.textPrimary,
     ),

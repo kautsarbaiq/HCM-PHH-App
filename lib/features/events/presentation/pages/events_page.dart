@@ -418,9 +418,12 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                   }
                   final userId = profileAsync.value?.id ?? '';
                   // HCA: outside-guest registrations count toward attendance.
-                  final guestCounts =
-                      ref.watch(eventGuestCountsProvider).valueOrNull ??
-                      const <String, int>{};
+                  // PHH has no event_guest_counts RPC, so don't even fire the
+                  // request there (it would fail on every build of this page).
+                  final guestCounts = Brand.isPhh
+                      ? const <String, int>{}
+                      : (ref.watch(eventGuestCountsProvider).valueOrNull ??
+                            const <String, int>{});
 
                   return SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {

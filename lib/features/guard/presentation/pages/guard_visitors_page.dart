@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -93,7 +92,7 @@ class GuardVisitorsPage extends ConsumerWidget {
 
     return Container(
       decoration: const BoxDecoration(gradient: AppColors.canvasGradient),
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -106,7 +105,7 @@ class GuardVisitorsPage extends ConsumerWidget {
                 iconSize: 25,
                 radius: 16,
               ),
-              SizedBox(width: 14.w),
+              SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,18 +113,18 @@ class GuardVisitorsPage extends ConsumerWidget {
                     Text(
                       'Visitor Logs',
                       style: TextStyle(
-                        fontSize: 23.sp,
+                        fontSize: 23,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary,
                         letterSpacing: -0.4,
                       ),
                     ),
-                    SizedBox(height: 4.h),
+                    SizedBox(height: 4),
                     Text(
                       "Today's active and completed registrations",
                       style: TextStyle(
                         color: AppColors.textSecondary,
-                        fontSize: 13.sp,
+                        fontSize: 13,
                       ),
                     ),
                   ],
@@ -133,7 +132,7 @@ class GuardVisitorsPage extends ConsumerWidget {
               ),
             ],
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 16),
           // Quick actions in the header: QR check-in scan + manual walk-in.
           Row(
             children: [
@@ -149,14 +148,14 @@ class GuardVisitorsPage extends ConsumerWidget {
                     foregroundColor: AppColors.brand,
                     backgroundColor: AppColors.primaryWhite,
                     side: const BorderSide(color: AppColors.brand, width: 1.4),
-                    padding: EdgeInsets.symmetric(vertical: 13.h),
+                    padding: EdgeInsets.symmetric(vertical: 13),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                 ),
               ),
-              SizedBox(width: 10.w),
+              SizedBox(width: 10),
               Expanded(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
@@ -181,7 +180,7 @@ class GuardVisitorsPage extends ConsumerWidget {
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
                       foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 13.h),
+                      padding: EdgeInsets.symmetric(vertical: 13),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -192,7 +191,7 @@ class GuardVisitorsPage extends ConsumerWidget {
               ),
             ],
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 16),
           Expanded(
             child: Container(
               width: double.infinity,
@@ -223,7 +222,7 @@ class GuardVisitorsPage extends ConsumerWidget {
                       child: visitors.isEmpty
                           ? ListView(
                               children: [
-                                SizedBox(height: 60.h),
+                                SizedBox(height: 60),
                                 const AppEmptyState(
                                   icon: PhosphorIconsRegular.users,
                                   title: 'No visitors yet',
@@ -274,14 +273,14 @@ class _VisitorCardList extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 720),
         child: ListView.separated(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 24.h),
+          padding: EdgeInsets.fromLTRB(12, 12, 12, 24),
           itemCount: visitors.length,
-          separatorBuilder: (_, __) => SizedBox(height: 10.h),
+          separatorBuilder: (_, __) => SizedBox(height: 10),
           itemBuilder: (context, index) {
             final visitor = visitors[index];
             final statusColor = _statusColor(visitor.status);
             return PremiumCard(
-              padding: EdgeInsets.all(16.w),
+              padding: EdgeInsets.all(16),
               radius: 18,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,14 +294,14 @@ class _VisitorCardList extends StatelessWidget {
                         iconSize: 22,
                         radius: 14,
                       ),
-                      SizedBox(width: 12.w),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           visitor.visitorName,
                           style: TextStyle(
                             fontWeight: FontWeight.w800,
                             color: AppColors.textPrimary,
-                            fontSize: 15.sp,
+                            fontSize: 15,
                             letterSpacing: -0.2,
                           ),
                         ),
@@ -317,7 +316,7 @@ class _VisitorCardList extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: 10.h),
+                  SizedBox(height: 10),
                   _CardInfoRow(label: 'Purpose', value: visitor.purpose),
                   _CardInfoRow(
                     label: 'Type',
@@ -347,7 +346,7 @@ class _VisitorCardList extends StatelessWidget {
                   _PhotoThumbs(visitor: visitor),
                   if (visitor.status == 'expected' ||
                       visitor.status == 'checked_in') ...[
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 8),
                     Align(
                       alignment: Alignment.centerRight,
                       child: _VisitorActions(
@@ -376,15 +375,15 @@ class _CardInfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 2.h),
+      padding: EdgeInsets.symmetric(vertical: 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 72.w,
+            width: 72,
             child: Text(
               label,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
             ),
           ),
           Expanded(
@@ -393,7 +392,7 @@ class _CardInfoRow extends StatelessWidget {
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w700,
-                fontSize: 13.sp,
+                fontSize: 13,
               ),
             ),
           ),
@@ -548,32 +547,32 @@ class _PhotoThumbs extends StatelessWidget {
     ];
     if (photos.isEmpty) {
       return Padding(
-        padding: EdgeInsets.only(top: 8.h),
+        padding: EdgeInsets.only(top: 8),
         child: Row(
           children: [
             Icon(
               PhosphorIconsRegular.imageBroken,
-              size: 14.sp,
+              size: 14,
               color: AppColors.textSecondary,
             ),
-            SizedBox(width: 6.w),
+            SizedBox(width: 6),
             Text(
               'No photos captured',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 12.sp),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
             ),
           ],
         ),
       );
     }
     return Padding(
-      padding: EdgeInsets.only(top: 10.h),
+      padding: EdgeInsets.only(top: 10),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: photos
             .map(
               (p) => Padding(
-                padding: EdgeInsets.only(right: 8.w),
-                child: _Thumb(photo: p, size: 64.w),
+                padding: EdgeInsets.only(right: 8),
+                child: _Thumb(photo: p, size: 64),
               ),
             )
             .toList(),
@@ -603,11 +602,11 @@ class _Thumb extends StatelessWidget {
             fit: BoxFit.cover,
             borderRadius: BorderRadius.circular(12),
           ),
-          SizedBox(height: 5.h),
+          SizedBox(height: 5),
           Text(
             photo.label,
             style: TextStyle(
-              fontSize: 10.sp,
+              fontSize: 10,
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
             ),

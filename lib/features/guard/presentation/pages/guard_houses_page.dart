@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/repositories/house_repository.dart';
@@ -46,7 +45,7 @@ class GuardHousesPage extends ConsumerWidget {
 
     return Container(
       decoration: const BoxDecoration(gradient: AppColors.canvasGradient),
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -59,7 +58,7 @@ class GuardHousesPage extends ConsumerWidget {
                 iconSize: 25,
                 radius: 16,
               ),
-              SizedBox(width: 14.w),
+              SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,18 +66,18 @@ class GuardHousesPage extends ConsumerWidget {
                     Text(
                       'House Directory',
                       style: TextStyle(
-                        fontSize: 23.sp,
+                        fontSize: 23,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary,
                         letterSpacing: -0.4,
                       ),
                     ),
-                    SizedBox(height: 4.h),
+                    SizedBox(height: 4),
                     Text(
                       'All houses and their emergency contacts',
                       style: TextStyle(
                         color: AppColors.textSecondary,
-                        fontSize: 13.sp,
+                        fontSize: 13,
                       ),
                     ),
                   ],
@@ -86,7 +85,7 @@ class GuardHousesPage extends ConsumerWidget {
               ),
             ],
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 16),
           Expanded(
             child: Container(
               width: double.infinity,
@@ -113,7 +112,7 @@ class GuardHousesPage extends ConsumerWidget {
                     child: houses.isEmpty
                         ? ListView(
                             children: [
-                              SizedBox(height: 80.h),
+                              SizedBox(height: 80),
                               const AppEmptyState(
                                 icon: PhosphorIconsRegular.house,
                                 title: 'No houses found',
@@ -130,10 +129,10 @@ class GuardHousesPage extends ConsumerWidget {
                                 return ListView.separated(
                                   physics:
                                       const AlwaysScrollableScrollPhysics(),
-                                  padding: EdgeInsets.all(12.w),
+                                  padding: EdgeInsets.all(12),
                                   itemCount: houses.length,
                                   separatorBuilder: (_, __) =>
-                                      SizedBox(height: 10.h),
+                                      SizedBox(height: 10),
                                   itemBuilder: (context, index) =>
                                       _buildHouseCard(context, houses[index]),
                                 );
@@ -264,7 +263,7 @@ class GuardHousesPage extends ConsumerWidget {
     final phone = house.owner?.phone;
     final hasPhone = phone != null && phone.isNotEmpty;
     return PremiumCard(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(16),
       radius: 18,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,13 +277,13 @@ class GuardHousesPage extends ConsumerWidget {
                 iconSize: 20,
                 radius: 13,
               ),
-              SizedBox(width: 12.w),
+              SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'House ${house.houseNumber}',
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
-                    fontSize: 16.sp,
+                    fontSize: 16,
                     color: AppColors.textPrimary,
                     letterSpacing: -0.2,
                   ),
@@ -292,11 +291,11 @@ class GuardHousesPage extends ConsumerWidget {
               ),
             ],
           ),
-          SizedBox(height: 14.h),
+          SizedBox(height: 14),
           _infoRow('Owner', house.owner?.fullName ?? '-'),
-          SizedBox(height: 8.h),
+          SizedBox(height: 8),
           _infoRow('Mobile', phone ?? '-'),
-          SizedBox(height: 14.h),
+          SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
             child: DecoratedBox(
@@ -329,7 +328,7 @@ class GuardHousesPage extends ConsumerWidget {
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: Colors.transparent,
                   disabledForegroundColor: AppColors.textSecondary,
-                  padding: EdgeInsets.symmetric(vertical: 13.h),
+                  padding: EdgeInsets.symmetric(vertical: 13),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -348,10 +347,10 @@ class GuardHousesPage extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: 70.w,
+          width: 70,
           child: Text(
             label,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13.sp),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
           ),
         ),
         Expanded(
@@ -359,7 +358,7 @@ class GuardHousesPage extends ConsumerWidget {
             value,
             style: TextStyle(
               color: AppColors.textPrimary,
-              fontSize: 13.sp,
+              fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
           ),

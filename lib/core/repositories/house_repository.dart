@@ -66,14 +66,17 @@ class HouseRepository {
     return (response as List).map((json) => House.fromJson(json)).toList();
   }
 
-  Future<House> getHouseById(String id) async {
+  /// Returns null when the house isn't visible (RLS) or no longer exists.
+  /// `.single()` used to throw a 406 (PGRST116) in that case, which showed up
+  /// as a failed request on every profile load.
+  Future<House?> getHouseById(String id) async {
     final response = await _supabase
         .from('houses')
         .select('*, profiles!houses_owner_id_fkey(*)')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
-    return House.fromJson(response);
+    return response == null ? null : House.fromJson(response);
   }
 
   Future<House> createHouse(House house) async {
