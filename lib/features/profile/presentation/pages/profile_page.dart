@@ -11,7 +11,6 @@ import 'package:path/path.dart' as p;
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
-import '../../../../core/config/brand.dart';
 import '../../../main/presentation/pages/main_navigation_page.dart'
     show hideBillsForTenant;
 import '../../../parking/parking_ui.dart';
@@ -343,7 +342,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     _buildInfoCard(ref),
                     // HCA (boss 17/07): parking is its OWN section, directly
                     // under the info card and above the documents.
-                    if (!Brand.isPhh) const MyParkingSection(),
+                    const MyParkingSection(),
                     const SizedBox(height: 32),
                     SectionHeader(
                       title: 'Resident Documents',
@@ -575,9 +574,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             AppColors.mintGradient,
             // HCA: the house is assigned by the management office — residents
             // can't edit it themselves.
-            onEdit: Brand.isPhh
-                ? () => _editHouseAddress(house?.address)
-                : null,
+            onEdit: null,
           ),
         ],
       ),
@@ -700,72 +697,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     }
   }
 
-  /// Edits the resident's house address (they are the house owner). An empty
-  /// value clears it (stored as null). Shows a SnackBar if no house is assigned.
-  Future<void> _editHouseAddress(String? currentAddress) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final profile = await ref.read(currentProfileProvider.future);
-    if (!mounted) return;
-
-    final houseId = profile?.houseId;
-    if (houseId == null || houseId.isEmpty) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('No house assigned')),
-      );
-      return;
-    }
-
-    final controller = TextEditingController(text: currentAddress ?? '');
-    final value = await showDialog<String?>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Edit House Address'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          minLines: 1,
-          maxLines: 3,
-          textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(
-            labelText: 'Address',
-            hintText: 'e.g. 12 Jalan Mawar, Taman Indah',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, null),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, controller.text),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-
-    if (value == null) return; // Cancelled.
-
-    try {
-      await ref.read(houseRepositoryProvider).updateHouse(houseId, {
-        'address': value.trim().isEmpty ? null : value.trim(),
-      });
-      ref.invalidate(myHouseProvider);
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Address updated successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('Could not update address: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
 
   Widget _buildSectionHeader(String title, {VoidCallback? onTap}) {
     final header = SectionHeader(

@@ -1,4 +1,3 @@
-import 'package:hcm_app/core/config/brand.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -80,7 +79,7 @@ class _EmergencyBottomSheetState extends ConsumerState<EmergencyBottomSheet> {
       // PHH keeps its original plain subtitle.
       final repo = ref.read(emergencyRepositoryProvider);
       String finalSubtitle = subtitle;
-      if (!Brand.isPhh) {
+      {
         final houseNo = await repo.houseNumberOf(profile.houseId);
         final who = [
           if (houseNo != null) 'House $houseNo',

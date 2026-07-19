@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../config/brand.dart';
 import 'house_repository.dart'; // For House
 import 'profile_repository.dart'; // For Profile
 
@@ -117,15 +116,11 @@ class Visitor {
     if (expectedAt != null) {
       data['expected_at'] = expectedAt;
     }
-    // Validity columns exist only on the HCA database — sending any of them
-    // (even entry_type's default) breaks PostgREST inserts on PHH.
-    if (!Brand.isPhh) {
-      data['entry_type'] = entryType;
-      if (validFrom != null) data['valid_from'] = validFrom;
-      if (validTo != null) data['valid_to'] = validTo;
-      if (visitDays != null) data['visit_days'] = visitDays;
-      if (timeWindow != null) data['time_window'] = timeWindow;
-    }
+    data['entry_type'] = entryType;
+    if (validFrom != null) data['valid_from'] = validFrom;
+    if (validTo != null) data['valid_to'] = validTo;
+    if (visitDays != null) data['visit_days'] = visitDays;
+    if (timeWindow != null) data['time_window'] = timeWindow;
     return data;
   }
 }

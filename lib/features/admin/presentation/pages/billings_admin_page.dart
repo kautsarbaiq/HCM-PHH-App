@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/config/brand.dart';
 import '../../../../core/repositories/billing_repository.dart';
 import '../../../../core/repositories/house_repository.dart';
 import '../../../../core/repositories/admin_repository.dart';
@@ -46,7 +45,7 @@ class AdminBillingsNotifier extends AsyncNotifier<List<Billing>> {
 final _currencyFormat = NumberFormat('#,##0.00');
 // PHH bills are in Rupiah, HCA in Ringgit — this used to be hardcoded to RM,
 // so the PHH admin portal showed the wrong currency.
-const _currencySymbol = Brand.isPhh ? 'Rp' : 'RM';
+const _currencySymbol = 'RM';
 String _formatAmount(double amount) =>
     '$_currencySymbol ${_currencyFormat.format(amount)}';
 
@@ -137,7 +136,7 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                   billing.period?.isNotEmpty == true ? billing.period! : '-',
                 ),
                 _buildDetailItem(
-                  Brand.isPhh ? 'Due Date' : 'Payment Due Date',
+                  'Payment Due Date',
                   _formatDate(billing.dueDate),
                 ),
                 _buildDetailItem(
@@ -260,7 +259,7 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
     // just one endpoint would silently drop the other from the saved value.
     DateTime? periodStart;
     DateTime? periodEnd;
-    if (!Brand.isPhh && (billing?.period?.isNotEmpty ?? false)) {
+    if (billing?.period?.isNotEmpty ?? false) {
       DateTime? parse(String s) {
         try {
           return DateFormat('MMM d, yyyy').parseStrict(s.trim());
@@ -346,31 +345,6 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                         Icons.payments_outlined,
                         isNumeric: true,
                       ),
-                      if (Brand.isPhh)
-                        // PHH keeps the single month picker.
-                        _buildTextField(
-                          periodController,
-                          'Billing period — tap to pick month',
-                          Icons.calendar_month,
-                          readOnly: true,
-                          onTap: () async {
-                            final now = DateTime.now();
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: now,
-                              firstDate: DateTime(now.year - 2),
-                              lastDate: DateTime(now.year + 2),
-                              initialDatePickerMode: DatePickerMode.year,
-                              helpText: 'Select billing period',
-                            );
-                            if (picked != null) {
-                              periodController.text = DateFormat(
-                                'MMMM yyyy',
-                              ).format(picked);
-                            }
-                          },
-                        )
-                      else ...[
                         // HCA (boss feedback 15/07): the billing period is a
                         // start date + end date.
                         const SizedBox(height: 12),
@@ -465,7 +439,7 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                             ),
                           ],
                         ),
-                      ],
+                      
                       const SizedBox(height: 16),
                       InkWell(
                         onTap: () async {
@@ -481,7 +455,7 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                         },
                         child: InputDecorator(
                           decoration: _inputDecoration(
-                            Brand.isPhh ? 'Due Date' : 'Payment Due Date',
+                            'Payment Due Date',
                             Icons.calendar_today,
                           ),
                           child: Text(
@@ -891,9 +865,7 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                                       Expanded(
                                         flex: 2,
                                         child: Text(
-                                          Brand.isPhh
-                                              ? 'Due Date'
-                                              : 'Payment Due Date',
+                                          'Payment Due Date',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w700,
                                             color: AppColors.textSecondary,

@@ -95,12 +95,10 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
           'typed correctly (for example: name@gmail.com).';
     }
     if (m.contains('email not confirmed')) {
-      // HCA: accounts are activated by the management office, so point the
+      // Accounts are activated by the management office, so point the
       // resident there instead of at their email inbox.
-      return Brand.isPhh
-          ? 'This email has not been confirmed yet. Please check your inbox.'
-          : 'Please contact the management office for approval of your '
-                'account.';
+      return 'Please contact the management office for approval of your '
+          'account.';
     }
     if (m.contains('already registered')) {
       return 'This email is already registered — please log in instead.';
@@ -124,10 +122,9 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
         _showMessage('Password must be at least 6 characters.');
         return;
       }
-      if (!Brand.isPhh &&
-          !RegExp(
-            r'^\d{3,6}$',
-          ).hasMatch(_communityCodeController.text.trim())) {
+      if (!RegExp(
+        r'^\d{3,6}$',
+      ).hasMatch(_communityCodeController.text.trim())) {
         _showMessage('Please enter your residence community code (3-6 digit).');
         return;
       }
@@ -138,29 +135,24 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
       final authService = ref.read(authServiceProvider);
 
       if (_isSignUp) {
-        String? communityName;
-        if (!Brand.isPhh) {
-          // Validate the community code BEFORE creating the account.
-          communityName = await authService.checkCommunityCode(
-            _communityCodeController.text.trim(),
+        // Validate the community code BEFORE creating the account.
+        final communityName = await authService.checkCommunityCode(
+          _communityCodeController.text.trim(),
+        );
+        if (communityName == null) {
+          if (!mounted) return;
+          _showMessage(
+            'Community code not found. Please check with your management.',
           );
-          if (communityName == null) {
-            if (!mounted) return;
-            _showMessage(
-              'Community code not found. Please check with your management.',
-            );
-            setState(() => _isLoading = false);
-            return;
-          }
+          setState(() => _isLoading = false);
+          return;
         }
         final res = await authService.signUpWithEmailPassword(
           email,
           password,
           _nameController.text.trim(),
-          communityCode: Brand.isPhh
-              ? null
-              : _communityCodeController.text.trim(),
-          residentType: Brand.isPhh ? null : _residentType,
+          communityCode: _communityCodeController.text.trim(),
+          residentType: _residentType,
         );
         if (!mounted) return;
         if (res.session != null) {
@@ -340,7 +332,7 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                               controller: _nameController,
                             ),
                             const SizedBox(height: 16),
-                            if (!Brand.isPhh) ...[
+                            ...[
                               GlassTextField(
                                 hintText: 'Residence Community Code',
                                 prefixIcon: Icons.apartment_outlined,
@@ -416,7 +408,7 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                           ),
                           // Owner / Tenant selector (point 17) — last thing
                           // before the Sign Up button, per boss feedback.
-                          if (_isSignUp && !Brand.isPhh) ...[
+                          if (_isSignUp) ...[
                             const SizedBox(height: 16),
                             Row(
                               children: [

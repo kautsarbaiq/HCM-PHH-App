@@ -42,11 +42,9 @@ class EventsNotifier extends AsyncNotifier<List<CommunityEvent>> {
     // Point 8: residents only see APPROVED events, plus their own proposals
     // (so a proposer can track pending/rejected). PHH shows everything.
     final myId = Supabase.instance.client.auth.currentUser?.id;
-    final all = Brand.isPhh
-        ? raw
-        : raw
-              .where((e) => e.status == 'approved' || e.createdBy == myId)
-              .toList();
+    final all = raw
+        .where((e) => e.status == 'approved' || e.createdBy == myId)
+        .toList();
     // Boss 16/07: newest event on top — sort by creation time, latest first.
     DateTime created(CommunityEvent e) =>
         DateTime.tryParse(e.createdAt) ?? DateTime(2000);
@@ -230,11 +228,19 @@ class _EventsPageState extends ConsumerState<EventsPage> {
     }
   }
 
-  /// HCA (boss 16/07): share the public registration link so people from
-  /// outside the community can register and receive a QR gate pass.
+  /// Share the public registration link so people from outside the community
+  /// can register and receive a QR gate pass.
+  ///
+  /// The link carries the INVITER's id: the guest pass is issued against the
+  /// house of whoever shared it, not the event's creator. Community events are
+  /// created by management (who may have no house at all), so tying the pass
+  /// to the creator would fail for exactly those events.
   Future<void> _shareInvite(CommunityEvent event) async {
+    final me = Supabase.instance.client.auth.currentUser?.id ?? '';
     // The web app uses hash routing, so the path lives after `#`.
-    final url = '${Brand.webBaseUrl}/#/event-invite/${event.id}';
+    final url =
+        '${Brand.webBaseUrl}/#/event-invite/${event.id}'
+        '${me.isEmpty ? '' : '?inv=$me'}';
     final text =
         "You're invited to ${event.title}! 🎉\n"
         '${_fmtDate(event.date)}'
@@ -349,10 +355,8 @@ class _EventsPageState extends ConsumerState<EventsPage> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundGrey,
-      // Point 8 (HCA): residents can propose an event for admin approval.
-      floatingActionButton: Brand.isPhh
-          ? null
-          : FloatingActionButton.extended(
+      // Point 8: residents can propose an event for admin approval.
+      floatingActionButton: FloatingActionButton.extended(
               backgroundColor: AppColors.brand,
               onPressed: _proposeEvent,
               icon: const Icon(PhosphorIconsRegular.plus, color: Colors.white),
@@ -420,10 +424,9 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                   // HCA: outside-guest registrations count toward attendance.
                   // PHH has no event_guest_counts RPC, so don't even fire the
                   // request there (it would fail on every build of this page).
-                  final guestCounts = Brand.isPhh
-                      ? const <String, int>{}
-                      : (ref.watch(eventGuestCountsProvider).valueOrNull ??
-                            const <String, int>{});
+                  final guestCounts =
+                      ref.watch(eventGuestCountsProvider).valueOrNull ??
+                      const <String, int>{};
 
                   return SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
@@ -458,8 +461,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                 ),
                                 // HCA point 8: the proposer tracks their
                                 // event's review status, like the web portal.
-                                if (!Brand.isPhh &&
-                                    event.status != 'approved') ...[
+                                if (event.status != 'approved') ...[
                                   const SizedBox(width: 8),
                                   StatusPill(
                                     label: event.status == 'pending'
@@ -524,8 +526,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                             ),
                             // HCA: a rejected proposal shows management's
                             // remarks so the resident knows why.
-                            if (!Brand.isPhh &&
-                                event.status == 'rejected' &&
+                            if (event.status == 'rejected' &&
                                 (event.adminRemarks?.isNotEmpty ??
                                     false)) ...[
                               const SizedBox(height: 8),
@@ -551,12 +552,11 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                 ],
                               ),
                             ],
-                            // HCA (boss 16/07): the host can invite people
-                            // from OUTSIDE the community — share a public
-                            // registration link; guests get a QR gate pass.
-                            if (!Brand.isPhh &&
-                                event.status == 'approved' &&
-                                event.createdBy == userId) ...[
+                            // Any resident can invite people from OUTSIDE the
+                            // community to an approved event — share a public
+                            // registration link; guests get a QR gate pass
+                            // issued against the inviter's house.
+                            if (event.status == 'approved') ...[
                               const SizedBox(height: 12),
                               SizedBox(
                                 width: double.infinity,
@@ -589,9 +589,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                 Flexible(
                                   // HCA: tap the count to see who's coming.
                                   child: InkWell(
-                                    onTap: Brand.isPhh
-                                        ? null
-                                        : () => _showAttendees(event),
+                                    onTap: () => _showAttendees(event),
                                     borderRadius: BorderRadius.circular(8),
                                     child: Row(
                                       children: [
@@ -610,12 +608,9 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                             style: TextStyle(
                                               fontSize: 13,
                                               fontWeight: FontWeight.w600,
-                                              color: Brand.isPhh
-                                                  ? AppColors.textPrimary
-                                                  : AppColors.brand,
-                                              decoration: Brand.isPhh
-                                                  ? null
-                                                  : TextDecoration.underline,
+                                              color: AppColors.brand,
+                                              decoration:
+                                                  TextDecoration.underline,
                                               decorationColor: AppColors.brand,
                                             ),
                                           ),
@@ -629,8 +624,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                 // pending/rejected proposals don't collect
                                 // attendees — and a full event shows FULL
                                 // instead of the RSVP button.
-                                if (!Brand.isPhh &&
-                                    event.status == 'approved' &&
+                                if (event.status == 'approved' &&
                                     !isRsvpd &&
                                     event.capacity > 0 &&
                                     totalAttending >= event.capacity)
@@ -639,8 +633,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                     color: AppColors.textSecondary,
                                     dense: true,
                                   )
-                                else if (Brand.isPhh ||
-                                    event.status == 'approved')
+                                else if (event.status == 'approved')
                                   _RsvpButton(
                                     isRsvpd: isRsvpd,
                                     isPending: isPending,

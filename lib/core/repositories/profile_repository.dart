@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../config/brand.dart';
 
 // --- Model ---
 class Profile {
@@ -94,7 +93,7 @@ class ProfileRepository {
       final response = await _supabase
           .from('profiles')
           // HCA joins the community name; PHH has no communities table.
-          .select(Brand.isPhh ? '*' : '*, communities(name)')
+          .select('*, communities(name)')
           .eq('id', id)
           .single();
       return Profile.fromJson(response);

@@ -289,24 +289,22 @@ class AdminLayout extends StatelessWidget {
                     location.startsWith('/admin/houses'),
                     isDesktop,
                   ),
-                  if (!Brand.isPhh)
-                    _item(
-                      context,
-                      Icons.apartment_rounded,
-                      'Communities',
-                      '/admin/communities',
-                      location.startsWith('/admin/communities'),
-                      isDesktop,
-                    ),
-                  if (!Brand.isPhh)
-                    _item(
-                      context,
-                      Icons.notifications_active_rounded,
-                      'Alert History',
-                      '/admin/alerts',
-                      location.startsWith('/admin/alerts'),
-                      isDesktop,
-                    ),
+                  _item(
+                    context,
+                    Icons.apartment_rounded,
+                    'Communities',
+                    '/admin/communities',
+                    location.startsWith('/admin/communities'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.notifications_active_rounded,
+                    'Alert History',
+                    '/admin/alerts',
+                    location.startsWith('/admin/alerts'),
+                    isDesktop,
+                  ),
                   _item(
                     context,
                     Icons.campaign_rounded,

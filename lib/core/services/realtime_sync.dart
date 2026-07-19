@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Repositories
-import '../config/brand.dart';
 import '../repositories/contact_repository.dart' show adminContactsProvider;
 import '../repositories/profile_repository.dart' show currentProfileProvider;
 import '../repositories/admin_attention_repository.dart'
@@ -103,13 +102,13 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
     dashboardBookingsProvider,
     myBookingsProvider,
     adminBookingsProvider,
-    if (!Brand.isPhh) adminAttentionProvider,
+    adminAttentionProvider,
   ],
   'events': [
     eventsProvider,
     adminEventsProvider,
-    if (!Brand.isPhh) adminAttentionProvider,
-    if (!Brand.isPhh) eventGuestCountsProvider,
+    adminAttentionProvider,
+    eventGuestCountsProvider,
   ],
   'polls': [pollsProvider, adminPollsProvider],
   'visitors': [
@@ -118,14 +117,14 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
     adminVisitorsProvider,
     adminDashboardStatsProvider,
     // A new event guest is a visitor row — refresh the events' guest counts.
-    if (!Brand.isPhh) eventGuestCountsProvider,
+    eventGuestCountsProvider,
   ],
   'documents': [eDocumentsProvider, adminDocumentsProvider],
   'forms': [eFormsProvider, adminFormsProvider],
   'form_submissions': [
     mySubmittedFormsProvider,
     adminFormSubmissionsProvider,
-    if (!Brand.isPhh) adminAttentionProvider,
+    adminAttentionProvider,
   ],
   'marketplace_services': [servicesProvider, adminMarketplaceProvider],
   'emergency_contacts': [contactsProvider, adminContactsProvider],
@@ -156,11 +155,8 @@ final Map<String, List<ProviderOrFamily>> _providersByTable = {
     adminFormSubmissionsProvider,
     adminIdScansProvider,
   ],
-  // communities/parking_bays tables exist only on HCA — binding them on a PHH
-  // build would CHANNEL_ERROR the shared realtime channel and kill ALL sync.
-  if (!Brand.isPhh) 'communities': [adminCommunitiesProvider],
-  if (!Brand.isPhh)
-    'parking_bays': [
+  'communities': [adminCommunitiesProvider],
+  'parking_bays': [
       myParkingProvider,
       allParkingBaysProvider,
       houseParkingProvider,

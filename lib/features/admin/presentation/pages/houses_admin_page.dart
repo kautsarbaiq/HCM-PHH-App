@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/repositories/admin_repository.dart';
 import '../../../../core/repositories/house_repository.dart';
-import '../../../../core/config/brand.dart';
 import '../../../../core/repositories/parking_repository.dart';
 import '../../../parking/parking_ui.dart';
 import '../../../../theme/app_colors.dart';
@@ -726,9 +725,9 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                     const columnSpacing = 24.0;
                     // HCA has two extra action buttons (parking + owner login)
                     // and an extra Parking column.
-                    final actionsColWidth = Brand.isPhh ? 168.0 : 268.0;
+                    const actionsColWidth = 268.0;
                     const statusColWidth = 120.0;
-                    final flexCols = Brand.isPhh ? 3 : 4;
+                    const flexCols = 4;
                     final fullWidth = constraints.maxWidth;
                     // Width consumed by fixed chrome: outer margins, the spacing
                     // between the columns, and the fixed status/actions columns.
@@ -792,16 +791,15 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                                     ),
                                   ),
                                 ),
-                                if (!Brand.isPhh)
-                                  const DataColumn(
-                                    label: Text(
-                                      'Parking',
-                                      style: TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontWeight: FontWeight.w700,
-                                      ),
+                                const DataColumn(
+                                  label: Text(
+                                    'Parking',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
+                                ),
                                 const DataColumn(
                                   label: Text(
                                     'Status',
@@ -859,19 +857,18 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                                         ),
                                       ),
                                     ),
-                                    if (!Brand.isPhh)
-                                      DataCell(
-                                        SizedBox(
-                                          width: flexColWidth,
-                                          child: Text(
-                                            _bayNumbers(house),
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              color: AppColors.textPrimary,
-                                            ),
+                                    DataCell(
+                                      SizedBox(
+                                        width: flexColWidth,
+                                        child: Text(
+                                          _bayNumbers(house),
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: AppColors.textPrimary,
                                           ),
                                         ),
                                       ),
+                                    ),
                                     DataCell(
                                       SizedBox(
                                         width: statusColWidth,
@@ -901,30 +898,28 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                                                   _showDetails(house),
                                               tooltip: 'View Details',
                                             ),
-                                            if (!Brand.isPhh)
-                                              IconButton(
-                                                icon: const Icon(
-                                                  Icons.local_parking_rounded,
-                                                  color: AppColors.accentSky,
-                                                ),
-                                                onPressed: () =>
-                                                    showAdminParkingSheet(
-                                                      context,
-                                                      house.id,
-                                                      house.houseNumber,
-                                                    ),
-                                                tooltip: 'Parking bays',
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.local_parking_rounded,
+                                                color: AppColors.accentSky,
                                               ),
-                                            if (!Brand.isPhh)
-                                              IconButton(
-                                                icon: const Icon(
-                                                  Icons.person_add_alt_1_rounded,
-                                                  color: AppColors.success,
-                                                ),
-                                                onPressed: () =>
-                                                    _showCreateOwnerForm(house),
-                                                tooltip: 'Create owner login',
+                                              onPressed: () =>
+                                                  showAdminParkingSheet(
+                                                    context,
+                                                    house.id,
+                                                    house.houseNumber,
+                                                  ),
+                                              tooltip: 'Parking bays',
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.person_add_alt_1_rounded,
+                                                color: AppColors.success,
                                               ),
+                                              onPressed: () =>
+                                                  _showCreateOwnerForm(house),
+                                              tooltip: 'Create owner login',
+                                            ),
                                             IconButton(
                                               icon: const Icon(
                                                 Icons.edit_rounded,
@@ -1017,7 +1012,7 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
               fontSize: 13,
             ),
           ),
-          if (!Brand.isPhh) ...[
+          ...[
             const SizedBox(height: 2),
             Text(
               'Parking: ${_bayNumbers(house)}',
@@ -1040,30 +1035,28 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
                 onPressed: () => _showDetails(house),
                 tooltip: 'View Details',
               ),
-              if (!Brand.isPhh)
-                IconButton(
-                  icon: const Icon(
-                    Icons.local_parking_rounded,
-                    color: AppColors.accentSky,
-                    size: 20,
-                  ),
-                  onPressed: () => showAdminParkingSheet(
-                    context,
-                    house.id,
-                    house.houseNumber,
-                  ),
-                  tooltip: 'Parking bays',
+              IconButton(
+                icon: const Icon(
+                  Icons.local_parking_rounded,
+                  color: AppColors.accentSky,
+                  size: 20,
                 ),
-              if (!Brand.isPhh)
-                IconButton(
-                  icon: const Icon(
-                    Icons.person_add_alt_1_rounded,
-                    color: AppColors.success,
-                    size: 20,
-                  ),
-                  onPressed: () => _showCreateOwnerForm(house),
-                  tooltip: 'Create owner login',
+                onPressed: () => showAdminParkingSheet(
+                  context,
+                  house.id,
+                  house.houseNumber,
                 ),
+                tooltip: 'Parking bays',
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.person_add_alt_1_rounded,
+                  color: AppColors.success,
+                  size: 20,
+                ),
+                onPressed: () => _showCreateOwnerForm(house),
+                tooltip: 'Create owner login',
+              ),
               IconButton(
                 icon: const Icon(
                   Icons.edit_rounded,

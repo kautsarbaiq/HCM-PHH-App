@@ -14,11 +14,16 @@ class EventInvitePage extends StatefulWidget {
   final String? passToken;
   final String? guestName;
 
+  /// Resident who shared this link. The gate pass is issued against THEIR
+  /// house, so invites work for community events created by management too.
+  final String? inviterId;
+
   const EventInvitePage({
     super.key,
     required this.eventId,
     this.passToken,
     this.guestName,
+    this.inviterId,
   });
 
   @override
@@ -106,6 +111,7 @@ class _EventInvitePageState extends State<EventInvitePage> {
           'phone': phone,
           'email': email,
           'vehicle_plate': _plateCtrl.text.trim(),
+          'inviter_id': widget.inviterId,
         },
       );
       final data = res.data;

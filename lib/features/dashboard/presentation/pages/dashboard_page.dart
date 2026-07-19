@@ -62,7 +62,7 @@ final dashboardBookingsProvider = FutureProvider.autoDispose<List<Booking>>((
 
 final _currency = NumberFormat.currency(
   locale: 'id_ID',
-  symbol: Brand.isPhh ? 'Rp ' : 'RM ',
+  symbol: 'RM ',
   decimalDigits: 0,
 );
 
@@ -202,7 +202,7 @@ class DashboardPage extends ConsumerWidget {
                 ),
               ),
               // HCA: the resident's community name (point 3).
-              if (!Brand.isPhh &&
+              if (
                   (profile?.communityName?.isNotEmpty ?? false))
                 Text(
                   profile!.communityName!,

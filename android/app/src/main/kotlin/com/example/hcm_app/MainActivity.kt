@@ -12,13 +12,11 @@ import io.flutter.embedding.android.FlutterActivity
 class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // HCA (boss 16/07): push notifications play the app's signature tone.
-        // The channel only exists on the HCA flavor — its applicationId is
-        // com.bluesoft.hcm_app and the sound lives in the hca sourceset — so
-        // the PHH build is untouched.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-            packageName == "com.bluesoft.hcm_app"
-        ) {
+        // Push notifications play the app's signature tone. Both brands get it
+        // (the sound lives in the shared main sourceset); only the channel's
+        // display name differs, since that is what the user sees in Android's
+        // notification settings.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Reference the resource by its R id (not just a name string) so
             // the resource shrinker sees it as USED and keeps it in the APK,
             // and resolve the sound URI by id (survives name collapsing too).
@@ -29,9 +27,14 @@ class MainActivity : FlutterActivity() {
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
+            val label = if (packageName == "com.bluesoft.phh") {
+                "PHH Housing Alerts"
+            } else {
+                "HomeCloudAsia Alerts"
+            }
             val channel = NotificationChannel(
                 "hca_alerts",
-                "HomeCloudAsia Alerts",
+                label,
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "Community updates, approvals and visitor alerts"

@@ -16,7 +16,6 @@ final GlobalKey<ScaffoldState> mainScaffoldKey = GlobalKey<ScaffoldState>();
 /// Owners and all PHH users are unaffected. Shared by the nav bar, dashboard
 /// and quick-access grid.
 bool hideBillsForTenant(WidgetRef ref) {
-  if (Brand.isPhh) return false;
   return ref.watch(currentProfileProvider).valueOrNull?.isTenant ?? false;
 }
 
@@ -57,7 +56,7 @@ class MainNavigationPage extends ConsumerWidget {
     // HCA: while the keyboard is open the floating nav/SOS would ride up over
     // the form fields (boss feedback 15/07) — hide them until typing is done.
     final bool hideFloatingUi =
-        !Brand.isPhh && MediaQuery.of(context).viewInsets.bottom > 0;
+        MediaQuery.of(context).viewInsets.bottom > 0;
 
     return Scaffold(
       key: mainScaffoldKey,

@@ -154,6 +154,7 @@ class AppRouter {
           eventId: state.pathParameters['id'] ?? '',
           passToken: state.uri.queryParameters['pass'],
           guestName: state.uri.queryParameters['n'],
+          inviterId: state.uri.queryParameters['inv'],
         ),
       ),
       ShellRoute(

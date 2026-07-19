@@ -1,4 +1,3 @@
-import 'package:hcm_app/core/config/brand.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -164,18 +163,17 @@ class _AccessPageState extends ConsumerState<AccessPage> {
         createdBy: profile.id,
         registrationType: 'pre-registered',
         // Point 7 validity (HCA).
-        entryType: Brand.isPhh ? 'single' : _entryType,
-        validFrom: (!Brand.isPhh && _entryType == 'long_term' && _validFrom != null)
+        entryType: _entryType,
+        validFrom: (_entryType == 'long_term' && _validFrom != null)
             ? d(_validFrom!)
             : null,
-        validTo: (!Brand.isPhh && _entryType == 'long_term' && _validTo != null)
+        validTo: (_entryType == 'long_term' && _validTo != null)
             ? d(_validTo!)
             : null,
-        visitDays: (!Brand.isPhh && _entryType == 'multiple' && _visitDays.isNotEmpty)
+        visitDays: (_entryType == 'multiple' && _visitDays.isNotEmpty)
             ? _visitDays.map(d).toList()
             : null,
-        timeWindow: (!Brand.isPhh &&
-                _entryType == 'multiple' &&
+        timeWindow: (_entryType == 'multiple' &&
                 _timeWindowController.text.trim().isNotEmpty)
             ? _timeWindowController.text.trim()
             : null,
@@ -547,11 +545,11 @@ class _AccessPageState extends ConsumerState<AccessPage> {
                 ),
                 const SizedBox(height: 16),
                 // HCA point 7: choose the pass type. PHH keeps single-visit.
-                if (!Brand.isPhh) ...[
+                ...[
                   _buildEntryTypeSelector(),
                   const SizedBox(height: 16),
                 ],
-                if (Brand.isPhh || _entryType == 'single')
+                if (_entryType == 'single')
                   GestureDetector(
                     onTap: _pickDateTime,
                     behavior: HitTestBehavior.opaque,
@@ -563,7 +561,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
                       ),
                     ),
                   ),
-                if (!Brand.isPhh && _entryType == 'long_term') ...[
+                if (_entryType == 'long_term') ...[
                   _dateField(
                     'Valid From',
                     _validFrom,
@@ -576,7 +574,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
                     (d) => setState(() => _validTo = d),
                   ),
                 ],
-                if (!Brand.isPhh && _entryType == 'multiple') ...[
+                if (_entryType == 'multiple') ...[
                   _buildMultiDayPicker(),
                   const SizedBox(height: 16),
                   GestureDetector(
@@ -656,7 +654,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
 
             // HCA: describe the pass validity on the card (boss feedback).
             String? passType;
-            if (!Brand.isPhh) {
+            {
               String day(String iso) {
                 try {
                   return DateFormat('MMM d').format(DateTime.parse(iso));

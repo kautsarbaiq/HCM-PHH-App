@@ -74,18 +74,40 @@ Deno.serve(async (req: Request) => {
       return json({ error: "This event has already taken place." }, 410);
     }
 
-    // --- host's house: guest passes hang off the host like normal visitors --
-    const { data: host } = await admin
-      .from("profiles")
-      .select("house_id")
-      .eq("id", event.created_by)
-      .maybeSingle();
-    if (!host?.house_id) {
+    // --- whose house does the pass hang off? -------------------------------
+    // Prefer the INVITER (the resident who shared the link). Community events
+    // are created by management, who may have no house at all, so falling back
+    // to the event creator only works for resident-created events.
+    const inviterId = (body.inviter_id ?? "").toString().trim();
+    let houseId: string | null = null;
+
+    if (inviterId) {
+      const { data: inviter } = await admin
+        .from("profiles")
+        .select("house_id")
+        .eq("id", inviterId)
+        .maybeSingle();
+      houseId = inviter?.house_id ?? null;
+    }
+    if (!houseId) {
+      const { data: host } = await admin
+        .from("profiles")
+        .select("house_id")
+        .eq("id", event.created_by)
+        .maybeSingle();
+      houseId = host?.house_id ?? null;
+    }
+    if (!houseId) {
       return json(
-        { error: "The event host has no house assigned — contact the host." },
+        {
+          error:
+            "Whoever shared this invite has no house assigned — ask them to " +
+            "contact management.",
+        },
         409,
       );
     }
+    const host = { house_id: houseId };
 
     const contact = [phone, email].filter(Boolean).join(" / ");
 
@@ -117,7 +139,9 @@ Deno.serve(async (req: Request) => {
       qr_token: qrToken,
       status: "expected",
       expected_at: event.event_date,
-      created_by: event.created_by,
+      // Credit the pass to whoever invited the guest, so it shows up in THEIR
+      // Access screen alongside their other visitor passes.
+      created_by: inviterId || event.created_by,
       registration_type: "event_guest",
       entry_type: "single",
       event_id: eventId,

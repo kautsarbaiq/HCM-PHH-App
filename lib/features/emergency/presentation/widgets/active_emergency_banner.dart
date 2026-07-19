@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/config/brand.dart';
 import '../../../../core/repositories/emergency_repository.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
@@ -55,7 +54,7 @@ class ActiveEmergencyBanner extends ConsumerWidget {
     // Point 12: staff clearing an alert must leave remarks (what happened,
     // action taken). Residents cancelling their own alert skip the popup.
     String? remarks;
-    if (canResolve && !Brand.isPhh) {
+    if (canResolve) {
       final controller = TextEditingController();
       final confirmed = await showDialog<bool>(
         context: context,
@@ -101,7 +100,7 @@ class ActiveEmergencyBanner extends ConsumerWidget {
       );
       if (confirmed != true) return;
       remarks = controller.text.trim();
-    } else if (!canResolve && !Brand.isPhh) {
+    } else if (!canResolve) {
       remarks = 'Cancelled by the resident who raised it';
     }
 

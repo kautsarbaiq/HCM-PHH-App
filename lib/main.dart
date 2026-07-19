@@ -1,6 +1,5 @@
 import 'dart:async' show unawaited;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,12 +23,9 @@ void main() async {
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL'] ?? '',
     anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
-    // HCA (15/07 point 1) + all mobile: persist the session so the user stays
-    // logged in until they log out. PHH web keeps its original no-persist
-    // behaviour (login required each visit on a shared computer).
-    authOptions: (kIsWeb && Brand.isPhh)
-        ? const FlutterAuthClientOptions(localStorage: EmptyLocalStorage())
-        : const FlutterAuthClientOptions(),
+    // Both brands: persist the session so the user stays logged in until they
+    // explicitly log out (boss point 1).
+    authOptions: const FlutterAuthClientOptions(),
   );
 
   // Push notifications (mobile only; no-op on web, never blocks startup).

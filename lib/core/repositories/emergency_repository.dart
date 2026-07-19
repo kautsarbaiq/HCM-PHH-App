@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../config/brand.dart';
 
 class EmergencyAlert {
   final String id;
@@ -69,8 +68,7 @@ class EmergencyAlert {
       'subtitle': subtitle,
       'triggered_by': triggeredBy,
       'status': status,
-      // HCA-only column; PHH's table doesn't have it.
-      if (!Brand.isPhh && houseId != null) 'house_id': houseId,
+      if (houseId != null) 'house_id': houseId,
     };
   }
 }
@@ -144,16 +142,16 @@ class EmergencyRepository {
         );
   }
 
-  /// Mark an emergency as cleared. On HCA also records WHO cleared it, WHEN
-  /// and their remarks (points 11-12).
+  /// Mark an emergency as cleared, recording WHO cleared it, WHEN and their
+  /// remarks (points 11-12).
   Future<void> resolveEmergency(String id, {String? remarks}) async {
-    final updates = <String, dynamic>{'status': 'Resolved'};
-    if (!Brand.isPhh) {
-      updates['cleared_by'] = _supabase.auth.currentUser?.id;
-      updates['cleared_at'] = DateTime.now().toUtc().toIso8601String();
-      if (remarks != null && remarks.trim().isNotEmpty) {
-        updates['clear_remarks'] = remarks.trim();
-      }
+    final updates = <String, dynamic>{
+      'status': 'Resolved',
+      'cleared_by': _supabase.auth.currentUser?.id,
+      'cleared_at': DateTime.now().toUtc().toIso8601String(),
+    };
+    if (remarks != null && remarks.trim().isNotEmpty) {
+      updates['clear_remarks'] = remarks.trim();
     }
     await _supabase.from('emergencies').update(updates).eq('id', id);
   }
