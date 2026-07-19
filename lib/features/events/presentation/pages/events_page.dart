@@ -34,6 +34,20 @@ String _fmtDate(String iso) {
   }
 }
 
+/// True once an event is over, so the UI stops offering things that can only
+/// fail. Boss report 19/07: a guest opened an invite for a BBQ dated three
+/// weeks earlier and got "This event has already taken place." from the
+/// registration function — the card still looked live because nothing in the
+/// list was date-aware.
+///
+/// Deliberately stricter than the edge function (which allows a 24h grace
+/// period): the UI hides the invite button the moment the event ends, so a
+/// link the app hands out always works.
+bool eventHasEnded(CommunityEvent e) {
+  final ends = DateTime.tryParse(e.endDate ?? '') ?? DateTime.tryParse(e.date);
+  return ends != null && ends.isBefore(DateTime.now());
+}
+
 class EventsNotifier extends AsyncNotifier<List<CommunityEvent>> {
   @override
   Future<List<CommunityEvent>> build() async {
@@ -46,9 +60,15 @@ class EventsNotifier extends AsyncNotifier<List<CommunityEvent>> {
         .where((e) => e.status == 'approved' || e.createdBy == myId)
         .toList();
     // Boss 16/07: newest event on top — sort by creation time, latest first.
+    // Boss 19/07: but events that are OVER always sink below the live ones,
+    // so the list opens on what people can still attend.
     DateTime created(CommunityEvent e) =>
         DateTime.tryParse(e.createdAt) ?? DateTime(2000);
-    all.sort((a, b) => created(b).compareTo(created(a)));
+    all.sort((a, b) {
+      final ea = eventHasEnded(a), eb = eventHasEnded(b);
+      if (ea != eb) return ea ? 1 : -1;
+      return created(b).compareTo(created(a));
+    });
     return all;
   }
 
@@ -459,9 +479,22 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                     ),
                                   ),
                                 ),
+                                // An event that is over reads as ENDED, ahead
+                                // of any RSVP state — "GOING" on a finished
+                                // event is what made the boss read a stale
+                                // event as still running.
+                                if (event.status == 'approved' &&
+                                    eventHasEnded(event)) ...[
+                                  const SizedBox(width: 8),
+                                  const StatusPill(
+                                    label: 'ENDED',
+                                    color: AppColors.textSecondary,
+                                    dense: true,
+                                  ),
+                                ]
                                 // HCA point 8: the proposer tracks their
                                 // event's review status, like the web portal.
-                                if (event.status != 'approved') ...[
+                                else if (event.status != 'approved') ...[
                                   const SizedBox(width: 8),
                                   StatusPill(
                                     label: event.status == 'pending'
@@ -556,7 +589,8 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                             // community to an approved event — share a public
                             // registration link; guests get a QR gate pass
                             // issued against the inviter's house.
-                            if (event.status == 'approved') ...[
+                            if (event.status == 'approved' &&
+                                !eventHasEnded(event)) ...[
                               const SizedBox(height: 12),
                               SizedBox(
                                 width: double.infinity,
@@ -625,6 +659,9 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                                 // attendees — and a full event shows FULL
                                 // instead of the RSVP button.
                                 if (event.status == 'approved' &&
+                                    eventHasEnded(event))
+                                  const SizedBox.shrink()
+                                else if (event.status == 'approved' &&
                                     !isRsvpd &&
                                     event.capacity > 0 &&
                                     totalAttending >= event.capacity)

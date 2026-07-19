@@ -144,6 +144,44 @@ class _EventInvitePageState extends State<EventInvitePage> {
     }
   }
 
+  /// The registration function refuses events that are over (boss report
+  /// 19/07: a guest filled in the whole form for a three-week-old BBQ before
+  /// being told). Mirror that check here so the guest is told up front
+  /// instead of after submitting.
+  bool _hasEnded() {
+    final raw = (_event?['end_date'] ?? _event?['event_date'] ?? '').toString();
+    final ends = DateTime.tryParse(raw);
+    return ends != null && ends.isBefore(DateTime.now());
+  }
+
+  Widget _ended() => _card(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _eventHeader(),
+            const SizedBox(height: 16),
+            const Icon(Icons.event_busy_rounded,
+                size: 40, color: AppColors.textSecondary),
+            const SizedBox(height: 10),
+            const Text(
+              'This event has already taken place.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Registration is closed, so no new gate passes are being issued.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+          ],
+        ),
+      );
+
   String _fmtDate(String iso) {
     try {
       return DateFormat(
@@ -173,7 +211,9 @@ class _EventInvitePageState extends State<EventInvitePage> {
                       ? _passView()
                       : _event == null
                           ? _notFound()
-                          : _formView(),
+                          : _hasEnded()
+                              ? _ended()
+                              : _formView(),
             ),
           ),
         ),
