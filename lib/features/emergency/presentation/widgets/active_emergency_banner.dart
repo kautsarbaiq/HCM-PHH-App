@@ -6,17 +6,36 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/repositories/emergency_repository.dart';
+import '../../../../core/services/emergency_alarm.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 
 /// Live banner that surfaces any ACTIVE emergency on a dashboard. Shows nothing
 /// when there are no active alerts. Used by residents (read-only) and by admin
 /// and guard ([canResolve] true → a Resolve button per alert).
-class ActiveEmergencyBanner extends ConsumerWidget {
+///
+/// While at least one alert is showing it also drives a continuous buzzer
+/// ([EmergencyAlarm]) that stops the moment the alert is cancelled/cleared.
+class ActiveEmergencyBanner extends ConsumerStatefulWidget {
   final bool canResolve;
   const ActiveEmergencyBanner({super.key, this.canResolve = false});
 
+  @override
+  ConsumerState<ActiveEmergencyBanner> createState() =>
+      _ActiveEmergencyBannerState();
+}
+
+class _ActiveEmergencyBannerState extends ConsumerState<ActiveEmergencyBanner> {
   static const _red = Color(0xFFEF4444);
+
+  bool get canResolve => widget.canResolve;
+
+  @override
+  void dispose() {
+    // Leaving the screen (logout, navigation) must silence the buzzer.
+    EmergencyAlarm.instance.setActive(false);
+    super.dispose();
+  }
 
   String _typeLabel(String type) {
     switch (type) {
@@ -48,7 +67,7 @@ class ActiveEmergencyBanner extends ConsumerWidget {
     }
   }
 
-  Future<void> _resolve(BuildContext context, WidgetRef ref, String id) async {
+  Future<void> _resolve(BuildContext context, String id) async {
     final messenger = ScaffoldMessenger.of(context);
 
     // Point 12: staff clearing an alert must leave remarks (what happened,
@@ -122,7 +141,7 @@ class ActiveEmergencyBanner extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final myId = Supabase.instance.client.auth.currentUser?.id;
     final all =
         ref.watch(activeEmergenciesProvider).valueOrNull ??
@@ -136,6 +155,14 @@ class ActiveEmergencyBanner extends ConsumerWidget {
         : all
               .where((a) => a.type == 'broadcast' || a.triggeredBy == myId)
               .toList();
+
+    // Buzzer follows the visible alerts: sound while any are showing, silence
+    // the instant the last one is cancelled/cleared. Scheduled post-frame so
+    // we never touch the player mid-build.
+    final hasAlerts = alerts.isNotEmpty;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) EmergencyAlarm.instance.setActive(hasAlerts);
+    });
     if (alerts.isEmpty) return const SizedBox.shrink();
 
     return Padding(
@@ -237,7 +264,7 @@ class ActiveEmergencyBanner extends ConsumerWidget {
                         if (canResolve || a.triggeredBy == myId) ...[
                           const SizedBox(height: 10),
                           GestureDetector(
-                            onTap: () => _resolve(context, ref, a.id),
+                            onTap: () => _resolve(context, a.id),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 14,
