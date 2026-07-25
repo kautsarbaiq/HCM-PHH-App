@@ -53,6 +53,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
   final _typeController = TextEditingController();
   final _dateController = TextEditingController();
   final _plateController = TextEditingController();
+  final _icController = TextEditingController(); // point 2: last-4 IC (optional)
   DateTime? _selectedDateTime;
   bool _isSubmitting = false;
   // HCA point 7: visitor pass entry type + its validity inputs.
@@ -120,6 +121,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
     _typeController.dispose();
     _dateController.dispose();
     _plateController.dispose();
+    _icController.dispose();
     _timeWindowController.dispose();
     super.dispose();
   }
@@ -162,6 +164,9 @@ class _AccessPageState extends ConsumerState<AccessPage> {
         expectedAt: (_selectedDateTime ?? DateTime.now()).toIso8601String(),
         createdBy: profile.id,
         registrationType: 'pre-registered',
+        icLast4: _icController.text.trim().isEmpty
+            ? null
+            : _icController.text.trim(),
         // Point 7 validity (HCA).
         entryType: _entryType,
         validFrom: (_entryType == 'long_term' && _validFrom != null)
@@ -190,6 +195,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
           _typeController.clear();
           _dateController.clear();
           _plateController.clear();
+          _icController.clear();
           _timeWindowController.clear();
           _selectedDateTime = null;
           _entryType = 'single';
@@ -594,6 +600,14 @@ class _AccessPageState extends ConsumerState<AccessPage> {
                   controller: _plateController,
                   hintText: 'Vehicle Plate (Optional)',
                   prefixIcon: PhosphorIconsRegular.carProfile,
+                ),
+                const SizedBox(height: 16),
+                // Point 2 (20/07): optional last-4 IC digits for gate ID check.
+                GlassTextField(
+                  controller: _icController,
+                  hintText: 'IC last 4 digits (Optional)',
+                  prefixIcon: PhosphorIconsRegular.identificationCard,
+                  keyboardType: TextInputType.number,
                 ),
               ],
             ),

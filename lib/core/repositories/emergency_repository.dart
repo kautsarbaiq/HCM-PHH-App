@@ -142,9 +142,15 @@ class EmergencyRepository {
         );
   }
 
-  /// Mark an emergency as cleared, recording WHO cleared it, WHEN and their
-  /// remarks (points 11-12).
-  Future<void> resolveEmergency(String id, {String? remarks}) async {
+  /// Mark an emergency as cleared, recording WHO cleared it, WHEN, their
+  /// remarks (points 11-12) and — meeting 20/07 point 7 — the resolution TYPE
+  /// ('false_alarm' | 'attended'). The community push (status only, never the
+  /// remarks) is sent by the send-push function on this UPDATE.
+  Future<void> resolveEmergency(
+    String id, {
+    String? remarks,
+    String? clearType,
+  }) async {
     final updates = <String, dynamic>{
       'status': 'Resolved',
       'cleared_by': _supabase.auth.currentUser?.id,
@@ -152,6 +158,9 @@ class EmergencyRepository {
     };
     if (remarks != null && remarks.trim().isNotEmpty) {
       updates['clear_remarks'] = remarks.trim();
+    }
+    if (clearType != null && clearType.isNotEmpty) {
+      updates['clear_type'] = clearType;
     }
     await _supabase.from('emergencies').update(updates).eq('id', id);
   }

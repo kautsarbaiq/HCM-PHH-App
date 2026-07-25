@@ -335,6 +335,13 @@ class _VisitorCardList extends StatelessWidget {
                       label: 'IC / Passport',
                       value: visitor.idNumber!,
                     ),
+                  // Point 2/3 (20/07): last-4 IC the resident/guest supplied,
+                  // so the guard can verify identity at the gate.
+                  if ((visitor.icLast4 ?? '').isNotEmpty)
+                    _CardInfoRow(
+                      label: 'IC last 4',
+                      value: '•••• ${visitor.icLast4}',
+                    ),
                   _CardInfoRow(
                     label: 'Check-in',
                     value: _checkInDisplay(visitor),
@@ -447,6 +454,20 @@ class _VisitorActionsState extends ConsumerState<_VisitorActions> {
 
     final status = widget.visitor.status;
     if (status == 'expected') {
+      // Meeting 20/07 point 4: a pre-registered / event guest can ONLY be
+      // checked in by scanning their QR code — no manual check-in button.
+      // (Walk-ins are registered on the spot and never sit as 'expected'.)
+      final qrOnly = widget.visitor.registrationType == 'pre-registered' ||
+          widget.visitor.registrationType == 'event_guest';
+      if (qrOnly) {
+        return widget.showLabels
+            ? const _ScanToCheckInHint()
+            : const Tooltip(
+                message: 'Scan QR to check in',
+                child: Icon(PhosphorIconsRegular.qrCode,
+                    color: AppColors.textSecondary),
+              );
+      }
       return widget.showLabels
           ? _gradientActionButton(
               gradient: AppColors.mintGradient,
@@ -517,6 +538,39 @@ class _VisitorActionsState extends ConsumerState<_VisitorActions> {
             borderRadius: BorderRadius.circular(13),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Shown in place of the manual "Check In" button for pre-registered / event
+/// guests — they must be checked in by scanning their QR (point 4, 20/07).
+class _ScanToCheckInHint extends StatelessWidget {
+  const _ScanToCheckInHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceTint,
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: AppColors.brand.withOpacity(0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Icon(PhosphorIconsRegular.qrCode, size: 16, color: AppColors.brand),
+          SizedBox(width: 6),
+          Text(
+            'Scan QR to check in',
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: AppColors.brand,
+            ),
+          ),
+        ],
       ),
     );
   }

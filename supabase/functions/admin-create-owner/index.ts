@@ -121,6 +121,8 @@ Deno.serve(async (req: Request) => {
       resident_type: "owner",
       house_id: houseId || null,
       community_id: communityId,
+      // Admin created this account directly → no separate approval step.
+      approval_status: "approved",
     });
     if (profErr) {
       // Roll back the auth user so the admin can retry cleanly.

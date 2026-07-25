@@ -18,6 +18,16 @@ import '../../features/directory/presentation/pages/security_guard_page.dart';
 import '../../features/directory/presentation/pages/econtact_page.dart';
 import '../../features/marketplace/presentation/pages/market_square_page.dart';
 import '../../features/idscan/presentation/pages/id_scan_page.dart';
+import '../../features/rewards/presentation/pages/rewards_page.dart';
+import '../../features/inventory/pages/inventory_home_page.dart';
+import '../../features/inventory/pages/purchase_orders_page.dart';
+import '../../features/inventory/pages/receive_po_page.dart';
+import '../../features/inventory/pages/qr_labels_page.dart';
+import '../../features/inventory/pages/picking_list_page.dart';
+import '../../features/inventory/pages/pick_task_page.dart';
+import '../../features/inventory/pages/placement_page.dart';
+import '../../features/inventory/pages/comparison_page.dart';
+import '../../features/inventory/pages/comparison_detail_page.dart';
 import '../../features/auth/presentation/pages/resident_login_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 
@@ -42,6 +52,7 @@ import '../../features/admin/presentation/pages/marketplace_admin_page.dart';
 import '../../features/admin/presentation/pages/facilities_admin_page.dart';
 import '../../features/admin/presentation/pages/bookings_admin_page.dart';
 import '../../features/admin/presentation/pages/id_scans_admin_page.dart';
+import '../../features/admin/presentation/pages/rewards_admin_page.dart';
 
 // Guard imports
 import '../../features/guard/presentation/pages/guard_login_page.dart';
@@ -220,6 +231,53 @@ class AppRouter {
         path: '/scan-id',
         builder: (context, state) => const IdScanPage(),
       ),
+      // Rewards program for house owners (meeting 20/07 point 9).
+      GoRoute(
+        path: '/rewards',
+        builder: (context, state) => const RewardsPage(),
+      ),
+
+      // Warehouse / inventory module (shared PHH-Inventory "canvas" backend).
+      GoRoute(
+        path: '/inventory',
+        builder: (context, state) => const InventoryHomePage(),
+      ),
+      GoRoute(
+        path: '/inventory/receiving',
+        builder: (context, state) => const PurchaseOrdersPage(),
+      ),
+      GoRoute(
+        path: '/inventory/receiving/:id',
+        builder: (context, state) =>
+            ReceivePoPage(poId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/inventory/receiving/:id/labels',
+        builder: (context, state) =>
+            QrLabelsPage(poId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/inventory/picking',
+        builder: (context, state) => const PickingListPage(),
+      ),
+      GoRoute(
+        path: '/inventory/picking/:id',
+        builder: (context, state) =>
+            PickTaskPage(listId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/inventory/placement',
+        builder: (context, state) => const PlacementPage(),
+      ),
+      GoRoute(
+        path: '/inventory/comparison',
+        builder: (context, state) => const ComparisonPage(),
+      ),
+      GoRoute(
+        path: '/inventory/comparison/:id',
+        builder: (context, state) =>
+            ComparisonDetailPage(poId: state.pathParameters['id']!),
+      ),
 
       // Admin Routes
       GoRoute(
@@ -303,6 +361,10 @@ class AppRouter {
           GoRoute(
             path: '/admin/id-scans',
             builder: (context, state) => const IdScansAdminPage(),
+          ),
+          GoRoute(
+            path: '/admin/rewards',
+            builder: (context, state) => const RewardsAdminPage(),
           ),
         ],
       ),

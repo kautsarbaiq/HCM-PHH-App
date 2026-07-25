@@ -138,6 +138,17 @@ async function buildNotification(
       const admins = await userIdsByRole("admin");
       const house = r.house_id ? await residentsOfHouse(r.house_id) : [];
       if (p.type === "INSERT") {
+        // Meeting 20/07 point 5: an event guest registering via a shared invite
+        // must notify ONLY the host who created/shared it — not the whole
+        // community (house residents + every guard + every admin).
+        if (r.registration_type === "event_guest") {
+          if (!r.created_by) return null;
+          return {
+            userIds: [r.created_by],
+            title: "Event guest registered",
+            body: `${r.visitor_name ?? "A guest"} registered for your event.`,
+          };
+        }
         return {
           userIds: [...house, ...guards, ...admins],
           title: "New visitor registered",
@@ -221,6 +232,21 @@ async function buildNotification(
           userIds: await everyone(),
           title: `🚨 ${r.title ?? "Emergency"}`,
           body: r.subtitle ?? "Emergency alert — open the app.",
+        };
+      }
+      // Meeting 20/07 point 7: when a guard clears a panic alert, notify the
+      // whole community of the RESOLUTION STATUS only — never the remarks.
+      if (
+        p.type === "UPDATE" && old.status !== r.status &&
+        r.status === "Resolved"
+      ) {
+        const attended = r.clear_type === "attended";
+        return {
+          userIds: await everyone(),
+          title: attended ? "Alert resolved ✓" : "Alert cleared",
+          body: attended
+            ? `${r.title ?? "The alert"} was attended by security.`
+            : `${r.title ?? "The alert"} was marked a false alarm.`,
         };
       }
       return null;

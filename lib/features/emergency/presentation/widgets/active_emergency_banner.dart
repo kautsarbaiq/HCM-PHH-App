@@ -70,55 +70,101 @@ class _ActiveEmergencyBannerState extends ConsumerState<ActiveEmergencyBanner> {
   Future<void> _resolve(BuildContext context, String id) async {
     final messenger = ScaffoldMessenger.of(context);
 
-    // Point 12: staff clearing an alert must leave remarks (what happened,
-    // action taken). Residents cancelling their own alert skip the popup.
     String? remarks;
+    String? clearType;
     if (canResolve) {
-      final controller = TextEditingController();
-      final confirmed = await showDialog<bool>(
+      // Meeting 20/07 point 7: the guard picks a resolution first.
+      //   • False alarm  → cleared immediately, no remarks.
+      //   • Attended     → remarks required (what happened / action taken).
+      // Either way the community is told the STATUS only (send-push), never
+      // the remarks.
+      final choice = await showDialog<String>(
         context: context,
         builder: (dctx) => AlertDialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Text(
-            'Clear Alert',
+            'Resolve Alert',
             style: TextStyle(
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
             ),
           ),
-          content: TextField(
-            controller: controller,
-            maxLines: 3,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Remarks — what happened / action taken',
-              border: OutlineInputBorder(),
-            ),
+          content: const Text(
+            'How was this alert resolved?',
+            style: TextStyle(color: AppColors.textSecondary),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(dctx, false),
+              onPressed: () => Navigator.pop(dctx),
               child: const Text('Cancel'),
+            ),
+            OutlinedButton(
+              onPressed: () => Navigator.pop(dctx, 'false_alarm'),
+              child: const Text('False alarm'),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.success,
                 foregroundColor: Colors.white,
               ),
-              onPressed: () {
-                if (controller.text.trim().isEmpty) return;
-                Navigator.pop(dctx, true);
-              },
-              child: const Text('Clear Alert'),
+              onPressed: () => Navigator.pop(dctx, 'attended'),
+              child: const Text('Attended'),
             ),
           ],
         ),
       );
-      if (confirmed != true) return;
-      remarks = controller.text.trim();
+      if (choice == null) return;
+      clearType = choice;
+
+      if (choice == 'attended') {
+        final controller = TextEditingController();
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (dctx) => AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text(
+              'Attended — remarks',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            content: TextField(
+              controller: controller,
+              maxLines: 3,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'What happened / action taken',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dctx, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.success,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  if (controller.text.trim().isEmpty) return;
+                  Navigator.pop(dctx, true);
+                },
+                child: const Text('Clear Alert'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed != true) return;
+        remarks = controller.text.trim();
+      }
     } else if (!canResolve) {
       remarks = 'Cancelled by the resident who raised it';
     }
@@ -126,7 +172,7 @@ class _ActiveEmergencyBannerState extends ConsumerState<ActiveEmergencyBanner> {
     try {
       await ref
           .read(emergencyRepositoryProvider)
-          .resolveEmergency(id, remarks: remarks);
+          .resolveEmergency(id, remarks: remarks, clearType: clearType);
       messenger.showSnackBar(
         SnackBar(
           content: Text(ref.tr('emergency.resolved')),
@@ -239,6 +285,10 @@ class _ActiveEmergencyBannerState extends ConsumerState<ActiveEmergencyBanner> {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
+                            const Spacer(),
+                            // Point 6 (20/07): silence the buzzer. Shown on the
+                            // first card only (the alarm is app-wide, one tone).
+                            if (a == alerts.first) _MuteToggle(),
                           ],
                         ),
                         const SizedBox(height: 6),
@@ -308,6 +358,51 @@ class _ActiveEmergencyBannerState extends ConsumerState<ActiveEmergencyBanner> {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// Small speaker button on the alert banner that mutes/unmutes the app-wide
+/// panic buzzer (meeting 20/07 point 6). Reflects the live mute state.
+class _MuteToggle extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: EmergencyAlarm.instance.muted,
+      builder: (context, muted, _) {
+        return GestureDetector(
+          onTap: () => EmergencyAlarm.instance.setMuted(!muted),
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.22),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  muted
+                      ? PhosphorIconsFill.speakerSimpleX
+                      : PhosphorIconsFill.speakerSimpleHigh,
+                  color: Colors.white,
+                  size: 14,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  muted ? 'Muted' : 'Silence',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

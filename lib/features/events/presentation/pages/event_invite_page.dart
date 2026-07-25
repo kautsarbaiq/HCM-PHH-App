@@ -35,6 +35,7 @@ class _EventInvitePageState extends State<EventInvitePage> {
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _plateCtrl = TextEditingController();
+  final _icCtrl = TextEditingController(); // point 3: last-4 IC (optional)
 
   Map<String, dynamic>? _event; // from event_invite_info
   bool _loading = true;
@@ -62,6 +63,7 @@ class _EventInvitePageState extends State<EventInvitePage> {
     _phoneCtrl.dispose();
     _emailCtrl.dispose();
     _plateCtrl.dispose();
+    _icCtrl.dispose();
     super.dispose();
   }
 
@@ -111,6 +113,7 @@ class _EventInvitePageState extends State<EventInvitePage> {
           'phone': phone,
           'email': email,
           'vehicle_plate': _plateCtrl.text.trim(),
+          'ic_last4': _icCtrl.text.trim(),
           'inviter_id': widget.inviterId,
         },
       );
@@ -361,6 +364,15 @@ class _EventInvitePageState extends State<EventInvitePage> {
             textCapitalization: TextCapitalization.characters,
             decoration:
                 deco('Vehicle plate (optional)', Icons.directions_car_outlined),
+          ),
+          const SizedBox(height: 12),
+          // Point 3 (20/07): optional last-4 IC digits for the gate ID check.
+          TextField(
+            controller: _icCtrl,
+            keyboardType: TextInputType.number,
+            maxLength: 4,
+            decoration: deco('IC last 4 digits (optional)', Icons.badge_outlined)
+                .copyWith(counterText: ''),
           ),
           if (_error != null) ...[
             const SizedBox(height: 12),

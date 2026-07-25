@@ -143,6 +143,8 @@ class AdminLayout extends StatelessWidget {
       title = 'Resident IDs';
     } else if (location.contains('bookings')) {
       title = 'Bookings';
+    } else if (location.contains('rewards')) {
+      title = 'Rewards';
     }
 
     return Container(
@@ -399,6 +401,14 @@ class AdminLayout extends StatelessWidget {
                     'Bookings',
                     '/admin/bookings',
                     location.startsWith('/admin/bookings'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    Icons.card_giftcard_rounded,
+                    'Rewards',
+                    '/admin/rewards',
+                    location.startsWith('/admin/rewards'),
                     isDesktop,
                   ),
                   // Boss feedback 15/07: HCA doesn't use the ID-scan module.

@@ -22,8 +22,12 @@ class Profile {
   final String? communityId;
   final String? communityName;
   final String residentType; // 'owner' | 'tenant'
+  // Meeting 20/07 point 1: 'pending' until management approves the account,
+  // then 'approved'. Legacy rows default to 'approved' (grandfathered in SQL).
+  final String approvalStatus;
 
   bool get isTenant => residentType == 'tenant';
+  bool get isApproved => approvalStatus == 'approved';
 
   Profile({
     required this.id,
@@ -41,6 +45,7 @@ class Profile {
     this.communityId,
     this.communityName,
     this.residentType = 'owner',
+    this.approvalStatus = 'approved',
   });
 
   factory Profile.fromJson(Map<String, dynamic> json) {
@@ -62,6 +67,7 @@ class Profile {
           ? (json['communities']['name'] as String?)
           : null,
       residentType: json['resident_type'] as String? ?? 'owner',
+      approvalStatus: json['approval_status'] as String? ?? 'approved',
     );
   }
 }

@@ -50,6 +50,8 @@ Deno.serve(async (req: Request) => {
     const phone = (body.phone ?? "").toString().trim();
     const email = (body.email ?? "").toString().trim().toLowerCase();
     const plate = (body.vehicle_plate ?? "").toString().trim();
+    // Meeting 20/07 point 3: optional last-4 IC digits for the gate ID check.
+    const icLast4 = (body.ic_last4 ?? "").toString().trim().slice(0, 4);
 
     if (!eventId) return json({ error: "event_id is required" }, 400);
     if (name.length < 2) return json({ error: "Please enter your name" }, 400);
@@ -146,6 +148,7 @@ Deno.serve(async (req: Request) => {
       entry_type: "single",
       event_id: eventId,
       guest_contact: contact,
+      ic_last4: icLast4 || null,
     });
     if (insErr) {
       return json({ error: `Registration failed: ${insErr.message}` }, 500);

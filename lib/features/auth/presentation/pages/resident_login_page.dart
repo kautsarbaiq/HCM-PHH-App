@@ -156,19 +156,50 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
         );
         if (!mounted) return;
         if (res.session != null) {
-          // Email confirmation is disabled → signed in immediately.
-          await refreshUserRole();
-          if (!mounted) return;
-          context.go(homeRouteForRole(appUserRoleNotifier.value));
+          // Even if a session is returned (email confirmation off), a new
+          // resident account starts 'pending' — management must approve it
+          // first (owner AND tenant, point 1). Don't let them into the app.
+          final status = await authService.myApprovalStatus();
+          if (status != 'approved') {
+            await authService.signOut();
+            if (!mounted) return;
+            _showMessage(
+              'Account created! The management office will review and '
+              'approve it — you can log in once approved.',
+              error: false,
+            );
+            setState(() => _isSignUp = false);
+          } else {
+            await refreshUserRole();
+            if (!mounted) return;
+            context.go(homeRouteForRole(appUserRoleNotifier.value));
+          }
         } else {
           _showMessage(
-            'Account created! Please confirm your email, then log in.',
+            'Account created! The management office will review and approve '
+            'it — you can log in once approved.',
             error: false,
           );
           setState(() => _isSignUp = false);
         }
       } else {
         await authService.signInWithEmailPassword(email, password);
+
+        // Point 1: block sign-in for accounts still awaiting approval.
+        final status = await authService.myApprovalStatus();
+        if (status != 'approved') {
+          await authService.signOut();
+          if (!mounted) return;
+          _showMessage(
+            status == 'rejected'
+                ? 'This account was not approved. Please contact the '
+                    'management office.'
+                : 'Your account is awaiting management approval. Please try '
+                    'again once it has been approved.',
+          );
+          setState(() => _isLoading = false);
+          return;
+        }
 
         // Load the role so we can route admin/guard/resident to the right area.
         await refreshUserRole();

@@ -67,6 +67,25 @@ class AuthService {
     return null;
   }
 
+  /// Meeting 20/07 point 1: a resident account is unusable until management
+  /// approves it. Returns the current user's approval_status
+  /// ('approved' | 'pending' | 'rejected'); defaults to 'approved' for legacy
+  /// rows / any read error so existing users are never locked out.
+  Future<String> myApprovalStatus() async {
+    final uid = _supabase.auth.currentUser?.id;
+    if (uid == null) return 'approved';
+    try {
+      final row = await _supabase
+          .from('profiles')
+          .select('approval_status')
+          .eq('id', uid)
+          .maybeSingle();
+      return (row?['approval_status'] as String?) ?? 'approved';
+    } catch (_) {
+      return 'approved';
+    }
+  }
+
   Future<void> signOut() async {
     await _supabase.auth.signOut();
   }

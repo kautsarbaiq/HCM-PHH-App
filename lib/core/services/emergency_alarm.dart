@@ -32,12 +32,29 @@ class EmergencyAlarm {
   Timer? _hapticTimer;
   bool _active = false;
 
+  /// Whether the guard/admin has silenced the buzzer (meeting 20/07 point 6).
+  /// A ValueNotifier so the mute button can reflect state live. Muting stops
+  /// the current tone and keeps future alerts silent until it's turned back on.
+  final ValueNotifier<bool> muted = ValueNotifier<bool>(false);
+
   /// Drive the buzzer from the current alert state. Idempotent: repeated calls
   /// with the same value do nothing.
   void setActive(bool active) {
     if (active == _active) return;
     _active = active;
-    if (active) {
+    _sync();
+  }
+
+  /// Silence / un-silence the buzzer without affecting whether an alert is
+  /// active (so un-muting during a live alert resumes the tone).
+  void setMuted(bool value) {
+    if (value == muted.value) return;
+    muted.value = value;
+    _sync();
+  }
+
+  void _sync() {
+    if (_active && !muted.value) {
       _start();
     } else {
       _stop();

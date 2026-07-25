@@ -59,6 +59,8 @@ dependencies:
   path_provider: ^2.1.5
   audioplayers: ^6.1.0 # mobile buzzer only; web uses package:web (audioplayers web backend is broken)
   web: ^1.1.0
+  http: ^1.2.2 # inventory module — talks to the shared PHH-Inventory Express API
+  printing: ^5.13.4 # inventory module — print/save per-unit QR label sheets as PDF
 
 dev_dependencies:
   flutter_test:

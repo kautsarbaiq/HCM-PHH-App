@@ -24,6 +24,9 @@ class Visitor {
   // Data auto-extracted from the visitor's ID/license by the scan-id function.
   final String? idNumber;
   final Map<String, dynamic>? idDetails;
+  // Meeting 20/07 points 2-3: optional last-4 IC digits the resident/guest
+  // supplies so the guard can verify identity at the gate.
+  final String? icLast4;
   // HCA point 7: visitor pass validity.
   //   single    → one visit (expectedAt)
   //   multiple  → several days (visitDays) within timeWindow
@@ -57,6 +60,7 @@ class Visitor {
     this.licensePhotoUrl,
     this.idNumber,
     this.idDetails,
+    this.icLast4,
     this.entryType = 'single',
     this.validFrom,
     this.validTo,
@@ -86,6 +90,7 @@ class Visitor {
       licensePhotoUrl: json['license_photo_url'] as String?,
       idNumber: json['id_number'] as String?,
       idDetails: json['id_details'] as Map<String, dynamic>?,
+      icLast4: json['ic_last4'] as String?,
       entryType: json['entry_type'] as String? ?? 'single',
       validFrom: json['valid_from'] as String?,
       validTo: json['valid_to'] as String?,
@@ -112,6 +117,9 @@ class Visitor {
     };
     if (qrToken != null) {
       data['qr_token'] = qrToken;
+    }
+    if (icLast4 != null && icLast4!.isNotEmpty) {
+      data['ic_last4'] = icLast4;
     }
     if (expectedAt != null) {
       data['expected_at'] = expectedAt;

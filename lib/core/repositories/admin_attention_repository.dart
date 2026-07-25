@@ -7,12 +7,14 @@ class PendingSignup {
   final String userId;
   final String email;
   final String fullName;
+  final String residentType; // 'owner' | 'tenant' (meeting 20/07 point 1)
   final String createdAt;
 
   PendingSignup({
     required this.userId,
     required this.email,
     required this.fullName,
+    required this.residentType,
     required this.createdAt,
   });
 
@@ -20,6 +22,7 @@ class PendingSignup {
     userId: json['user_id'].toString(),
     email: (json['email'] ?? '').toString(),
     fullName: (json['full_name'] ?? '').toString(),
+    residentType: (json['resident_type'] ?? 'owner').toString(),
     createdAt: (json['created_at'] ?? '').toString(),
   );
 }

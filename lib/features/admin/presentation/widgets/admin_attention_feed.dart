@@ -206,13 +206,42 @@ class _SignupRowState extends ConsumerState<_SignupRow> {
         iconSize: 20,
         radius: 14,
       ),
-      title: Text(
-        s.fullName.isEmpty ? s.email : s.fullName,
-        style: const TextStyle(
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-          fontSize: 14.5,
-        ),
+      title: Row(
+        children: [
+          Flexible(
+            child: Text(
+              s.fullName.isEmpty ? s.email : s.fullName,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                fontSize: 14.5,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Owner vs Tenant — both now require approval (point 1, 20/07).
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: (s.residentType == 'tenant'
+                      ? AppColors.info
+                      : AppColors.brand)
+                  .withOpacity(0.12),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              s.residentType == 'tenant' ? 'TENANT' : 'OWNER',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.5,
+                color:
+                    s.residentType == 'tenant' ? AppColors.info : AppColors.brand,
+              ),
+            ),
+          ),
+        ],
       ),
       subtitle: Text(
         'New account waiting for approval'

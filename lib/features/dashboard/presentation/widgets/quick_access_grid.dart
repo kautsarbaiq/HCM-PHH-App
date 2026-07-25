@@ -129,6 +129,24 @@ const List<QuickAccessItem> quickAccessCatalog = [
     color: AppColors.accentMint,
     route: '/security-guard',
   ),
+  // Warehouse/inventory module (boss 20/07) — shared PHH-Inventory backend.
+  QuickAccessItem(
+    id: 'inventory',
+    label: 'Inventory',
+    icon: PhosphorIconsRegular.package,
+    fillIcon: PhosphorIconsFill.package,
+    color: AppColors.accentSky,
+    route: '/inventory',
+  ),
+  // Rewards — house-owner perk (meeting 20/07 point 9).
+  QuickAccessItem(
+    id: 'rewards',
+    label: 'Rewards',
+    icon: PhosphorIconsRegular.gift,
+    fillIcon: PhosphorIconsFill.gift,
+    color: AppColors.accentAmber,
+    route: '/rewards',
+  ),
   // 'scanid' (Scan ID) removed per boss feedback 15/07 — HCA doesn't use the
   // ID-scan module. (This grid only renders on HCA; PHH keeps its drawer.)
 ];
@@ -141,6 +159,8 @@ const List<String> _defaultVisible = [
   'document',
   'contact',
   'emergency',
+  'inventory',
+  'rewards',
 ];
 
 /// Which catalog ids are shown on the home page, persisted per device.
@@ -195,11 +215,13 @@ class QuickAccessSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final visibleIds = ref.watch(quickAccessVisibleProvider);
-    // Point 17: tenants never see the billing tile.
+    // Point 17: tenants never see the billing tile. Point 9 (20/07): Rewards is
+    // a house-owner perk, so tenants don't see it either.
     final hideBilling = hideBillsForTenant(ref);
     final items = quickAccessCatalog
         .where((i) => visibleIds.contains(i.id))
         .where((i) => !(hideBilling && i.id == 'billing'))
+        .where((i) => !(hideBilling && i.id == 'rewards'))
         .toList();
 
     return Column(

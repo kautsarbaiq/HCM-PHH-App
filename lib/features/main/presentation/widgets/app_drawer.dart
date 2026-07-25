@@ -13,6 +13,9 @@ class AppDrawer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Rewards is a house-owner perk (meeting 20/07 point 9) — hidden for tenants.
+    final isOwner =
+        !(ref.watch(currentProfileProvider).valueOrNull?.isTenant ?? false);
     return Drawer(
       backgroundColor: Colors.transparent,
       child: ClipRRect(
@@ -122,6 +125,23 @@ class AppDrawer extends ConsumerWidget {
                           subtitle: 'Pool, gym, BBQ & more',
                           route: '/facility',
                         ),
+                        _buildDrawerTile(
+                          context,
+                          icon: PhosphorIconsRegular.package,
+                          fillIcon: PhosphorIconsFill.package,
+                          title: 'Inventory',
+                          subtitle: 'Warehouse operations',
+                          route: '/inventory',
+                        ),
+                        if (isOwner)
+                          _buildDrawerTile(
+                            context,
+                            icon: PhosphorIconsRegular.gift,
+                            fillIcon: PhosphorIconsFill.gift,
+                            title: 'Rewards',
+                            subtitle: 'On-time bill perks & discounts',
+                            route: '/rewards',
+                          ),
                         const SizedBox(height: 16),
                         _buildSectionLabel('Language'),
                         Padding(
