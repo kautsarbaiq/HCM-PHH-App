@@ -274,21 +274,66 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
         margin: const EdgeInsets.only(bottom: 10),
         child: Row(
           children: [
-            Container(
+            // Partner logo (boss 27/07) with the discount % as a corner badge.
+            SizedBox(
               width: 48,
               height: 48,
-              decoration: BoxDecoration(
-                gradient: AppColors.sunsetGradient,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                '${o.discountPercent}%',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14,
-                ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: (o.partnerLogo ?? '').isEmpty
+                          ? AppColors.sunsetGradient
+                          : null,
+                      color: (o.partnerLogo ?? '').isEmpty
+                          ? null
+                          : AppColors.surfaceTint,
+                      borderRadius: BorderRadius.circular(14),
+                      image: (o.partnerLogo ?? '').isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(o.partnerLogo!),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                    alignment: Alignment.center,
+                    child: (o.partnerLogo ?? '').isEmpty
+                        ? Text(
+                            '${o.discountPercent}%',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 14,
+                            ),
+                          )
+                        : null,
+                  ),
+                  if ((o.partnerLogo ?? '').isNotEmpty)
+                    Positioned(
+                      right: -4,
+                      bottom: -4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: AppColors.brand,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                        child: Text(
+                          '${o.discountPercent}%',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             const SizedBox(width: 12),

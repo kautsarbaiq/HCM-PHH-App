@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/repositories/rewards_repository.dart';
 import '../../../../core/widgets/app_states.dart';
@@ -77,42 +80,94 @@ class _PartnersTab extends ConsumerWidget {
   Future<void> _add(BuildContext context, WidgetRef ref) async {
     final name = TextEditingController();
     final category = TextEditingController();
+    Uint8List? logoBytes;
+    String logoExt = 'jpg';
+
     final ok = await showDialog<bool>(
       context: context,
-      builder: (d) => AlertDialog(
-        title: const Text('Add partner'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: name,
-              decoration: const InputDecoration(labelText: 'Brand name'),
+      builder: (d) => StatefulBuilder(
+        builder: (d, setLocal) => AlertDialog(
+          title: const Text('Add partner'),
+          content: SizedBox(
+            width: 360,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Boss 27/07: a partner (company) can carry a logo/picture.
+                  GestureDetector(
+                    onTap: () async {
+                      final x = await ImagePicker().pickImage(
+                        source: ImageSource.gallery,
+                        maxWidth: 400,
+                        imageQuality: 85,
+                      );
+                      if (x != null) {
+                        logoBytes = await x.readAsBytes();
+                        logoExt = x.name.split('.').last.toLowerCase();
+                        setLocal(() {});
+                      }
+                    },
+                    child: CircleAvatar(
+                      radius: 36,
+                      backgroundColor: AppColors.surfaceTint,
+                      backgroundImage:
+                          logoBytes != null ? MemoryImage(logoBytes!) : null,
+                      child: logoBytes == null
+                          ? const Icon(Icons.add_a_photo_outlined,
+                              color: AppColors.brand)
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text('Tap to add logo (optional)',
+                      style: TextStyle(
+                          fontSize: 12, color: AppColors.textSecondary)),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: name,
+                    decoration: const InputDecoration(
+                      labelText: 'Brand name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: category,
+                    decoration: const InputDecoration(
+                      labelText: 'Category (e.g. Café, Restaurant)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            TextField(
-              controller: category,
-              decoration: const InputDecoration(
-                  labelText: 'Category (e.g. Café, Restaurant)'),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(d, false),
+                child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () {
+                if (name.text.trim().isEmpty) return;
+                Navigator.pop(d, true);
+              },
+              child: const Text('Add'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(d, false),
-              child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              if (name.text.trim().isEmpty) return;
-              Navigator.pop(d, true);
-            },
-            child: const Text('Add'),
-          ),
-        ],
       ),
     );
     if (ok == true) {
-      await ref
-          .read(rewardsRepositoryProvider)
-          .createPartner(name.text.trim(), category.text.trim());
+      final repo = ref.read(rewardsRepositoryProvider);
+      String? logoUrl;
+      if (logoBytes != null) {
+        try {
+          logoUrl = await repo.uploadPartnerLogo(logoBytes!, logoExt);
+        } catch (_) {/* logo optional — save the partner regardless */}
+      }
+      await repo.createPartner(name.text.trim(), category.text.trim(),
+          logoUrl: logoUrl);
       ref.invalidate(adminPartnersProvider);
     }
   }
@@ -150,10 +205,15 @@ class _PartnersTab extends ConsumerWidget {
                 itemBuilder: (context, i) {
                   final p = partners[i];
                   return ListTile(
-                    leading: const CircleAvatar(
+                    leading: CircleAvatar(
                       backgroundColor: AppColors.surfaceTint,
-                      child: Icon(Icons.storefront_rounded,
-                          color: AppColors.brand),
+                      backgroundImage: (p.logoUrl ?? '').isNotEmpty
+                          ? NetworkImage(p.logoUrl!)
+                          : null,
+                      child: (p.logoUrl ?? '').isEmpty
+                          ? const Icon(Icons.storefront_rounded,
+                              color: AppColors.brand)
+                          : null,
                     ),
                     title: Text(p.name,
                         style:
@@ -221,42 +281,61 @@ class _OffersTab extends ConsumerWidget {
       context: context,
       builder: (d) => AlertDialog(
         title: const Text('Add offer'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                value: partnerId,
-                decoration: const InputDecoration(labelText: 'Partner'),
-                items: [
-                  for (final p in partners)
-                    DropdownMenuItem(value: p.id, child: Text(p.name)),
-                ],
-                onChanged: (v) => partnerId = v ?? partnerId,
-              ),
-              TextField(
-                controller: title,
-                decoration:
-                    const InputDecoration(labelText: 'Offer title'),
-              ),
-              TextField(
-                controller: desc,
-                decoration: const InputDecoration(
-                    labelText: 'Description (optional)'),
-              ),
-              TextField(
-                controller: discount,
-                keyboardType: TextInputType.number,
-                decoration:
-                    const InputDecoration(labelText: 'Discount %'),
-              ),
-              TextField(
-                controller: streak,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                    labelText: 'Unlock at (consecutive on-time bills)'),
-              ),
-            ],
+        content: SizedBox(
+          width: 360,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: partnerId,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Partner',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    for (final p in partners)
+                      DropdownMenuItem(value: p.id, child: Text(p.name)),
+                  ],
+                  onChanged: (v) => partnerId = v ?? partnerId,
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: title,
+                  decoration: const InputDecoration(
+                    labelText: 'Offer title',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: desc,
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: discount,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Discount %',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: streak,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Unlock at (consecutive on-time bills)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -385,9 +464,15 @@ class _ClaimsTab extends ConsumerWidget {
         context: context,
         builder: (d) => AlertDialog(
           title: const Text('Approve & issue voucher'),
-          content: TextField(
-            controller: ctrl,
-            decoration: const InputDecoration(labelText: 'Voucher code'),
+          content: SizedBox(
+            width: 360,
+            child: TextField(
+              controller: ctrl,
+              decoration: const InputDecoration(
+                labelText: 'Voucher code',
+                border: OutlineInputBorder(),
+              ),
+            ),
           ),
           actions: [
             TextButton(
@@ -428,35 +513,51 @@ class _ClaimsTab extends ConsumerWidget {
       context: context,
       builder: (d) => AlertDialog(
         title: const Text('Grant reward to owner'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                value: offerId,
-                decoration: const InputDecoration(labelText: 'Offer'),
-                items: [
-                  for (final o in offers)
-                    DropdownMenuItem(
-                        value: o.id,
-                        child: Text('${o.title} (${o.discountPercent}%)')),
-                ],
-                onChanged: (v) => offerId = v ?? offerId,
-              ),
-              DropdownButtonFormField<String>(
-                value: ownerId,
-                decoration: const InputDecoration(labelText: 'Owner'),
-                items: [
-                  for (final o in owners)
-                    DropdownMenuItem(value: o.id, child: Text(o.name)),
-                ],
-                onChanged: (v) => ownerId = v ?? ownerId,
-              ),
-              TextField(
-                controller: voucher,
-                decoration: const InputDecoration(labelText: 'Voucher code'),
-              ),
-            ],
+        content: SizedBox(
+          width: 360,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: offerId,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Offer',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    for (final o in offers)
+                      DropdownMenuItem(
+                          value: o.id,
+                          child: Text('${o.title} (${o.discountPercent}%)')),
+                  ],
+                  onChanged: (v) => offerId = v ?? offerId,
+                ),
+                const SizedBox(height: 14),
+                DropdownButtonFormField<String>(
+                  value: ownerId,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Owner',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    for (final o in owners)
+                      DropdownMenuItem(value: o.id, child: Text(o.name)),
+                  ],
+                  onChanged: (v) => ownerId = v ?? ownerId,
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: voucher,
+                  decoration: const InputDecoration(
+                    labelText: 'Voucher code',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         actions: [

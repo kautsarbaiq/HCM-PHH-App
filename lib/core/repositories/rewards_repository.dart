@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -11,12 +13,14 @@ class RewardPartner {
   final String id;
   final String name;
   final String? category;
+  final String? logoUrl;
   final bool isActive;
 
   RewardPartner({
     required this.id,
     required this.name,
     this.category,
+    this.logoUrl,
     this.isActive = true,
   });
 
@@ -24,6 +28,7 @@ class RewardPartner {
         id: j['id'].toString(),
         name: j['name'] as String? ?? '',
         category: j['category'] as String?,
+        logoUrl: j['logo_url'] as String?,
         isActive: j['is_active'] as bool? ?? true,
       );
 }
@@ -32,6 +37,7 @@ class RewardOffer {
   final String id;
   final String partnerId;
   final String partnerName;
+  final String? partnerLogo;
   final String title;
   final String? description;
   final int discountPercent;
@@ -42,6 +48,7 @@ class RewardOffer {
     required this.id,
     required this.partnerId,
     required this.partnerName,
+    this.partnerLogo,
     required this.title,
     this.description,
     required this.discountPercent,
@@ -49,18 +56,20 @@ class RewardOffer {
     this.isActive = true,
   });
 
-  factory RewardOffer.fromJson(Map<String, dynamic> j) => RewardOffer(
-        id: j['id'].toString(),
-        partnerId: (j['partner_id'] ?? '').toString(),
-        partnerName: (j['reward_partners'] is Map)
-            ? (j['reward_partners']['name'] as String? ?? '')
-            : '',
-        title: j['title'] as String? ?? '',
-        description: j['description'] as String?,
-        discountPercent: (j['discount_percent'] as num?)?.toInt() ?? 0,
-        minStreak: (j['min_streak'] as num?)?.toInt() ?? 0,
-        isActive: j['is_active'] as bool? ?? true,
-      );
+  factory RewardOffer.fromJson(Map<String, dynamic> j) {
+    final partner = j['reward_partners'] as Map<String, dynamic>?;
+    return RewardOffer(
+      id: j['id'].toString(),
+      partnerId: (j['partner_id'] ?? '').toString(),
+      partnerName: partner?['name'] as String? ?? '',
+      partnerLogo: partner?['logo_url'] as String?,
+      title: j['title'] as String? ?? '',
+      description: j['description'] as String?,
+      discountPercent: (j['discount_percent'] as num?)?.toInt() ?? 0,
+      minStreak: (j['min_streak'] as num?)?.toInt() ?? 0,
+      isActive: j['is_active'] as bool? ?? true,
+    );
+  }
 }
 
 class RewardClaim {
@@ -169,7 +178,7 @@ class RewardsRepository {
   Future<List<RewardOffer>> activeOffers() async {
     final rows = await _db
         .from('reward_offers')
-        .select('*, reward_partners(name)')
+        .select('*, reward_partners(name, logo_url)')
         .eq('is_active', true)
         .order('min_streak', ascending: true);
     return (rows as List)
@@ -180,7 +189,7 @@ class RewardsRepository {
   Future<List<RewardOffer>> allOffers() async {
     final rows = await _db
         .from('reward_offers')
-        .select('*, reward_partners(name)')
+        .select('*, reward_partners(name, logo_url)')
         .order('created_at', ascending: false);
     return (rows as List)
         .map((j) => RewardOffer.fromJson(j as Map<String, dynamic>))
@@ -235,11 +244,32 @@ class RewardsRepository {
   }
 
   // ---- admin mutations ----
-  Future<void> createPartner(String name, String? category) async {
+  Future<void> createPartner(
+    String name,
+    String? category, {
+    String? logoUrl,
+  }) async {
     await _db.from('reward_partners').insert({
       'name': name,
       if (category != null && category.isNotEmpty) 'category': category,
+      if (logoUrl != null && logoUrl.isNotEmpty) 'logo_url': logoUrl,
     });
+  }
+
+  /// Upload a partner logo to the public 'avatars' bucket (existing policies:
+  /// authenticated write + public read) and return its public URL.
+  Future<String> uploadPartnerLogo(Uint8List bytes, String ext) async {
+    final path =
+        'reward-logos/${DateTime.now().millisecondsSinceEpoch}.${ext.isEmpty ? 'jpg' : ext}';
+    await _db.storage.from('avatars').uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(
+            upsert: true,
+            contentType: 'image/${ext == 'png' ? 'png' : 'jpeg'}',
+          ),
+        );
+    return _db.storage.from('avatars').getPublicUrl(path);
   }
 
   Future<void> setPartnerActive(String id, bool active) async {
