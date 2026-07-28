@@ -78,12 +78,15 @@ class RewardClaim {
   final String ownerId;
   final String status; // pending | approved | rejected
   final String? voucherCode;
+  final String? voucherToken; // uuid encoded in the QR (redemption, 28/07)
+  final String? redeemedAt; // set once the shop redeems it
   final String? adminRemarks;
   final String createdAt;
   // Joined
   final String? offerTitle;
   final int? discountPercent;
   final String? partnerName;
+  final String? partnerLogo;
   final String? ownerName;
 
   RewardClaim({
@@ -92,13 +95,19 @@ class RewardClaim {
     required this.ownerId,
     required this.status,
     this.voucherCode,
+    this.voucherToken,
+    this.redeemedAt,
     this.adminRemarks,
     required this.createdAt,
     this.offerTitle,
     this.discountPercent,
     this.partnerName,
+    this.partnerLogo,
     this.ownerName,
   });
+
+  bool get isRedeemed => (redeemedAt ?? '').isNotEmpty;
+  bool get isActive => status == 'approved' && !isRedeemed;
 
   factory RewardClaim.fromJson(Map<String, dynamic> j) {
     final offer = j['reward_offers'] as Map<String, dynamic>?;
@@ -110,11 +119,14 @@ class RewardClaim {
       ownerId: (j['owner_id'] ?? '').toString(),
       status: j['status'] as String? ?? 'pending',
       voucherCode: j['voucher_code'] as String?,
+      voucherToken: j['voucher_token'] as String?,
+      redeemedAt: j['redeemed_at'] as String?,
       adminRemarks: j['admin_remarks'] as String?,
       createdAt: (j['created_at'] ?? '').toString(),
       offerTitle: offer?['title'] as String?,
       discountPercent: (offer?['discount_percent'] as num?)?.toInt(),
       partnerName: partner?['name'] as String?,
+      partnerLogo: partner?['logo_url'] as String?,
       ownerName: owner?['full_name'] as String?,
     );
   }
@@ -125,6 +137,43 @@ class OwnerRef {
   final String id;
   final String name;
   OwnerRef(this.id, this.name);
+}
+
+/// Public voucher details shown on the shop redemption page (28/07).
+class VoucherInfo {
+  final String offerTitle;
+  final int discountPercent;
+  final String partnerName;
+  final String? partnerLogo;
+  final String ownerName;
+  final String status; // pending | approved | rejected
+  final String? voucherCode;
+  final String? redeemedAt;
+
+  VoucherInfo({
+    required this.offerTitle,
+    required this.discountPercent,
+    required this.partnerName,
+    this.partnerLogo,
+    required this.ownerName,
+    required this.status,
+    this.voucherCode,
+    this.redeemedAt,
+  });
+
+  bool get isRedeemed => (redeemedAt ?? '').isNotEmpty;
+  bool get isActive => status == 'approved' && !isRedeemed;
+
+  factory VoucherInfo.fromJson(Map<String, dynamic> j) => VoucherInfo(
+        offerTitle: j['offer_title'] as String? ?? 'Reward',
+        discountPercent: (j['discount_percent'] as num?)?.toInt() ?? 0,
+        partnerName: j['partner_name'] as String? ?? '',
+        partnerLogo: j['partner_logo'] as String?,
+        ownerName: j['owner_name'] as String? ?? 'Resident',
+        status: j['status'] as String? ?? 'pending',
+        voucherCode: j['voucher_code'] as String?,
+        redeemedAt: j['redeemed_at'] as String?,
+      );
 }
 
 final rewardsRepositoryProvider = Provider<RewardsRepository>((ref) {
@@ -213,7 +262,7 @@ class RewardsRepository {
     final rows = await _db
         .from('reward_claims')
         .select(
-            '*, reward_offers(title, discount_percent, reward_partners(name))')
+            '*, reward_offers(title, discount_percent, reward_partners(name, logo_url))')
         .eq('owner_id', uid)
         .order('created_at', ascending: false);
     return (rows as List)
@@ -225,12 +274,28 @@ class RewardsRepository {
     final rows = await _db
         .from('reward_claims')
         .select(
-            '*, reward_offers(title, discount_percent, reward_partners(name)), '
+            '*, reward_offers(title, discount_percent, reward_partners(name, logo_url)), '
             'profiles!reward_claims_owner_id_fkey(full_name)')
         .order('created_at', ascending: false);
     return (rows as List)
         .map((j) => RewardClaim.fromJson(j as Map<String, dynamic>))
         .toList();
+  }
+
+  // ---- public redemption (shop side, no login) ----
+  /// Look up a voucher by its QR token. Returns null if not found.
+  Future<VoucherInfo?> voucherInfo(String token) async {
+    final rows = await _db.rpc('reward_voucher_info', params: {'p_token': token});
+    final list = rows as List;
+    if (list.isEmpty) return null;
+    return VoucherInfo.fromJson(list.first as Map<String, dynamic>);
+  }
+
+  /// Mark a voucher redeemed (the shop taps "Redeem"). Returns the result map
+  /// {ok, error?, redeemed_at?}.
+  Future<Map<String, dynamic>> redeemVoucher(String token) async {
+    final res = await _db.rpc('redeem_voucher', params: {'p_token': token});
+    return (res as Map).cast<String, dynamic>();
   }
 
   Future<void> claimOffer(String offerId) async {

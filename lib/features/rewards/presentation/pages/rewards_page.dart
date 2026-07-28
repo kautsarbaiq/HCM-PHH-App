@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../../../core/config/brand.dart';
 import '../../../../core/repositories/rewards_repository.dart';
 import '../../../../core/widgets/app_states.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
 import '../../../../theme/app_colors.dart';
+
+/// The URL a shop opens when it scans a voucher QR — the public redeem page.
+String voucherRedeemUrl(String token) =>
+    '${Brand.webBaseUrl}/#/redeem/$token';
 
 /// Owner rewards (meeting 20/07 point 9): pay bills on time in a row to unlock
 /// partner-brand discounts. Owners claim an offer here; an admin approves it
@@ -93,8 +100,8 @@ class RewardsPage extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
             const SectionHeader(
-              title: 'My vouchers',
-              subtitle: 'Claims and their status',
+              title: 'My coupons',
+              subtitle: 'Show the QR at the shop to redeem',
             ),
             const SizedBox(height: 8),
             claimsAsync.when(
@@ -104,12 +111,20 @@ class RewardsPage extends ConsumerWidget {
                 if (claims.isEmpty) {
                   return const AppEmptyState(
                     icon: Icons.confirmation_number_outlined,
-                    title: 'No vouchers yet',
+                    title: 'No coupons yet',
                     message: 'Claim a reward above to see it here.',
                   );
                 }
+                // Active coupons first, then pending, then used.
+                int rank(RewardClaim c) => c.isActive
+                    ? 0
+                    : c.status == 'pending'
+                        ? 1
+                        : 2;
+                final sorted = [...claims]
+                  ..sort((a, b) => rank(a).compareTo(rank(b)));
                 return Column(
-                  children: [for (final c in claims) _ClaimCard(claim: c)],
+                  children: [for (final c in sorted) _CouponCard(claim: c)],
                 );
               },
             ),
@@ -368,78 +383,171 @@ class _OfferCardState extends ConsumerState<_OfferCard> {
   }
 }
 
-class _ClaimCard extends StatelessWidget {
+/// A coupon in the owner's wallet. Active coupons carry a QR the shop scans;
+/// used coupons are dimmed; pending ones await approval (boss 28/07).
+class _CouponCard extends StatelessWidget {
   final RewardClaim claim;
-  const _ClaimCard({required this.claim});
+  const _CouponCard({required this.claim});
+
+  void _showQr(BuildContext context) {
+    final token = claim.voucherToken;
+    if (token == null || token.isEmpty) return;
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${claim.discountPercent ?? ''}% OFF • ${claim.partnerName ?? ''}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                    color: AppColors.textPrimary),
+              ),
+              const SizedBox(height: 16),
+              QrImageView(
+                data: voucherRedeemUrl(token),
+                version: QrVersions.auto,
+                size: 240,
+                foregroundColor: AppColors.deepSlate,
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Show this to the shop. They scan it to apply your discount.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final approved = claim.status == 'approved';
-    return PremiumCard(
-      padding: const EdgeInsets.all(14),
-      margin: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            approved
-                ? PhosphorIconsFill.ticket
-                : PhosphorIconsRegular.clock,
-            color: approved ? AppColors.success : AppColors.warning,
-            size: 24,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${claim.offerTitle ?? 'Reward'}'
-                  '${claim.discountPercent != null ? ' — ${claim.discountPercent}%' : ''}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
-                  ),
-                ),
-                if ((claim.partnerName ?? '').isNotEmpty)
-                  Text(
-                    claim.partnerName!,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                if (approved && (claim.voucherCode ?? '').isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Voucher: ${claim.voucherCode}',
+    final active = claim.isActive;
+    final redeemed = claim.isRedeemed;
+    final pending = claim.status == 'pending';
+    final token = claim.voucherToken;
+
+    return Opacity(
+      opacity: redeemed ? 0.6 : 1,
+      child: PremiumCard(
+        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.only(bottom: 10),
+        onTap: active && token != null ? () => _showQr(context) : null,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Partner logo / discount
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                gradient: (claim.partnerLogo ?? '').isEmpty
+                    ? AppColors.sunsetGradient
+                    : null,
+                color: (claim.partnerLogo ?? '').isEmpty
+                    ? null
+                    : AppColors.surfaceTint,
+                borderRadius: BorderRadius.circular(14),
+                image: (claim.partnerLogo ?? '').isNotEmpty
+                    ? DecorationImage(
+                        image: NetworkImage(claim.partnerLogo!),
+                        fit: BoxFit.cover)
+                    : null,
+              ),
+              alignment: Alignment.center,
+              child: (claim.partnerLogo ?? '').isEmpty
+                  ? Text('${claim.discountPercent ?? 0}%',
                       style: const TextStyle(
-                        color: AppColors.success,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 13))
+                  : null,
             ),
-          ),
-          StatusPill(
-            label: claim.status.toUpperCase(),
-            color: approved ? AppColors.success : AppColors.warning,
-            dense: true,
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${claim.offerTitle ?? 'Reward'}'
+                    '${claim.discountPercent != null ? ' — ${claim.discountPercent}%' : ''}',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        fontSize: 14),
+                  ),
+                  if ((claim.partnerName ?? '').isNotEmpty)
+                    Text(claim.partnerName!,
+                        style: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 12)),
+                  const SizedBox(height: 4),
+                  if (active)
+                    Row(
+                      children: const [
+                        Icon(PhosphorIconsFill.qrCode,
+                            size: 13, color: AppColors.brand),
+                        SizedBox(width: 4),
+                        Text('Tap to show QR at the shop',
+                            style: TextStyle(
+                                color: AppColors.brand,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700)),
+                      ],
+                    )
+                  else if (redeemed)
+                    Text('Used ${_fmtDate(claim.redeemedAt)}',
+                        style: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 11.5))
+                  else if (pending)
+                    const Text('Waiting for management approval',
+                        style: TextStyle(
+                            color: AppColors.warning,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Mini QR (active) or status pill
+            if (active && token != null)
+              QrImageView(
+                data: voucherRedeemUrl(token),
+                version: QrVersions.auto,
+                size: 46,
+                foregroundColor: AppColors.deepSlate,
+              )
+            else
+              StatusPill(
+                label: redeemed ? 'USED' : claim.status.toUpperCase(),
+                color: redeemed
+                    ? AppColors.textSecondary
+                    : pending
+                        ? AppColors.warning
+                        : AppColors.success,
+                dense: true,
+              ),
+          ],
+        ),
       ),
     );
+  }
+
+  String _fmtDate(String? iso) {
+    if (iso == null || iso.isEmpty) return '';
+    try {
+      return DateFormat('MMM d').format(DateTime.parse(iso).toLocal());
+    } catch (_) {
+      return '';
+    }
   }
 }

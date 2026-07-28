@@ -19,6 +19,7 @@ import '../../features/directory/presentation/pages/econtact_page.dart';
 import '../../features/marketplace/presentation/pages/market_square_page.dart';
 import '../../features/idscan/presentation/pages/id_scan_page.dart';
 import '../../features/rewards/presentation/pages/rewards_page.dart';
+import '../../features/rewards/presentation/pages/voucher_redeem_page.dart';
 import '../../features/inventory/pages/inventory_home_page.dart';
 import '../../features/inventory/pages/purchase_orders_page.dart';
 import '../../features/inventory/pages/receive_po_page.dart';
@@ -118,6 +119,10 @@ class AppRouter {
       // PUBLIC event-invitation page (HCA): outside guests open a shared link
       // without any account — never bounce them to splash/login/home.
       if (loc.startsWith('/event-invite')) return null;
+
+      // PUBLIC voucher redemption page: a shop scans the owner's QR and opens
+      // this with no account (boss 28/07).
+      if (loc.startsWith('/redeem')) return null;
 
       // Cold start: hold on the splash until the first auth + role resolution
       // completes, so we never flash the resident home or bounce through a
@@ -235,6 +240,12 @@ class AppRouter {
       GoRoute(
         path: '/rewards',
         builder: (context, state) => const RewardsPage(),
+      ),
+      // Public voucher redemption for shops (boss 28/07 — no login).
+      GoRoute(
+        path: '/redeem/:token',
+        builder: (context, state) =>
+            VoucherRedeemPage(token: state.pathParameters['token'] ?? ''),
       ),
 
       // Warehouse / inventory module (shared PHH-Inventory "canvas" backend).
