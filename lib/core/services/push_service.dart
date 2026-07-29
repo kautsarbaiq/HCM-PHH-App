@@ -36,9 +36,22 @@ class PushService {
       // Save the token now (if already logged in) and on every change.
       await _saveToken();
       messaging.onTokenRefresh.listen((_) => _saveToken());
+      // IMPORTANT: also save on `initialSession` — when the app cold-starts
+      // with a persisted login, Supabase fires initialSession (NOT signedIn),
+      // so listening only for signedIn meant an already-logged-in user never
+      // registered a device token → they received no push (boss retest 29/07).
       Supabase.instance.client.auth.onAuthStateChange.listen((state) {
-        if (state.event == AuthChangeEvent.signedIn) {
-          _saveToken();
+        switch (state.event) {
+          case AuthChangeEvent.signedIn:
+          case AuthChangeEvent.initialSession:
+          case AuthChangeEvent.tokenRefreshed:
+          case AuthChangeEvent.userUpdated:
+            if (Supabase.instance.client.auth.currentUser != null) {
+              _saveToken();
+            }
+            break;
+          default:
+            break;
         }
       });
 
