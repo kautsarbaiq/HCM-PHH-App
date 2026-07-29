@@ -139,14 +139,23 @@ async function buildNotification(
       const house = r.house_id ? await residentsOfHouse(r.house_id) : [];
       if (p.type === "INSERT") {
         // Meeting 20/07 point 5: an event guest registering via a shared invite
-        // must notify ONLY the host who created/shared it — not the whole
-        // community (house residents + every guard + every admin).
+        // must notify ONLY the HOST who CREATED the event — not the whole
+        // community, and not the resident who merely shared the link (that's
+        // the visitor's created_by). Look the host up from the event.
         if (r.registration_type === "event_guest") {
-          if (!r.created_by) return null;
+          if (!r.event_id) return null;
+          const { data: ev } = await supabase
+            .from("events")
+            .select("created_by, title")
+            .eq("id", r.event_id)
+            .maybeSingle();
+          if (!ev?.created_by) return null;
           return {
-            userIds: [r.created_by],
+            userIds: [ev.created_by as string],
             title: "Event guest registered",
-            body: `${r.visitor_name ?? "A guest"} registered for your event.`,
+            body: `${r.visitor_name ?? "A guest"} registered for ${
+              (ev.title as string) ?? "your event"
+            }.`,
           };
         }
         return {
