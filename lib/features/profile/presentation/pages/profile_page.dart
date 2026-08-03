@@ -339,6 +339,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 child: Column(
                   children: [
                     _buildProfileHeader(ref),
+                    // Notification status sits right at the top: testers could
+                    // not find it when it was buried at the bottom of the page
+                    // (client feedback 02/08), and it is the first thing to
+                    // check when push isn't arriving.
+                    const SizedBox(height: 24),
+                    _buildSectionHeader('Notifications'),
+                    const SizedBox(height: 12),
+                    const _PushStatusCard(),
                     const SizedBox(height: 32),
                     _buildInfoCard(ref),
                     // HCA (boss 17/07): parking is its OWN section, directly
@@ -403,10 +411,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       const SizedBox(height: 16),
                       _buildFinanceList(),
                     ],
-                    const SizedBox(height: 32),
-                    _buildSectionHeader('Notifications'),
-                    const SizedBox(height: 16),
-                    const _PushStatusCard(),
                     const SizedBox(height: 100),
                   ],
                 ),
