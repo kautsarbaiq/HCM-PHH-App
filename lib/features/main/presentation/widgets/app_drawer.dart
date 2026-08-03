@@ -125,14 +125,6 @@ class AppDrawer extends ConsumerWidget {
                           subtitle: 'Pool, gym, BBQ & more',
                           route: '/facility',
                         ),
-                        _buildDrawerTile(
-                          context,
-                          icon: PhosphorIconsRegular.package,
-                          fillIcon: PhosphorIconsFill.package,
-                          title: 'Inventory',
-                          subtitle: 'Warehouse operations',
-                          route: '/inventory',
-                        ),
                         if (isOwner)
                           _buildDrawerTile(
                             context,

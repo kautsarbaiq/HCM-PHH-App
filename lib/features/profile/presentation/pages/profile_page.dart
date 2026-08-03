@@ -11,6 +11,7 @@ import 'package:path/path.dart' as p;
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../../core/services/push_service.dart';
 import '../../../main/presentation/pages/main_navigation_page.dart'
     show hideBillsForTenant;
 import '../../../parking/parking_ui.dart';
@@ -402,6 +403,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       const SizedBox(height: 16),
                       _buildFinanceList(),
                     ],
+                    const SizedBox(height: 32),
+                    _buildSectionHeader('Notifications'),
+                    const SizedBox(height: 16),
+                    const _PushStatusCard(),
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -1117,5 +1122,100 @@ class _DocCardIconButton extends StatelessWidget {
     );
     if (tooltip == null) return button;
     return Tooltip(message: tooltip!, child: button);
+  }
+}
+
+/// Shows whether THIS device is registered to receive push notifications.
+/// Added after testers reported "no notification" when the real cause was that
+/// the phone had never registered a device token (boss retest 01/08).
+class _PushStatusCard extends StatefulWidget {
+  const _PushStatusCard();
+
+  @override
+  State<_PushStatusCard> createState() => _PushStatusCardState();
+}
+
+class _PushStatusCardState extends State<_PushStatusCard> {
+  PushStatus? _status;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+  }
+
+  Future<void> _check() async {
+    setState(() => _busy = true);
+    final s = await PushService.status();
+    if (mounted) {
+      setState(() {
+        _status = s;
+        _busy = false;
+      });
+    }
+  }
+
+  Future<void> _retry() async {
+    setState(() => _busy = true);
+    await PushService.ensureToken();
+    await _check();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = _status;
+    final ok = s?.ok ?? false;
+    final color = ok ? AppColors.success : AppColors.warning;
+
+    return PremiumCard(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              ok ? PhosphorIconsFill.bellRinging : PhosphorIconsFill.bellSlash,
+              color: color,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  ok ? 'Push notifications active' : 'Push not registered',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _busy ? 'Checking…' : (s?.detail ?? 'Checking…'),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!ok)
+            TextButton(
+              onPressed: _busy ? null : _retry,
+              child: const Text('Retry'),
+            ),
+        ],
+      ),
+    );
   }
 }

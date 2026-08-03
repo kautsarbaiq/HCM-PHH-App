@@ -184,6 +184,13 @@ class GuardLayout extends StatelessWidget {
               isSelected: location == '/guard/houses',
               onTap: () => go('/guard/houses'),
             ),
+            _SidebarItem(
+              icon: PhosphorIconsRegular.calendarBlank,
+              activeIcon: PhosphorIconsFill.calendarBlank,
+              label: 'Events',
+              isSelected: location == '/guard/events',
+              onTap: () => go('/guard/events'),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Row(

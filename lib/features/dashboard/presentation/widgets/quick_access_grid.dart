@@ -129,15 +129,6 @@ const List<QuickAccessItem> quickAccessCatalog = [
     color: AppColors.accentMint,
     route: '/security-guard',
   ),
-  // Warehouse/inventory module (boss 20/07) — shared PHH-Inventory backend.
-  QuickAccessItem(
-    id: 'inventory',
-    label: 'Inventory',
-    icon: PhosphorIconsRegular.package,
-    fillIcon: PhosphorIconsFill.package,
-    color: AppColors.accentSky,
-    route: '/inventory',
-  ),
   // Rewards — house-owner perk (meeting 20/07 point 9).
   QuickAccessItem(
     id: 'rewards',
@@ -159,7 +150,6 @@ const List<String> _defaultVisible = [
   'document',
   'contact',
   'emergency',
-  'inventory',
   'rewards',
 ];
 

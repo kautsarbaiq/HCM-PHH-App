@@ -20,15 +20,6 @@ import '../../features/marketplace/presentation/pages/market_square_page.dart';
 import '../../features/idscan/presentation/pages/id_scan_page.dart';
 import '../../features/rewards/presentation/pages/rewards_page.dart';
 import '../../features/rewards/presentation/pages/voucher_redeem_page.dart';
-import '../../features/inventory/pages/inventory_home_page.dart';
-import '../../features/inventory/pages/purchase_orders_page.dart';
-import '../../features/inventory/pages/receive_po_page.dart';
-import '../../features/inventory/pages/qr_labels_page.dart';
-import '../../features/inventory/pages/picking_list_page.dart';
-import '../../features/inventory/pages/pick_task_page.dart';
-import '../../features/inventory/pages/placement_page.dart';
-import '../../features/inventory/pages/comparison_page.dart';
-import '../../features/inventory/pages/comparison_detail_page.dart';
 import '../../features/auth/presentation/pages/resident_login_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 
@@ -59,6 +50,7 @@ import '../../features/admin/presentation/pages/rewards_admin_page.dart';
 import '../../features/guard/presentation/pages/guard_login_page.dart';
 import '../../features/guard/presentation/widgets/guard_layout.dart';
 import '../../features/guard/presentation/pages/guard_houses_page.dart';
+import '../../features/guard/presentation/pages/guard_events_page.dart';
 import '../../features/guard/presentation/pages/guard_visitors_page.dart';
 import '../../features/guard/presentation/pages/guard_qr_scanner_page.dart';
 import '../../features/guard/presentation/pages/guard_register_visitor_page.dart';
@@ -248,48 +240,6 @@ class AppRouter {
             VoucherRedeemPage(token: state.pathParameters['token'] ?? ''),
       ),
 
-      // Warehouse / inventory module (shared PHH-Inventory "canvas" backend).
-      GoRoute(
-        path: '/inventory',
-        builder: (context, state) => const InventoryHomePage(),
-      ),
-      GoRoute(
-        path: '/inventory/receiving',
-        builder: (context, state) => const PurchaseOrdersPage(),
-      ),
-      GoRoute(
-        path: '/inventory/receiving/:id',
-        builder: (context, state) =>
-            ReceivePoPage(poId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/inventory/receiving/:id/labels',
-        builder: (context, state) =>
-            QrLabelsPage(poId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/inventory/picking',
-        builder: (context, state) => const PickingListPage(),
-      ),
-      GoRoute(
-        path: '/inventory/picking/:id',
-        builder: (context, state) =>
-            PickTaskPage(listId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/inventory/placement',
-        builder: (context, state) => const PlacementPage(),
-      ),
-      GoRoute(
-        path: '/inventory/comparison',
-        builder: (context, state) => const ComparisonPage(),
-      ),
-      GoRoute(
-        path: '/inventory/comparison/:id',
-        builder: (context, state) =>
-            ComparisonDetailPage(poId: state.pathParameters['id']!),
-      ),
-
       // Admin Routes
       GoRoute(
         path: '/admin',
@@ -394,6 +344,11 @@ class AppRouter {
           GoRoute(
             path: '/guard/houses',
             builder: (context, state) => const GuardHousesPage(),
+          ),
+          // Guards need to see what events are happening in the area (boss 01/08).
+          GoRoute(
+            path: '/guard/events',
+            builder: (context, state) => const GuardEventsPage(),
           ),
           GoRoute(
             path: '/guard/visitors',
