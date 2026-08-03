@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Global messenger so foreground pushes can show an in-app banner from
@@ -25,6 +26,8 @@ class PushService {
   static bool _initialized = false;
   static bool _saved = false;
   static Timer? _retry;
+  static final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
 
   static Future<void> init() async {
     // Web push needs a service worker + VAPID key — mobile-only for now.
@@ -73,12 +76,50 @@ class PushService {
       await _saveToken();
       _scheduleRetries();
 
-      // Foreground: FCM does not show a system notification — surface it as
-      // an in-app banner instead (the screen itself already updates live).
+      // Foreground: FCM deliberately does NOT raise a system notification while
+      // the app is on screen, so we raise one ourselves — otherwise a host who
+      // is sitting in the app sees nothing and reports "push not working"
+      // (client retest 02/08). Same channel as the background notification, so
+      // it looks and sounds identical either way.
+      await _localNotifications.initialize(
+        const InitializationSettings(
+          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+          iOS: DarwinInitializationSettings(),
+        ),
+      );
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(
+            const AndroidNotificationChannel(
+              'hca_alerts',
+              'Alerts',
+              importance: Importance.high,
+            ),
+          );
+
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         final title = message.notification?.title;
         final body = message.notification?.body;
         if (title == null && body == null) return;
+
+        _localNotifications.show(
+          DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          title,
+          body,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'hca_alerts',
+              'Alerts',
+              importance: Importance.high,
+              priority: Priority.high,
+            ),
+            iOS: DarwinNotificationDetails(),
+          ),
+        );
+
+        // Keep the in-app banner too — useful while the user is looking at the
+        // screen the alert relates to.
         pushMessengerKey.currentState?.showSnackBar(
           SnackBar(
             content: Text(
