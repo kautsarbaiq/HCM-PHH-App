@@ -198,12 +198,15 @@ class PushService {
       if (uid == null) return; // not signed in (yet) — a retry will catch it
       final token = await FirebaseMessaging.instance.getToken();
       if (token == null) return;
-      await supabase.from('push_tokens').upsert({
-        'user_id': uid,
-        'token': token,
-        'platform': defaultTargetPlatform.name,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }, onConflict: 'token');
+      // Must go through the RPC, not a direct upsert: push_tokens is keyed by
+      // token, so when a second account signs in on a phone that already has a
+      // row, RLS blocks the update and that user is never registered (client
+      // test 03/08). The function releases the device from its previous owner
+      // and registers it to the caller.
+      await supabase.rpc('register_push_token', params: {
+        'p_token': token,
+        'p_platform': defaultTargetPlatform.name,
+      });
       _saved = true;
       _retry?.cancel();
     } catch (e) {
