@@ -61,6 +61,7 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   share_plus: ^12.0.2
   path_provider: ^2.1.5
+  package_info_plus: ^8.1.2 # shows the app version on the Profile page
   audioplayers: ^6.1.0 # mobile buzzer only; web uses package:web (audioplayers web backend is broken)
   web: ^1.1.0
   http: ^1.2.2 # inventory module — talks to the shared PHH-Inventory Express API

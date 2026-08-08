@@ -11,6 +11,7 @@ import 'package:path/path.dart' as p;
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../../../core/services/push_service.dart';
 import '../../../main/presentation/pages/main_navigation_page.dart'
     show hideBillsForTenant;
@@ -411,6 +412,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       const SizedBox(height: 16),
                       _buildFinanceList(),
                     ],
+                    const SizedBox(height: 28),
+                    const _AppVersionLabel(),
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -1219,6 +1222,51 @@ class _PushStatusCardState extends State<_PushStatusCard> {
               child: const Text('Retry'),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// App version shown at the bottom of the Profile page (boss request 08/08),
+/// so testers and support can tell which build a phone is running.
+class _AppVersionLabel extends StatefulWidget {
+  const _AppVersionLabel();
+
+  @override
+  State<_AppVersionLabel> createState() => _AppVersionLabelState();
+}
+
+class _AppVersionLabelState extends State<_AppVersionLabel> {
+  String _version = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() => _version = 'Version ${info.version} (${info.buildNumber})');
+      }
+    } catch (_) {
+      // Version is nice-to-have — never break the page over it.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_version.isEmpty) return const SizedBox.shrink();
+    return Center(
+      child: Text(
+        _version,
+        style: const TextStyle(
+          fontSize: 12,
+          color: AppColors.textSecondary,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }

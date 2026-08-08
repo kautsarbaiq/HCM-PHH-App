@@ -29,6 +29,9 @@ class GlassTextField extends StatefulWidget {
 class _GlassTextFieldState extends State<GlassTextField> {
   final FocusNode _focusNode = FocusNode();
   bool _isFocused = false;
+  // Password fields start hidden; the eye button reveals them so people can
+  // check what they typed before signing in (boss request 08/08).
+  bool _obscured = true;
 
   @override
   void initState() {
@@ -82,7 +85,7 @@ class _GlassTextFieldState extends State<GlassTextField> {
             focusNode: _focusNode,
             keyboardType: widget.keyboardType,
             maxLines: widget.isPassword ? 1 : widget.maxLines,
-            obscureText: widget.isPassword,
+            obscureText: widget.isPassword && _obscured,
             onChanged: widget.onChanged,
             style: const TextStyle(
               fontSize: 15,
@@ -102,6 +105,20 @@ class _GlassTextFieldState extends State<GlassTextField> {
                           ? AppColors.primaryBlue
                           : AppColors.textSecondary,
                       size: 20,
+                    )
+                  : null,
+              // Eye button to reveal/hide the password (boss request 08/08).
+              suffixIcon: widget.isPassword
+                  ? IconButton(
+                      icon: Icon(
+                        _obscured
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: AppColors.textSecondary,
+                        size: 20,
+                      ),
+                      tooltip: _obscured ? 'Show password' : 'Hide password',
+                      onPressed: () => setState(() => _obscured = !_obscured),
                     )
                   : null,
               border: InputBorder.none,
