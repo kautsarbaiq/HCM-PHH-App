@@ -46,6 +46,11 @@ import '../../features/admin/presentation/pages/bookings_admin_page.dart';
 import '../../features/admin/presentation/pages/id_scans_admin_page.dart';
 import '../../features/admin/presentation/pages/rewards_admin_page.dart';
 
+// Super admin imports
+import '../../features/superadmin/presentation/widgets/super_layout.dart';
+import '../../features/superadmin/presentation/pages/companies_page.dart';
+import '../../features/superadmin/presentation/pages/merchants_page.dart';
+
 // Guard imports
 import '../../features/guard/presentation/pages/guard_login_page.dart';
 import '../../features/guard/presentation/widgets/guard_layout.dart';
@@ -135,6 +140,14 @@ class AppRouter {
       // Signed in + resolved. The splash and login pages are "gates" that must
       // bounce into the role's real home (role == null → resident default).
       final atGate = loc == '/splash' || loginPages.contains(loc);
+      // Super admin owns the estate: their own portal plus every company's
+      // admin area (they manage all of them).
+      if (role == 'super_admin') {
+        return (atGate ||
+                !(loc.startsWith('/super') || loc.startsWith('/admin')))
+            ? '/super/companies'
+            : null;
+      }
       if (role == 'admin') {
         return (atGate || !loc.startsWith('/admin'))
             ? '/admin/dashboard'
@@ -143,8 +156,17 @@ class AppRouter {
       if (role == 'guard') {
         return (atGate || !loc.startsWith('/guard')) ? '/guard/visitors' : null;
       }
-      // resident (default): block admin/guard areas, splash and login pages.
-      if (atGate || loc.startsWith('/admin') || loc.startsWith('/guard')) {
+      if (role == 'merchant') {
+        return (atGate || !loc.startsWith('/merchant'))
+            ? '/merchant/shop'
+            : null;
+      }
+      // resident (default): block staff areas, splash and login pages.
+      if (atGate ||
+          loc.startsWith('/admin') ||
+          loc.startsWith('/guard') ||
+          loc.startsWith('/super') ||
+          loc.startsWith('/merchant')) {
         return '/home';
       }
       return null;
@@ -326,6 +348,21 @@ class AppRouter {
           GoRoute(
             path: '/admin/rewards',
             builder: (context, state) => const RewardsAdminPage(),
+          ),
+        ],
+      ),
+
+      // Super Admin Routes (boss batch 08/08 point 1)
+      ShellRoute(
+        builder: (context, state, child) => SuperLayout(child: child),
+        routes: [
+          GoRoute(
+            path: '/super/companies',
+            builder: (context, state) => const CompaniesPage(),
+          ),
+          GoRoute(
+            path: '/super/merchants',
+            builder: (context, state) => const SuperMerchantsPage(),
           ),
         ],
       ),
