@@ -34,10 +34,16 @@ Future<void> refreshUserRole() async {
 /// Landing route for a given role.
 String homeRouteForRole(String? role) {
   switch (role) {
+    // Boss batch 08/08: a super admin runs the whole estate — they land on
+    // their own portal; a company admin lands on that company's dashboard.
+    case 'super_admin':
+      return '/super/companies';
     case 'admin':
       return '/admin/dashboard';
     case 'guard':
       return '/guard/visitors';
+    case 'merchant':
+      return '/merchant/shop';
     default:
       return '/home';
   }
