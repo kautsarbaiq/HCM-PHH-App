@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -204,6 +205,20 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
         // Load the role so we can route admin/guard/resident to the right area.
         await refreshUserRole();
         if (!mounted) return;
+
+        // Boss batch 08/08 point 3: management accounts are web-portal only —
+        // they must not be able to sign in on the mobile app.
+        final role = appUserRoleNotifier.value;
+        if (!kIsWeb && (role == 'admin' || role == 'super_admin')) {
+          await authService.signOut();
+          if (!mounted) return;
+          _showMessage(
+            'Management accounts can only be used on the web portal, not the '
+            'mobile app.',
+          );
+          setState(() => _isLoading = false);
+          return;
+        }
         context.go(homeRouteForRole(appUserRoleNotifier.value));
       }
     } on AuthException catch (e) {
