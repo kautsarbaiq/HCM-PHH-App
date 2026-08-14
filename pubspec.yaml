@@ -62,10 +62,12 @@ dependencies:
   share_plus: ^12.0.2
   path_provider: ^2.1.5
   package_info_plus: ^8.1.2 # shows the app version on the Profile page
+  fl_chart: ^0.69.2 # dashboard charts (boss batch 08/08 point 14)
   audioplayers: ^6.1.0 # mobile buzzer only; web uses package:web (audioplayers web backend is broken)
   web: ^1.1.0
   http: ^1.2.2 # inventory module — talks to the shared PHH-Inventory Express API
   printing: ^5.13.4 # inventory module — print/save per-unit QR label sheets as PDF
+  pdf: ^3.11.3 # report export (boss batch 08/08 points 4, 10, 13)
 
 dev_dependencies:
   flutter_test:
