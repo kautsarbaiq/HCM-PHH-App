@@ -18,6 +18,8 @@ class EmergencyAlert {
   final String? clearedByName;
   final String? clearedAt;
   final String? clearRemarks;
+  // Boss 20/07 point 7: how the guard resolved it (false_alarm | attended).
+  final String? clearType;
 
   EmergencyAlert({
     required this.id,
@@ -33,6 +35,7 @@ class EmergencyAlert {
     this.clearedByName,
     this.clearedAt,
     this.clearRemarks,
+    this.clearType,
   });
 
   factory EmergencyAlert.fromJson(Map<String, dynamic> json) {
@@ -58,6 +61,7 @@ class EmergencyAlert {
           : null,
       clearedAt: json['cleared_at'] as String?,
       clearRemarks: json['clear_remarks'] as String?,
+      clearType: json['clear_type'] as String?,
     );
   }
 
