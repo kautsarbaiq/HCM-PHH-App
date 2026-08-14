@@ -45,11 +45,18 @@ import '../../features/admin/presentation/pages/facilities_admin_page.dart';
 import '../../features/admin/presentation/pages/bookings_admin_page.dart';
 import '../../features/admin/presentation/pages/id_scans_admin_page.dart';
 import '../../features/admin/presentation/pages/rewards_admin_page.dart';
+import '../../features/admin/presentation/pages/reports_admin_page.dart';
 
 // Super admin imports
 import '../../features/superadmin/presentation/widgets/super_layout.dart';
 import '../../features/superadmin/presentation/pages/companies_page.dart';
 import '../../features/superadmin/presentation/pages/merchants_page.dart';
+
+// Merchant imports
+import '../../features/merchant/presentation/widgets/merchant_layout.dart';
+import '../../features/merchant/presentation/pages/shop_profile_page.dart';
+import '../../features/merchant/presentation/pages/merchant_offers_page.dart';
+import '../../features/merchant/presentation/pages/merchant_redeem_page.dart';
 
 // Guard imports
 import '../../features/guard/presentation/pages/guard_login_page.dart';
@@ -349,6 +356,10 @@ class AppRouter {
             path: '/admin/rewards',
             builder: (context, state) => const RewardsAdminPage(),
           ),
+          GoRoute(
+            path: '/admin/reports',
+            builder: (context, state) => const ReportsAdminPage(),
+          ),
         ],
       ),
 
@@ -363,6 +374,25 @@ class AppRouter {
           GoRoute(
             path: '/super/merchants',
             builder: (context, state) => const SuperMerchantsPage(),
+          ),
+        ],
+      ),
+
+      // Merchant Routes (boss batch 08/08 point 2)
+      ShellRoute(
+        builder: (context, state, child) => MerchantLayout(child: child),
+        routes: [
+          GoRoute(
+            path: '/merchant/shop',
+            builder: (context, state) => const ShopProfilePage(),
+          ),
+          GoRoute(
+            path: '/merchant/offers',
+            builder: (context, state) => const MerchantOffersPage(),
+          ),
+          GoRoute(
+            path: '/merchant/redeem',
+            builder: (context, state) => const MerchantRedeemPage(),
           ),
         ],
       ),
