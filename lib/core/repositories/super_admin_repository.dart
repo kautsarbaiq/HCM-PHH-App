@@ -195,4 +195,64 @@ class SuperAdminRepository {
   Future<void> deleteMerchant(String id) async {
     await _db.from('merchants').delete().eq('id', id);
   }
+
+  // ---- account creation (boss batch 08/08 point 1) ----
+  // Auth users can only be created with the service_role key, so these go
+  // through the `super-create-account` edge function.
+
+  /// Creates the admin login for a company/community.
+  Future<void> createCompanyAdmin({
+    required String communityId,
+    required String fullName,
+    required String email,
+    required String password,
+  }) {
+    return _invoke({
+      'action': 'admin',
+      'community_id': communityId,
+      'full_name': fullName,
+      'email': email,
+      'password': password,
+    });
+  }
+
+  /// Creates a merchant login plus its shop row.
+  Future<void> createMerchantAccount({
+    required String shopName,
+    required String fullName,
+    required String email,
+    required String password,
+    String? communityId,
+    String? category,
+    String? contact,
+    String? address,
+  }) {
+    return _invoke({
+      'action': 'merchant',
+      'shop_name': shopName,
+      'full_name': fullName,
+      'email': email,
+      'password': password,
+      if (communityId != null) 'community_id': communityId,
+      if (category != null && category.isNotEmpty) 'category': category,
+      if (contact != null && contact.isNotEmpty) 'contact': contact,
+      if (address != null && address.isNotEmpty) 'address': address,
+    });
+  }
+
+  /// Removes the auth user behind an admin/merchant account.
+  Future<void> deleteAccount(String userId) {
+    return _invoke({'action': 'delete_user', 'user_id': userId});
+  }
+
+  Future<void> _invoke(Map<String, dynamic> body) async {
+    final res = await _db.functions.invoke('super-create-account', body: body);
+    if (res.status != 200) {
+      final data = res.data;
+      final msg = (data is Map && data['error'] != null)
+          ? data['error'].toString()
+          : 'Request failed (${res.status})';
+      throw Exception(msg);
+    }
+  }
 }
