@@ -9,6 +9,9 @@ class PendingSignup {
   final String fullName;
   final String residentType; // 'owner' | 'tenant' (meeting 20/07 point 1)
   final String createdAt;
+  /// Tenancy agreement uploaded at signup (boss batch 08/08 point 8-9).
+  /// Object path in the private `resident_documents` bucket, or null.
+  final String? tenancyDocUrl;
 
   PendingSignup({
     required this.userId,
@@ -16,6 +19,7 @@ class PendingSignup {
     required this.fullName,
     required this.residentType,
     required this.createdAt,
+    this.tenancyDocUrl,
   });
 
   factory PendingSignup.fromJson(Map<String, dynamic> json) => PendingSignup(
@@ -24,6 +28,7 @@ class PendingSignup {
     fullName: (json['full_name'] ?? '').toString(),
     residentType: (json['resident_type'] ?? 'owner').toString(),
     createdAt: (json['created_at'] ?? '').toString(),
+    tenancyDocUrl: json['tenancy_doc_url'] as String?,
   );
 }
 
