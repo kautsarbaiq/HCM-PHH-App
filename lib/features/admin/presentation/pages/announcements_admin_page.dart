@@ -114,6 +114,27 @@ class _AnnouncementsAdminPageState
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Boss batch 08/08 point 11: show the wallpaper with the
+                  // details, and the redirect link it opens.
+                  if ((announcement.imageUrl ?? '').trim().isNotEmpty) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.network(
+                        announcement.imageUrl!.trim(),
+                        width: double.infinity,
+                        height: 190,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          height: 190,
+                          color: AppColors.surfaceTint,
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.broken_image_outlined,
+                              color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                   Text(
                     _formatDate(announcement.publishedAt),
                     style: const TextStyle(
@@ -131,6 +152,26 @@ class _AnnouncementsAdminPageState
                       height: 1.4,
                     ),
                   ),
+                  if ((announcement.linkUrl ?? '').trim().isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        const Icon(Icons.link_rounded,
+                            size: 16, color: AppColors.brand),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            announcement.linkUrl!.trim(),
+                            style: const TextStyle(
+                              color: AppColors.brand,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -159,6 +200,9 @@ class _AnnouncementsAdminPageState
     );
     final imageController = TextEditingController(
       text: announcement?.imageUrl ?? '',
+    );
+    final linkController = TextEditingController(
+      text: announcement?.linkUrl ?? '',
     );
     bool isUrgent = announcement?.isUrgent ?? false;
     bool isSaving = false;
@@ -294,18 +338,43 @@ class _AnnouncementsAdminPageState
                             ),
                           ),
                           const SizedBox(width: 12),
+                          // Boss batch 08/08 point 11: show the selected
+                          // wallpaper itself, not just a "set ✓" label.
                           if (imageController.text.trim().isNotEmpty)
-                            const Expanded(
-                              child: Text(
-                                'Image set ✓',
-                                style: TextStyle(
-                                  color: AppColors.success,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12.5,
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.network(
+                                imageController.text.trim(),
+                                width: 108,
+                                height: 68,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  width: 108,
+                                  height: 68,
+                                  color: AppColors.surfaceTint,
+                                  alignment: Alignment.center,
+                                  child: const Icon(Icons.broken_image_outlined,
+                                      color: AppColors.textSecondary),
                                 ),
                               ),
                             ),
                         ],
+                      ),
+                      const SizedBox(height: 12),
+                      // Optional redirect: tapping the wallpaper in the app
+                      // opens this link (boss batch 08/08 point 11).
+                      TextField(
+                        controller: linkController,
+                        decoration: InputDecoration(
+                          labelText: 'Redirect link (optional)',
+                          hintText: 'https://…',
+                          helperText:
+                              'If set, tapping the wallpaper opens this link',
+                          prefixIcon: const Icon(Icons.link_rounded, size: 20),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       SwitchListTile(
@@ -370,6 +439,9 @@ class _AnnouncementsAdminPageState
                                     'image_url': imageController.text.trim().isEmpty
                                         ? null
                                         : imageController.text.trim(),
+                                    'link_url': linkController.text.trim().isEmpty
+                                        ? null
+                                        : linkController.text.trim(),
                                   });
                             } else {
                               await ref
@@ -382,6 +454,7 @@ class _AnnouncementsAdminPageState
                                       isUrgent: isUrgent,
                                       publishedAt: '',
                                       imageUrl: imageController.text.trim(),
+                                      linkUrl: linkController.text.trim(),
                                     ),
                                   );
                             }
