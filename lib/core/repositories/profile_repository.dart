@@ -25,6 +25,10 @@ class Profile {
   // Meeting 20/07 point 1: 'pending' until management approves the account,
   // then 'approved'. Legacy rows default to 'approved' (grandfathered in SQL).
   final String approvalStatus;
+  // Boss batch 08/08 points 8-9: tenancy agreement uploaded at signup. Stored
+  // as an OBJECT PATH in the private `resident_documents` bucket, so it must be
+  // signed before display (StorageRepository.signedResidentDocUrl).
+  final String? tenancyDocUrl;
 
   bool get isTenant => residentType == 'tenant';
   bool get isApproved => approvalStatus == 'approved';
@@ -46,6 +50,7 @@ class Profile {
     this.communityName,
     this.residentType = 'owner',
     this.approvalStatus = 'approved',
+    this.tenancyDocUrl,
   });
 
   factory Profile.fromJson(Map<String, dynamic> json) {
@@ -68,6 +73,7 @@ class Profile {
           : null,
       residentType: json['resident_type'] as String? ?? 'owner',
       approvalStatus: json['approval_status'] as String? ?? 'approved',
+      tenancyDocUrl: json['tenancy_doc_url'] as String?,
     );
   }
 }
