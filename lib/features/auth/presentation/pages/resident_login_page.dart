@@ -1,11 +1,15 @@
 import 'dart:async';
+import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path/path.dart' as p;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/config/brand.dart';
+import '../../../../core/repositories/storage_repository.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/user_role.dart';
 import '../../../../theme/app_colors.dart';
@@ -51,6 +55,50 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
   bool _checkingCode = false;
   bool _isLoading = false;
   bool _isSignUp = false;
+
+  // Boss batch 08/08 point 8: the Tenancy Agreement is collected here at
+  // signup instead of later from the profile screen. Held in memory until the
+  // account exists, because storage writes need an authenticated session.
+  Uint8List? _tenancyBytes;
+  String? _tenancyName;
+
+  Future<void> _pickTenancyDoc() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['pdf', 'jpg', 'jpeg', 'png'],
+      withData: true, // needed on web AND to upload without a file path
+    );
+    final file = result?.files.firstOrNull;
+    if (file == null || file.bytes == null) return;
+    if (file.bytes!.lengthInBytes > 10 * 1024 * 1024) {
+      _showMessage('File is too large — please upload under 10 MB.');
+      return;
+    }
+    setState(() {
+      _tenancyBytes = file.bytes;
+      _tenancyName = file.name;
+    });
+  }
+
+  /// Uploads the picked agreement for the freshly created account and stores
+  /// the object path on the profile so admins can review it (point 9).
+  /// Never throws: a failed upload must not undo a successful signup.
+  Future<void> _saveTenancyDoc(String userId) async {
+    final bytes = _tenancyBytes;
+    if (bytes == null) return;
+    try {
+      var ext = p.extension(_tenancyName ?? '');
+      if (ext.isEmpty) ext = '.pdf';
+      final objectPath = await ref
+          .read(storageRepositoryProvider)
+          .uploadResidentDocumentBytes(bytes, userId, ext);
+      await Supabase.instance.client
+          .from('profiles')
+          .update({'tenancy_doc_url': objectPath}).eq('id', userId);
+    } catch (e) {
+      debugPrint('Tenancy agreement upload failed: $e');
+    }
+  }
 
   void _onCommunityCodeChanged(String value) {
     _codeDebounce?.cancel();
@@ -129,6 +177,12 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
         _showMessage('Please enter your residence community code (3-6 digit).');
         return;
       }
+      // Point 8: a tenant cannot register without their tenancy agreement —
+      // the admin approves the account based on that document (point 9).
+      if (_residentType == 'tenant' && _tenancyBytes == null) {
+        _showMessage('Please upload your Tenancy Agreement to register.');
+        return;
+      }
     }
 
     setState(() => _isLoading = true);
@@ -155,6 +209,11 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
           communityCode: _communityCodeController.text.trim(),
           residentType: _residentType,
         );
+        // Storage writes need the session that signUp just returned, so the
+        // agreement goes up now — before the pending-approval sign-out below.
+        if (res.session != null && res.user != null) {
+          await _saveTenancyDoc(res.user!.id);
+        }
         if (!mounted) return;
         if (res.session != null) {
           // Even if a session is returned (email confirmation off), a new
@@ -245,6 +304,8 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
         _nameController.clear();
         _communityCodeController.clear();
         _residentType = 'owner';
+        _tenancyBytes = null;
+        _tenancyName = null;
       }
     });
   }
@@ -373,14 +434,14 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                         children: [
                           if (_isSignUp) ...[
                             GlassTextField(
-                              hintText: 'Full Name',
+                              hintText: ref.tr('signup.fullName'),
                               prefixIcon: Icons.person_outline,
                               controller: _nameController,
                             ),
                             const SizedBox(height: 16),
                             ...[
                               GlassTextField(
-                                hintText: 'Residence Community Code',
+                                hintText: ref.tr('signup.communityCode'),
                                 prefixIcon: Icons.apartment_outlined,
                                 controller: _communityCodeController,
                                 keyboardType: TextInputType.number,
@@ -458,9 +519,9 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                             const SizedBox(height: 16),
                             Row(
                               children: [
-                                for (final t in const [
-                                  ('owner', 'Owner'),
-                                  ('tenant', 'Tenant'),
+                                for (final t in [
+                                  ('owner', ref.tr('signup.owner')),
+                                  ('tenant', ref.tr('signup.tenant')),
                                 ]) ...[
                                   Expanded(
                                     child: GestureDetector(
@@ -503,6 +564,23 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                                     const SizedBox(width: 10),
                                 ],
                               ],
+                            ),
+                            // Point 8: Tenancy Agreement is captured here, at
+                            // registration. Required for tenants, optional for
+                            // owners (they may still attach their S&P/title).
+                            const SizedBox(height: 16),
+                            _TenancyUploadField(
+                              label: _residentType == 'tenant'
+                                  ? ref.tr('signup.tenancyRequired')
+                                  : ref.tr('signup.tenancyOptional'),
+                              hint: ref.tr('signup.tenancyHint'),
+                              fileName: _tenancyName,
+                              required: _residentType == 'tenant',
+                              onPick: _pickTenancyDoc,
+                              onClear: () => setState(() {
+                                _tenancyBytes = null;
+                                _tenancyName = null;
+                              }),
                             ),
                           ],
                           const SizedBox(height: 24),
@@ -615,6 +693,90 @@ class _GradientButton extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Tenancy Agreement picker shown on the signup form (boss batch 08/08 p.8).
+class _TenancyUploadField extends StatelessWidget {
+  final String? fileName;
+  final bool required;
+  final String label;
+  final String hint;
+  final VoidCallback onPick;
+  final VoidCallback onClear;
+
+  const _TenancyUploadField({
+    required this.fileName,
+    required this.required,
+    required this.label,
+    required this.hint,
+    required this.onPick,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final picked = fileName != null;
+    return InkWell(
+      onTap: onPick,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceTint,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: picked
+                ? AppColors.success.withOpacity(0.55)
+                : AppColors.brand.withOpacity(0.25),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              picked
+                  ? Icons.check_circle_rounded
+                  : Icons.upload_file_outlined,
+              size: 20,
+              color: picked ? AppColors.success : AppColors.brand,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    fileName ?? hint,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (picked)
+              IconButton(
+                icon: const Icon(Icons.close_rounded, size: 18),
+                color: AppColors.textSecondary,
+                tooltip: 'Remove',
+                onPressed: onClear,
+              ),
+          ],
         ),
       ),
     );

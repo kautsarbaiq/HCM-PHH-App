@@ -320,4 +320,362 @@ const Map<String, Map<AppLang, String>> _strings = {
     AppLang.ms: 'Siaran kecemasan dihantar',
     AppLang.zh: '紧急广播已发送',
   },
+
+  // -------------------------------------------------------------------------
+  // Boss batch 08/08 point 6: Bahasa Malaysia across web + mobile.
+  // Side menu (mobile drawer)
+  // -------------------------------------------------------------------------
+  'menu.eGovernance': {
+    AppLang.en: 'E-Governance',
+    AppLang.ms: 'E-Tadbir',
+    AppLang.zh: '电子政务',
+  },
+  'menu.directory': {
+    AppLang.en: 'Directory',
+    AppLang.ms: 'Direktori',
+    AppLang.zh: '通讯录',
+  },
+  'menu.community': {
+    AppLang.en: 'Community',
+    AppLang.ms: 'Komuniti',
+    AppLang.zh: '社区',
+  },
+  'menu.lifestyle': {
+    AppLang.en: 'Lifestyle',
+    AppLang.ms: 'Gaya Hidup',
+    AppLang.zh: '生活',
+  },
+  'menu.eform': {
+    AppLang.en: 'E-Form',
+    AppLang.ms: 'E-Borang',
+    AppLang.zh: '电子表格',
+  },
+  'menu.eformSub': {
+    AppLang.en: 'Submit forms online',
+    AppLang.ms: 'Hantar borang dalam talian',
+    AppLang.zh: '在线提交表格',
+  },
+  'menu.edocument': {
+    AppLang.en: 'E-Document',
+    AppLang.ms: 'E-Dokumen',
+    AppLang.zh: '电子文件',
+  },
+  'menu.edocumentSub': {
+    AppLang.en: 'Rules & regulations',
+    AppLang.ms: 'Peraturan & undang-undang',
+    AppLang.zh: '规章制度',
+  },
+  'menu.scanId': {
+    AppLang.en: 'Scan ID',
+    AppLang.ms: 'Imbas ID',
+    AppLang.zh: '扫描证件',
+  },
+  'menu.scanIdSub': {
+    AppLang.en: 'Auto-fill from your ID / license',
+    AppLang.ms: 'Isi automatik daripada IC / lesen anda',
+    AppLang.zh: '从证件自动填写',
+  },
+  'menu.committee': {
+    AppLang.en: 'Committee',
+    AppLang.ms: 'Jawatankuasa',
+    AppLang.zh: '管委会',
+  },
+  'menu.committeeSub': {
+    AppLang.en: 'Management committee',
+    AppLang.ms: 'Jawatankuasa pengurusan',
+    AppLang.zh: '管理委员会',
+  },
+  'menu.guard': {
+    AppLang.en: 'Security Guard',
+    AppLang.ms: 'Pengawal Keselamatan',
+    AppLang.zh: '保安人员',
+  },
+  'menu.guardSub': {
+    AppLang.en: 'On duty today',
+    AppLang.ms: 'Bertugas hari ini',
+    AppLang.zh: '今日值班',
+  },
+  'menu.econtact': {
+    AppLang.en: 'E-Contact',
+    AppLang.ms: 'E-Hubungi',
+    AppLang.zh: '联系簿',
+  },
+  'menu.econtactSub': {
+    AppLang.en: 'Essential contacts',
+    AppLang.ms: 'Hubungan penting',
+    AppLang.zh: '重要联系方式',
+  },
+  'menu.events': {
+    AppLang.en: 'Events (RSVP)',
+    AppLang.ms: 'Acara (RSVP)',
+    AppLang.zh: '活动 (报名)',
+  },
+  'menu.eventsSub': {
+    AppLang.en: 'Upcoming community events',
+    AppLang.ms: 'Acara komuniti akan datang',
+    AppLang.zh: '即将举行的社区活动',
+  },
+  'menu.epolling': {
+    AppLang.en: 'E-Polling',
+    AppLang.ms: 'E-Undian',
+    AppLang.zh: '电子投票',
+  },
+  'menu.epollingSub': {
+    AppLang.en: 'Vote on community matters',
+    AppLang.ms: 'Undi hal ehwal komuniti',
+    AppLang.zh: '就社区事务投票',
+  },
+  'menu.marketSquare': {
+    AppLang.en: 'Market Square',
+    AppLang.ms: 'Medan Pasar',
+    AppLang.zh: '生活市集',
+  },
+  'menu.marketSquareSub': {
+    AppLang.en: 'Trusted home services',
+    AppLang.ms: 'Perkhidmatan rumah dipercayai',
+    AppLang.zh: '可信赖的家居服务',
+  },
+  'menu.facility': {
+    AppLang.en: 'Book Facilities',
+    AppLang.ms: 'Tempah Kemudahan',
+    AppLang.zh: '预订设施',
+  },
+  'menu.facilitySub': {
+    AppLang.en: 'Pool, gym, BBQ & more',
+    AppLang.ms: 'Kolam, gim, BBQ & lain-lain',
+    AppLang.zh: '泳池、健身房、烧烤等',
+  },
+  'menu.rewards': {
+    AppLang.en: 'Rewards',
+    AppLang.ms: 'Ganjaran',
+    AppLang.zh: '奖励',
+  },
+  'menu.rewardsSub': {
+    AppLang.en: 'On-time bill perks & discounts',
+    AppLang.ms: 'Faedah & diskaun bayaran tepat masa',
+    AppLang.zh: '准时缴费优惠',
+  },
+  'menu.viewProfile': {
+    AppLang.en: 'Tap to view profile',
+    AppLang.ms: 'Ketik untuk lihat profil',
+    AppLang.zh: '点击查看个人资料',
+  },
+
+  // Profile extras
+  'profile.notifications': {
+    AppLang.en: 'Notifications',
+    AppLang.ms: 'Pemberitahuan',
+    AppLang.zh: '通知',
+  },
+  'profile.residentDocuments': {
+    AppLang.en: 'Resident Documents',
+    AppLang.ms: 'Dokumen Penghuni',
+    AppLang.zh: '住户文件',
+  },
+  'profile.financialRecords': {
+    AppLang.en: 'Financial Records',
+    AppLang.ms: 'Rekod Kewangan',
+    AppLang.zh: '财务记录',
+  },
+  'profile.familyLogins': {
+    AppLang.en: 'Family Logins',
+    AppLang.ms: 'Log Masuk Keluarga',
+    AppLang.zh: '家庭账号',
+  },
+  'profile.familyLoginsSub': {
+    AppLang.en: 'Create a login for your wife or child. They sign in with '
+        'their own email and password and see the same home, bills and '
+        'visitors as you.',
+    AppLang.ms: 'Buat log masuk untuk isteri atau anak anda. Mereka log masuk '
+        'dengan e-mel dan kata laluan sendiri dan melihat rumah, bil serta '
+        'pelawat yang sama seperti anda.',
+    AppLang.zh: '为配偶或子女创建登录账号。他们使用自己的邮箱和密码登录，看到与您相同的住家、账单和访客信息。',
+  },
+  'profile.addFamilyLogin': {
+    AppLang.en: 'Add family login',
+    AppLang.ms: 'Tambah log masuk keluarga',
+    AppLang.zh: '添加家庭账号',
+  },
+  'profile.tenancyAgreement': {
+    AppLang.en: 'Tenancy Agreement',
+    AppLang.ms: 'Perjanjian Sewa',
+    AppLang.zh: '租赁协议',
+  },
+  'profile.appVersion': {
+    AppLang.en: 'App version',
+    AppLang.ms: 'Versi aplikasi',
+    AppLang.zh: '应用版本',
+  },
+
+  // Signup extras (tenancy agreement, resident type)
+  'signup.owner': {
+    AppLang.en: 'Owner',
+    AppLang.ms: 'Pemilik',
+    AppLang.zh: '业主',
+  },
+  'signup.tenant': {
+    AppLang.en: 'Tenant',
+    AppLang.ms: 'Penyewa',
+    AppLang.zh: '租户',
+  },
+  'signup.fullName': {
+    AppLang.en: 'Full Name',
+    AppLang.ms: 'Nama Penuh',
+    AppLang.zh: '姓名',
+  },
+  'signup.communityCode': {
+    AppLang.en: 'Residence Community Code',
+    AppLang.ms: 'Kod Komuniti Kediaman',
+    AppLang.zh: '社区代码',
+  },
+  'signup.tenancyRequired': {
+    AppLang.en: 'Tenancy Agreement (required)',
+    AppLang.ms: 'Perjanjian Sewa (wajib)',
+    AppLang.zh: '租赁协议（必填）',
+  },
+  'signup.tenancyOptional': {
+    AppLang.en: 'Tenancy Agreement / ownership doc (optional)',
+    AppLang.ms: 'Perjanjian Sewa / dokumen pemilikan (pilihan)',
+    AppLang.zh: '租赁协议／产权文件（选填）',
+  },
+  'signup.tenancyHint': {
+    AppLang.en: 'Tap to upload a PDF or photo (max 10 MB)',
+    AppLang.ms: 'Ketik untuk memuat naik PDF atau foto (maks 10 MB)',
+    AppLang.zh: '点击上传 PDF 或照片（最大 10 MB）',
+  },
+
+  // -------------------------------------------------------------------------
+  // Web portal (admin / guard / super admin / merchant sidebars)
+  // -------------------------------------------------------------------------
+  'admin.dashboard': {
+    AppLang.en: 'Dashboard',
+    AppLang.ms: 'Papan Pemuka',
+    AppLang.zh: '仪表板',
+  },
+  'admin.residents': {
+    AppLang.en: 'Residents',
+    AppLang.ms: 'Penghuni',
+    AppLang.zh: '住户',
+  },
+  'admin.houses': {
+    AppLang.en: 'Houses',
+    AppLang.ms: 'Rumah',
+    AppLang.zh: '房屋',
+  },
+  'admin.visitors': {
+    AppLang.en: 'Visitors',
+    AppLang.ms: 'Pelawat',
+    AppLang.zh: '访客',
+  },
+  'admin.billings': {
+    AppLang.en: 'Billings',
+    AppLang.ms: 'Bil',
+    AppLang.zh: '账单',
+  },
+  'admin.facilities': {
+    AppLang.en: 'Facilities',
+    AppLang.ms: 'Kemudahan',
+    AppLang.zh: '设施',
+  },
+  'admin.announcements': {
+    AppLang.en: 'Announcements',
+    AppLang.ms: 'Pengumuman',
+    AppLang.zh: '公告',
+  },
+  'admin.events': {
+    AppLang.en: 'Events',
+    AppLang.ms: 'Acara',
+    AppLang.zh: '活动',
+  },
+  'admin.alerts': {
+    AppLang.en: 'Alerts',
+    AppLang.ms: 'Amaran',
+    AppLang.zh: '警报',
+  },
+  'admin.reports': {
+    AppLang.en: 'Reports',
+    AppLang.ms: 'Laporan',
+    AppLang.zh: '报表',
+  },
+  'admin.rewards': {
+    AppLang.en: 'Rewards',
+    AppLang.ms: 'Ganjaran',
+    AppLang.zh: '奖励',
+  },
+  'admin.guards': {
+    AppLang.en: 'Guards',
+    AppLang.ms: 'Pengawal',
+    AppLang.zh: '保安',
+  },
+  'admin.settings': {
+    AppLang.en: 'Settings',
+    AppLang.ms: 'Tetapan',
+    AppLang.zh: '设置',
+  },
+  'admin.export': {
+    AppLang.en: 'Export',
+    AppLang.ms: 'Eksport',
+    AppLang.zh: '导出',
+  },
+  'admin.all': {AppLang.en: 'All', AppLang.ms: 'Semua', AppLang.zh: '全部'},
+
+  // Shared status words (tables, pills, filters)
+  'status.pending': {
+    AppLang.en: 'Pending',
+    AppLang.ms: 'Menunggu',
+    AppLang.zh: '待处理',
+  },
+  'status.approved': {
+    AppLang.en: 'Approved',
+    AppLang.ms: 'Diluluskan',
+    AppLang.zh: '已批准',
+  },
+  'status.rejected': {
+    AppLang.en: 'Rejected',
+    AppLang.ms: 'Ditolak',
+    AppLang.zh: '已拒绝',
+  },
+  'status.paid': {AppLang.en: 'Paid', AppLang.ms: 'Dibayar', AppLang.zh: '已付'},
+  'status.unpaid': {
+    AppLang.en: 'Unpaid',
+    AppLang.ms: 'Belum Dibayar',
+    AppLang.zh: '未付',
+  },
+  'status.active': {
+    AppLang.en: 'Active',
+    AppLang.ms: 'Aktif',
+    AppLang.zh: '启用',
+  },
+  'status.inactive': {
+    AppLang.en: 'Inactive',
+    AppLang.ms: 'Tidak Aktif',
+    AppLang.zh: '停用',
+  },
+
+  // Guard portal sidebar
+  'guard.visitorLogs': {
+    AppLang.en: 'Visitor Logs',
+    AppLang.ms: 'Log Pelawat',
+    AppLang.zh: '访客记录',
+  },
+  'guard.houseDirectory': {
+    AppLang.en: 'House Directory',
+    AppLang.ms: 'Direktori Rumah',
+    AppLang.zh: '房屋目录',
+  },
+  'guard.quickActions': {
+    AppLang.en: 'QUICK ACTIONS',
+    AppLang.ms: 'TINDAKAN PANTAS',
+    AppLang.zh: '快捷操作',
+  },
+  'guard.scanQr': {
+    AppLang.en: 'Scan QR',
+    AppLang.ms: 'Imbas QR',
+    AppLang.zh: '扫描二维码',
+  },
+  'guard.manualRegistration': {
+    AppLang.en: 'Manual Registration',
+    AppLang.ms: 'Pendaftaran Manual',
+    AppLang.zh: '手动登记',
+  },
 };

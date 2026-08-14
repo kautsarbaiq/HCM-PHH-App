@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/widgets/language_switcher.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../emergency/presentation/widgets/active_emergency_banner.dart';
 import '../../../emergency/presentation/widgets/emergency_broadcast_sheet.dart';
 
-class GuardLayout extends StatelessWidget {
+class GuardLayout extends ConsumerWidget {
   final Widget child;
 
   const GuardLayout({super.key, required this.child});
@@ -55,7 +57,7 @@ class GuardLayout extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final width = MediaQuery.of(context).size.width;
     final isWide = width >= 700;
     final sidebarWidth = (width * 0.26).clamp(230.0, 300.0);
@@ -66,7 +68,7 @@ class GuardLayout extends StatelessWidget {
           ? null
           : Drawer(
               backgroundColor: Colors.white,
-              child: _sidebar(context, isWide: false),
+              child: _sidebar(context, ref, isWide: false),
             ),
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -117,7 +119,7 @@ class GuardLayout extends StatelessWidget {
           if (isWide)
             SizedBox(
               width: sidebarWidth,
-              child: _sidebar(context, isWide: true),
+              child: _sidebar(context, ref, isWide: true),
             ),
           Expanded(
             child: Column(
@@ -156,7 +158,8 @@ class GuardLayout extends StatelessWidget {
     );
   }
 
-  Widget _sidebar(BuildContext context, {required bool isWide}) {
+  Widget _sidebar(BuildContext context, WidgetRef ref,
+      {required bool isWide}) {
     final String location = GoRouterState.of(context).uri.path;
 
     void go(String path) {
@@ -173,21 +176,21 @@ class GuardLayout extends StatelessWidget {
             _SidebarItem(
               icon: PhosphorIconsRegular.users,
               activeIcon: PhosphorIconsFill.users,
-              label: 'Visitor Logs',
+              label: ref.tr('guard.visitorLogs'),
               isSelected: location == '/guard/visitors',
               onTap: () => go('/guard/visitors'),
             ),
             _SidebarItem(
               icon: PhosphorIconsRegular.house,
               activeIcon: PhosphorIconsFill.house,
-              label: 'House Directory',
+              label: ref.tr('guard.houseDirectory'),
               isSelected: location == '/guard/houses',
               onTap: () => go('/guard/houses'),
             ),
             _SidebarItem(
               icon: PhosphorIconsRegular.calendarBlank,
               activeIcon: PhosphorIconsFill.calendarBlank,
-              label: 'Events',
+              label: ref.tr('admin.events'),
               isSelected: location == '/guard/events',
               onTap: () => go('/guard/events'),
             ),
@@ -195,8 +198,8 @@ class GuardLayout extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Row(
                 children: [
-                  const Text(
-                    'QUICK ACTIONS',
+                  Text(
+                    ref.tr('guard.quickActions'),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -214,7 +217,7 @@ class GuardLayout extends StatelessWidget {
             _SidebarItem(
               icon: PhosphorIconsRegular.qrCode,
               activeIcon: PhosphorIconsFill.qrCode,
-              label: 'Scan QR',
+              label: ref.tr('guard.scanQr'),
               isSelected: location == '/guard/scan',
               onTap: () => go('/guard/scan'),
               accent: AppColors.mintGradient,
@@ -222,7 +225,7 @@ class GuardLayout extends StatelessWidget {
             _SidebarItem(
               icon: PhosphorIconsRegular.userPlus,
               activeIcon: PhosphorIconsFill.userPlus,
-              label: 'Manual Registration',
+              label: ref.tr('guard.manualRegistration'),
               isSelected: location == '/guard/register',
               onTap: () => go('/guard/register'),
               accent: AppColors.mintGradient,
@@ -237,7 +240,7 @@ class GuardLayout extends StatelessWidget {
               child: _SidebarItem(
                 icon: PhosphorIconsRegular.signOut,
                 activeIcon: PhosphorIconsRegular.signOut,
-                label: 'Logout',
+                label: ref.tr('common.logout'),
                 isSelected: false,
                 onTap: () => _handleLogout(context),
                 isLogout: true,

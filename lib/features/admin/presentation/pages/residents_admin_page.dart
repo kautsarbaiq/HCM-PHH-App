@@ -10,6 +10,7 @@ import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
 import '../../../../core/widgets/app_states.dart';
+import '../../../../core/widgets/tenancy_doc_button.dart';
 import 'houses_admin_page.dart'; // to get adminHousesProvider
 
 class ResidentsAdminPage extends ConsumerStatefulWidget {
@@ -89,10 +90,26 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
                   _buildDetailItem('Email Address', resident.email ?? '-'),
                   _buildDetailItem('Phone Number', resident.phone ?? '-'),
                   _buildDetailItem(
+                    'Resident Type',
+                    resident.isTenant ? 'Tenant' : 'Owner',
+                  ),
+                  _buildDetailItem(
                     'Account Status',
                     resident.status,
                     isStatus: true,
                   ),
+                  // Boss batch 08/08 point 9: the tenancy agreement uploaded at
+                  // signup is what the admin checks before activating a login.
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Tenancy Agreement',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TenancyDocButton(docPath: resident.tenancyDocUrl),
                   const SizedBox(height: 8),
                   const Text(
                     'Documents',

@@ -6,6 +6,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/config/brand.dart';
 import '../../../../core/repositories/profile_repository.dart';
 import '../../../../core/widgets/language_switcher.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 
 class AppDrawer extends ConsumerWidget {
@@ -38,100 +39,111 @@ class AppDrawer extends ConsumerWidget {
                     child: ListView(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       children: [
-                        _buildSectionLabel('E-Governance'),
+                        _buildSectionLabel(ref.tr('menu.eGovernance')),
                         _buildDrawerTile(
                           context,
+                          ref,
                           icon: PhosphorIconsRegular.fileText,
                           fillIcon: PhosphorIconsFill.fileText,
-                          title: 'E-Form',
-                          subtitle: 'Submit forms online',
+                          title: ref.tr('menu.eform'),
+                          subtitle: ref.tr('menu.eformSub'),
                           route: '/eform',
                         ),
                         _buildDrawerTile(
                           context,
+                          ref,
                           icon: PhosphorIconsRegular.filePdf,
                           fillIcon: PhosphorIconsFill.filePdf,
-                          title: 'E-Document',
-                          subtitle: 'Rules & regulations',
+                          title: ref.tr('menu.edocument'),
+                          subtitle: ref.tr('menu.edocumentSub'),
                           route: '/edocument',
                         ),
                         _buildDrawerTile(
                           context,
+                          ref,
                           icon: PhosphorIconsRegular.identificationCard,
                           fillIcon: PhosphorIconsFill.identificationCard,
-                          title: 'Scan ID',
-                          subtitle: 'Auto-fill from your ID / license',
+                          title: ref.tr('menu.scanId'),
+                          subtitle: ref.tr('menu.scanIdSub'),
                           route: '/scan-id',
                         ),
                         const SizedBox(height: 8),
-                        _buildSectionLabel('Directory'),
+                        _buildSectionLabel(ref.tr('menu.directory')),
                         _buildDrawerTile(
                           context,
+                          ref,
                           icon: PhosphorIconsRegular.usersThree,
                           fillIcon: PhosphorIconsFill.usersThree,
-                          title: 'Committee',
-                          subtitle: 'Management committee',
+                          title: ref.tr('menu.committee'),
+                          subtitle: ref.tr('menu.committeeSub'),
                           route: '/committee',
                         ),
                         _buildDrawerTile(
                           context,
+                          ref,
                           icon: PhosphorIconsRegular.shieldCheck,
                           fillIcon: PhosphorIconsFill.shieldCheck,
-                          title: 'Security Guard',
-                          subtitle: 'On duty today',
+                          title: ref.tr('menu.guard'),
+                          subtitle: ref.tr('menu.guardSub'),
                           route: '/security-guard',
                         ),
                         _buildDrawerTile(
                           context,
+                          ref,
                           icon: PhosphorIconsRegular.addressBook,
                           fillIcon: PhosphorIconsFill.addressBook,
-                          title: 'E-Contact',
-                          subtitle: 'Essential contacts',
+                          title: ref.tr('menu.econtact'),
+                          subtitle: ref.tr('menu.econtactSub'),
                           route: '/econtact',
                         ),
                         const SizedBox(height: 8),
-                        _buildSectionLabel('Community'),
+                        _buildSectionLabel(ref.tr('menu.community')),
                         _buildDrawerTile(
                           context,
+                          ref,
                           icon: PhosphorIconsRegular.calendarCheck,
                           fillIcon: PhosphorIconsFill.calendarCheck,
-                          title: 'Events (RSVP)',
-                          subtitle: 'Upcoming community events',
+                          title: ref.tr('menu.events'),
+                          subtitle: ref.tr('menu.eventsSub'),
                           route: '/events',
                         ),
                         _buildDrawerTile(
                           context,
+                          ref,
                           icon: PhosphorIconsRegular.chartBar,
                           fillIcon: PhosphorIconsFill.chartBar,
-                          title: 'E-Polling',
-                          subtitle: 'Vote on community matters',
+                          title: ref.tr('menu.epolling'),
+                          subtitle: ref.tr('menu.epollingSub'),
                           route: '/epolling',
                         ),
                         const SizedBox(height: 8),
-                        _buildSectionLabel('Lifestyle'),
+                        _buildSectionLabel(ref.tr('menu.lifestyle')),
                         _buildDrawerTile(
                           context,
+                          ref,
                           icon: PhosphorIconsRegular.storefront,
                           fillIcon: PhosphorIconsFill.storefront,
-                          title: 'Market Square',
-                          subtitle: 'Trusted home services',
+                          title: ref.tr('menu.marketSquare'),
+                          subtitle: ref.tr('menu.marketSquareSub'),
                           route: '/market-square',
                         ),
                         _buildDrawerTile(
                           context,
+                          ref,
                           icon: PhosphorIconsRegular.buildings,
                           fillIcon: PhosphorIconsFill.buildings,
-                          title: 'Book Facilities',
-                          subtitle: 'Pool, gym, BBQ & more',
+                          title: ref.tr('menu.facility'),
+                          subtitle: ref.tr('menu.facilitySub'),
                           route: '/facility',
                         ),
                         if (isOwner)
                           _buildDrawerTile(
                             context,
+                            ref,
                             icon: PhosphorIconsRegular.gift,
                             fillIcon: PhosphorIconsFill.gift,
-                            title: 'Rewards',
-                            subtitle: 'On-time bill perks & discounts',
+                            title: ref.tr('menu.rewards'),
+                            subtitle: ref.tr('menu.rewardsSub'),
                             route: '/rewards',
                           ),
                         const SizedBox(height: 16),
@@ -173,7 +185,7 @@ class AppDrawer extends ConsumerWidget {
         : 'Guest';
     final role = profile?.role;
     final subtitle = (role == null || role.isEmpty)
-        ? 'Tap to view profile'
+        ? ref.tr('menu.viewProfile')
         : '${role[0].toUpperCase()}${role.substring(1)}';
     final avatarUrl = profile?.avatarUrl;
 
@@ -268,7 +280,8 @@ class AppDrawer extends ConsumerWidget {
   }
 
   Widget _buildDrawerTile(
-    BuildContext context, {
+    BuildContext context,
+    WidgetRef ref, {
     required IconData icon,
     IconData? fillIcon,
     required String title,

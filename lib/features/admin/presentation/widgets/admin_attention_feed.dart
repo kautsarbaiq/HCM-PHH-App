@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/repositories/admin_attention_repository.dart';
 import '../../../../core/repositories/admin_repository.dart';
 import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/tenancy_doc_button.dart';
 import '../../../../theme/app_colors.dart';
 
 /// HCA admin dashboard: pending signups (approve/reject inline) plus counts of
@@ -243,10 +244,20 @@ class _SignupRowState extends ConsumerState<_SignupRow> {
           ),
         ],
       ),
-      subtitle: Text(
-        'New account waiting for approval'
-        '${since.isEmpty ? '' : ' • $since'}\n${s.email}',
-        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'New account waiting for approval'
+            '${since.isEmpty ? '' : ' • $since'}\n${s.email}',
+            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          ),
+          // Point 9: the admin approves the login based on this document.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TenancyDocButton(docPath: s.tenancyDocUrl, dense: true),
+          ),
+        ],
       ),
       isThreeLine: true,
       trailing: _busy

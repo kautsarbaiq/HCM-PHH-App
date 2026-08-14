@@ -1,25 +1,27 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/config/brand.dart';
 import '../../../../core/widgets/language_switcher.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../l10n/app_strings.dart';
 
-class AdminLayout extends StatelessWidget {
+class AdminLayout extends ConsumerWidget {
   final Widget child;
 
   const AdminLayout({super.key, required this.child});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = MediaQuery.of(context).size.width >= 1024;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundGrey,
-      drawer: isDesktop ? null : _buildSidebar(context, isDesktop: false),
+      drawer: isDesktop ? null : _buildSidebar(context, ref, isDesktop: false),
       appBar: isDesktop
           ? null
           : AppBar(
@@ -56,12 +58,12 @@ class AdminLayout extends StatelessWidget {
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isDesktop) _buildSidebar(context, isDesktop: true),
+          if (isDesktop) _buildSidebar(context, ref, isDesktop: true),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (isDesktop) _buildTopBar(context),
+                if (isDesktop) _buildTopBar(context, ref),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -106,25 +108,25 @@ class AdminLayout extends StatelessWidget {
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
+  Widget _buildTopBar(BuildContext context, WidgetRef ref) {
     final String location = GoRouterState.of(context).uri.path;
-    String title = 'Dashboard';
+    String title = ref.tr('admin.dashboard');
     if (location.contains('residents')) {
-      title = 'Residents';
+      title = ref.tr('admin.residents');
     } else if (location.contains('communities')) {
       title = 'Communities';
     } else if (location.contains('alerts')) {
       title = 'Alert History';
     } else if (location.contains('houses')) {
-      title = 'Houses';
+      title = ref.tr('admin.houses');
     } else if (location.contains('announcements')) {
-      title = 'Announcements';
+      title = ref.tr('admin.announcements');
     } else if (location.contains('billings')) {
-      title = 'Billings';
+      title = ref.tr('admin.billings');
     } else if (location.contains('visitors')) {
-      title = 'Visitors';
+      title = ref.tr('admin.visitors');
     } else if (location.contains('events')) {
-      title = 'Events';
+      title = ref.tr('admin.events');
     } else if (location.contains('polls')) {
       title = 'Polling';
     } else if (location.contains('documents')) {
@@ -134,17 +136,19 @@ class AdminLayout extends StatelessWidget {
     } else if (location.contains('contacts')) {
       title = 'Contacts';
     } else if (location.contains('guards')) {
-      title = 'Guards';
+      title = ref.tr('admin.guards');
     } else if (location.contains('marketplace')) {
       title = 'Market Square';
     } else if (location.contains('facilities')) {
-      title = 'Facilities';
+      title = ref.tr('admin.facilities');
     } else if (location.contains('id-scans')) {
       title = 'Resident IDs';
     } else if (location.contains('bookings')) {
       title = 'Bookings';
     } else if (location.contains('rewards')) {
-      title = 'Rewards';
+      title = ref.tr('admin.rewards');
+    } else if (location.contains('reports')) {
+      title = ref.tr('admin.reports');
     }
 
     return Container(
@@ -232,7 +236,8 @@ class AdminLayout extends StatelessWidget {
     );
   }
 
-  Widget _buildSidebar(BuildContext context, {required bool isDesktop}) {
+  Widget _buildSidebar(BuildContext context, WidgetRef ref,
+      {required bool isDesktop}) {
     final String location = GoRouterState.of(context).uri.path;
     final double sidebarWidth = isDesktop
         ? 270
@@ -269,22 +274,25 @@ class AdminLayout extends StatelessWidget {
                 children: [
                   _item(
                     context,
+                    ref,
                     Icons.dashboard_rounded,
-                    'Dashboard',
+                    ref.tr('admin.dashboard'),
                     '/admin/dashboard',
                     location == '/admin/dashboard',
                     isDesktop,
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.people_alt_rounded,
-                    'Residents',
+                    ref.tr('admin.residents'),
                     '/admin/residents',
                     location.startsWith('/admin/residents'),
                     isDesktop,
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.house_rounded,
                     'Houses & Units',
                     '/admin/houses',
@@ -293,6 +301,7 @@ class AdminLayout extends StatelessWidget {
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.apartment_rounded,
                     'Communities',
                     '/admin/communities',
@@ -301,6 +310,7 @@ class AdminLayout extends StatelessWidget {
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.notifications_active_rounded,
                     'Alert History',
                     '/admin/alerts',
@@ -309,38 +319,43 @@ class AdminLayout extends StatelessWidget {
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.campaign_rounded,
-                    'Announcements',
+                    ref.tr('admin.announcements'),
                     '/admin/announcements',
                     location.startsWith('/admin/announcements'),
                     isDesktop,
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.receipt_long_rounded,
-                    'Billings',
+                    ref.tr('admin.billings'),
                     '/admin/billings',
                     location.startsWith('/admin/billings'),
                     isDesktop,
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.badge_rounded,
-                    'Visitors',
+                    ref.tr('admin.visitors'),
                     '/admin/visitors',
                     location.startsWith('/admin/visitors'),
                     isDesktop,
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.event_rounded,
-                    'Events',
+                    ref.tr('admin.events'),
                     '/admin/events',
                     location.startsWith('/admin/events'),
                     isDesktop,
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.how_to_vote_rounded,
                     'Polling',
                     '/admin/polls',
@@ -349,6 +364,7 @@ class AdminLayout extends StatelessWidget {
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.picture_as_pdf_rounded,
                     'Documents',
                     '/admin/documents',
@@ -357,6 +373,7 @@ class AdminLayout extends StatelessWidget {
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.description_rounded,
                     'Forms',
                     '/admin/forms',
@@ -365,6 +382,7 @@ class AdminLayout extends StatelessWidget {
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.contacts_rounded,
                     'Contacts',
                     '/admin/contacts',
@@ -373,14 +391,16 @@ class AdminLayout extends StatelessWidget {
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.shield_rounded,
-                    'Guards',
+                    ref.tr('admin.guards'),
                     '/admin/guards',
                     location.startsWith('/admin/guards'),
                     isDesktop,
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.storefront_rounded,
                     'Market',
                     '/admin/marketplace',
@@ -389,14 +409,16 @@ class AdminLayout extends StatelessWidget {
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.pool_rounded,
-                    'Facilities',
+                    ref.tr('admin.facilities'),
                     '/admin/facilities',
                     location.startsWith('/admin/facilities'),
                     isDesktop,
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.event_available_rounded,
                     'Bookings',
                     '/admin/bookings',
@@ -405,16 +427,27 @@ class AdminLayout extends StatelessWidget {
                   ),
                   _item(
                     context,
+                    ref,
                     Icons.card_giftcard_rounded,
-                    'Rewards',
+                    ref.tr('admin.rewards'),
                     '/admin/rewards',
                     location.startsWith('/admin/rewards'),
+                    isDesktop,
+                  ),
+                  _item(
+                    context,
+                    ref,
+                    Icons.assessment_rounded,
+                    ref.tr('admin.reports'),
+                    '/admin/reports',
+                    location.startsWith('/admin/reports'),
                     isDesktop,
                   ),
                   // Boss feedback 15/07: HCA doesn't use the ID-scan module.
                   if (Brand.isPhh)
                     _item(
                       context,
+                      ref,
                       Icons.badge_rounded,
                       'Resident IDs',
                       '/admin/id-scans',
@@ -432,8 +465,9 @@ class AdminLayout extends StatelessWidget {
               padding: const EdgeInsets.all(14),
               child: _item(
                 context,
+                ref,
                 Icons.logout_rounded,
-                'Logout',
+                ref.tr('common.logout'),
                 null,
                 false,
                 isDesktop,
@@ -448,6 +482,7 @@ class AdminLayout extends StatelessWidget {
 
   Widget _item(
     BuildContext context,
+    WidgetRef ref,
     IconData icon,
     String title,
     String? path,

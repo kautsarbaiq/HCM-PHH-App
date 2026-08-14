@@ -15,6 +15,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../../../core/services/push_service.dart';
 import '../../../main/presentation/pages/main_navigation_page.dart'
     show hideBillsForTenant;
+import '../../../main/presentation/widgets/app_drawer.dart';
+import '../widgets/family_logins_section.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../parking/parking_ui.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/repositories/profile_repository.dart';
@@ -295,6 +298,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundGrey,
+      // Boss batch 08/08 point 7: the profile header carries both the side
+      // menu and logout. Profile is a pushed route so it needs its own drawer;
+      // it opens from the right to keep the back caret on the left.
+      endDrawer: const AppDrawer(),
       body: GradientBackground(
         child: CustomScrollView(
           slivers: [
@@ -309,8 +316,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 onPressed: () => context.pop(),
               ),
-              title: const Text(
-                'Profile',
+              title: Text(
+                ref.tr('profile.title'),
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w700,
@@ -329,9 +336,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         )
                       : const Icon(PhosphorIconsRegular.signOut),
                   color: AppColors.error,
+                  tooltip: ref.tr('common.logout'),
                   onPressed: _isSigningOut ? null : _confirmSignOut,
                 ),
-                const SizedBox(width: 8),
+                Builder(
+                  builder: (ctx) => IconButton(
+                    icon: const Icon(PhosphorIconsRegular.list),
+                    color: AppColors.textPrimary,
+                    tooltip: 'Menu',
+                    onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+                  ),
+                ),
+                const SizedBox(width: 4),
               ],
             ),
             SliverToBoxAdapter(
@@ -345,7 +361,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     // (client feedback 02/08), and it is the first thing to
                     // check when push isn't arriving.
                     const SizedBox(height: 24),
-                    _buildSectionHeader('Notifications'),
+                    _buildSectionHeader(ref.tr('profile.notifications')),
                     const SizedBox(height: 12),
                     const _PushStatusCard(),
                     const SizedBox(height: 32),
@@ -355,7 +371,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     const MyParkingSection(),
                     const SizedBox(height: 32),
                     SectionHeader(
-                      title: 'Resident Documents',
+                      title: ref.tr('profile.residentDocuments'),
                       trailing: _isUploadingDoc
                           ? const SizedBox(
                               width: 18,
@@ -401,12 +417,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ),
                     const SizedBox(height: 16),
                     _buildDocumentGrid(),
+                    // Boss batch 08/08 point 5: sub-logins for wife / child.
+                    const FamilyLoginsSection(),
                     // HCA: tenants don't handle billing (point 17), so the
                     // financial section is owner-only.
                     if (!hideBillsForTenant(ref)) ...[
                       const SizedBox(height: 32),
                       _buildSectionHeader(
-                        'Financial Records',
+                        ref.tr('profile.financial'),
                         onTap: () => context.go('/bills'),
                       ),
                       const SizedBox(height: 16),

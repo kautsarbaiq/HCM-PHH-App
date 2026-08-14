@@ -10,6 +10,7 @@ import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
 import '../../../../core/widgets/app_states.dart';
+import '../../../../core/export/table_export.dart';
 
 final adminBillingsProvider =
     AsyncNotifierProvider<AdminBillingsNotifier, List<Billing>>(
@@ -78,6 +79,218 @@ class BillingsAdminPage extends ConsumerStatefulWidget {
 }
 
 class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
+  // ---- Boss batch 08/08 point 13: filters, search and export ---------------
+  final _search = TextEditingController();
+  String _statusFilter = 'all'; // all | paid | unpaid | overdue
+  int _ageingDays = 0; // 0 = off, else unpaid for more than N days
+  DateTime? _from;
+  DateTime? _to;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  /// Days past due for an unpaid invoice (0 when paid or not yet due).
+  int _daysOverdue(Billing b) {
+    if (b.status == 'paid') return 0;
+    final due = DateTime.tryParse(b.dueDate ?? '');
+    if (due == null) return 0;
+    final diff = DateTime.now().difference(due).inDays;
+    return diff > 0 ? diff : 0;
+  }
+
+  List<Billing> _applyFilters(List<Billing> all) {
+    final q = _search.text.trim().toLowerCase();
+    return all.where((b) {
+      if (_statusFilter != 'all' && b.status != _statusFilter) return false;
+      if (_ageingDays > 0 && _daysOverdue(b) < _ageingDays) return false;
+      final due = DateTime.tryParse(b.dueDate ?? '');
+      if (_from != null && (due == null || due.isBefore(_from!))) return false;
+      if (_to != null &&
+          (due == null || due.isAfter(_to!.add(const Duration(days: 1))))) {
+        return false;
+      }
+      if (q.isEmpty) return true;
+      return [
+        b.invoiceNumber,
+        b.title,
+        b.status,
+        b.period ?? '',
+        b.resident?.fullName ?? '',
+        _houseLabel(b),
+      ].any((f) => f.toLowerCase().contains(q));
+    }).toList();
+  }
+
+  Future<void> _exportBillings(List<Billing> rows, bool asPdf) async {
+    final headers = [
+      'Invoice', 'Title', 'Resident', 'House', 'Period',
+      'Amount (RM)', 'Due date', 'Status', 'Days overdue', 'Paid at',
+    ];
+    final data = rows
+        .map((b) => [
+              b.invoiceNumber,
+              b.title,
+              b.resident?.fullName ?? '-',
+              _houseLabel(b),
+              b.period ?? '-',
+              b.amount.toStringAsFixed(2),
+              b.dueDate ?? '-',
+              b.status,
+              _daysOverdue(b) == 0 ? '-' : '${_daysOverdue(b)}',
+              b.paidAt == null
+                  ? '-'
+                  : DateFormat('dd MMM yyyy')
+                      .format(DateTime.parse(b.paidAt!).toLocal()),
+            ])
+        .toList();
+    final name =
+        'billings-${DateFormat('yyyyMMdd').format(DateTime.now())}';
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      if (asPdf) {
+        await TableExport.pdf(
+          filename: name,
+          title: 'Billings & Payments',
+          subtitle: _filterSummary(rows.length),
+          headers: headers,
+          rows: data,
+        );
+      } else {
+        await TableExport.csv(
+            filename: name, headers: headers, rows: data);
+      }
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(
+          content: Text('Export failed: $e'),
+          backgroundColor: AppColors.error));
+    }
+  }
+
+  String _filterSummary(int count) {
+    final bits = <String>[
+      _statusFilter == 'all' ? 'All statuses' : 'Status: $_statusFilter',
+      if (_ageingDays > 0) 'Unpaid > $_ageingDays days',
+      if (_from != null)
+        'From ${DateFormat('d MMM yyyy').format(_from!)}',
+      if (_to != null) 'To ${DateFormat('d MMM yyyy').format(_to!)}',
+    ];
+    return '${bits.join('  •  ')}  •  $count records';
+  }
+
+  Future<void> _pickRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 3),
+      lastDate: DateTime(now.year + 2),
+      initialDateRange: (_from != null && _to != null)
+          ? DateTimeRange(start: _from!, end: _to!)
+          : null,
+    );
+    if (picked != null) {
+      setState(() {
+        _from = picked.start;
+        _to = picked.end;
+      });
+    }
+  }
+
+  /// Toolbar: search, status, ageing buckets, date range, CSV/PDF.
+  Widget _filterBar(List<Billing> filtered) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _search,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: 'Search invoice, resident, house…',
+                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                  isDense: true,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            OutlinedButton.icon(
+              onPressed: filtered.isEmpty
+                  ? null
+                  : () => _exportBillings(filtered, false),
+              icon: const Icon(Icons.table_view_rounded, size: 18),
+              label: const Text('CSV'),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: filtered.isEmpty
+                  ? null
+                  : () => _exportBillings(filtered, true),
+              icon: const Icon(Icons.picture_as_pdf_rounded, size: 18),
+              label: const Text('PDF'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            for (final s in ['all', 'paid', 'unpaid', 'overdue'])
+              ChoiceChip(
+                label: Text(s == 'all' ? 'All' : s[0].toUpperCase() + s.substring(1)),
+                selected: _statusFilter == s,
+                onSelected: (_) => setState(() => _statusFilter = s),
+              ),
+            const SizedBox(width: 8),
+            const Text('Unpaid over:',
+                style: TextStyle(
+                    fontSize: 12.5, color: AppColors.textSecondary)),
+            for (final d in [0, 30, 60, 90])
+              ChoiceChip(
+                label: Text(d == 0 ? 'Any' : '$d+ days'),
+                selected: _ageingDays == d,
+                onSelected: (_) => setState(() => _ageingDays = d),
+              ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: _pickRange,
+              icon: const Icon(Icons.date_range_rounded, size: 18),
+              label: Text(
+                (_from == null || _to == null)
+                    ? 'Due date range'
+                    : '${DateFormat('d MMM').format(_from!)} – ${DateFormat('d MMM yyyy').format(_to!)}',
+              ),
+            ),
+            if (_from != null || _to != null || _ageingDays > 0 ||
+                _statusFilter != 'all')
+              TextButton.icon(
+                onPressed: () => setState(() {
+                  _from = null;
+                  _to = null;
+                  _ageingDays = 0;
+                  _statusFilter = 'all';
+                }),
+                icon: const Icon(Icons.filter_alt_off_rounded, size: 18),
+                label: const Text('Clear'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(_filterSummary(filtered.length),
+            style: const TextStyle(
+                fontSize: 12, color: AppColors.textSecondary)),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
   void _showError(Object error) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -782,8 +995,8 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                 message: '$error',
                 onRetry: () => ref.invalidate(adminBillingsProvider),
               ),
-              data: (billings) {
-                if (billings.isEmpty) {
+              data: (all) {
+                if (all.isEmpty) {
                   return AppEmptyState(
                     icon: Icons.receipt_long_rounded,
                     title: 'No invoices found',
@@ -794,7 +1007,35 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                     gradient: AppColors.mintGradient,
                   );
                 }
-                return LayoutBuilder(
+                final billings = _applyFilters(all);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _filterBar(billings),
+                    Expanded(
+                      child: billings.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'No invoices match your filters.',
+                                style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 13),
+                              ),
+                            )
+                          : _buildBillingList(billings),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBillingList(List<Billing> billings) {
+    return LayoutBuilder(
                   builder: (context, constraints) {
                     // On narrow phones, render a vertical card list instead of a wide table.
                     if (constraints.maxWidth < 600) {
@@ -1020,12 +1261,6 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                     );
                   },
                 );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   // Compact card used for the narrow-phone billings layout.
