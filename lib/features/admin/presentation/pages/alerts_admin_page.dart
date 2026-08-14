@@ -1,33 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/repositories/emergency_repository.dart';
 import '../../../../core/widgets/app_states.dart';
 import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/report_table.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
 import '../../../../theme/app_colors.dart';
 
-/// Admin: full history of panic/emergency alerts (point 11) — who pressed it,
-/// which house, and how it was cleared (by whom + remarks, point 12).
-class AlertsAdminPage extends ConsumerWidget {
+/// Admin: full history of panic/emergency alerts, as a sortable, searchable
+/// table with CSV/PDF export (boss batch 08/08 point 10). Shows who pressed it,
+/// which house, and how it was cleared (type, by whom, remarks).
+class AlertsAdminPage extends ConsumerStatefulWidget {
   const AlertsAdminPage({super.key});
 
-  String _fmt(String? iso) {
+  @override
+  ConsumerState<AlertsAdminPage> createState() => _AlertsAdminPageState();
+}
+
+class _AlertsAdminPageState extends ConsumerState<AlertsAdminPage> {
+  // 'all' | 'Active' | 'Resolved'
+  String _status = 'all';
+
+  static String _fmt(String? iso) {
     if (iso == null || iso.isEmpty) return '-';
     try {
-      return DateFormat(
-        'MMM dd, yyyy • HH:mm',
-      ).format(DateTime.parse(iso).toLocal());
+      return DateFormat('dd MMM yyyy, HH:mm')
+          .format(DateTime.parse(iso).toLocal());
     } catch (_) {
       return iso;
     }
   }
 
+  static String _typeLabel(String t) => switch (t) {
+        'panic' => 'Panic',
+        'broadcast' => 'Broadcast',
+        'community' => 'Community',
+        'rollcall' => 'Roll call',
+        'contact' => 'Contacts',
+        _ => t,
+      };
+
+  static String _resolution(EmergencyAlert a) {
+    if (a.status == 'Active') return 'Open';
+    return switch (a.clearType) {
+      'false_alarm' => 'False alarm',
+      'attended' => 'Attended',
+      _ => 'Cleared',
+    };
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final historyAsync = ref.watch(alertHistoryProvider);
 
     return PremiumCard(
@@ -45,22 +71,24 @@ class AlertsAdminPage extends ConsumerWidget {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.refresh_rounded, color: AppColors.brand),
+                icon: const Icon(Icons.refresh_rounded,
+                    color: AppColors.brand),
                 onPressed: () => ref.invalidate(alertHistoryProvider),
                 tooltip: 'Refresh',
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Expanded(
             child: historyAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () =>
+                  const Center(child: CircularProgressIndicator()),
               error: (e, _) => AppErrorState(
                 message: 'Could not load alert history: $e',
                 onRetry: () => ref.invalidate(alertHistoryProvider),
               ),
-              data: (alerts) {
-                if (alerts.isEmpty) {
+              data: (all) {
+                if (all.isEmpty) {
                   return const AppEmptyState(
                     icon: Icons.notifications_off_outlined,
                     title: 'No alerts yet',
@@ -68,128 +96,81 @@ class AlertsAdminPage extends ConsumerWidget {
                     gradient: AppColors.mintGradient,
                   );
                 }
-                return ListView.separated(
-                  itemCount: alerts.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, i) {
-                    final a = alerts[i];
-                    final active = a.status == 'Active';
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color:
-                                  (active
-                                          ? AppColors.error
-                                          : AppColors.success)
-                                      .withOpacity(0.10),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              active
-                                  ? PhosphorIconsFill.siren
-                                  : PhosphorIconsRegular.checkCircle,
-                              color: active
-                                  ? AppColors.error
-                                  : AppColors.success,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        a.title,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          color: AppColors.textPrimary,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    StatusPill(
-                                      label: a.status.toUpperCase(),
-                                      color: active
-                                          ? AppColors.error
-                                          : AppColors.success,
-                                      dense: true,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  [
-                                    if (a.houseNumber != null)
-                                      'House ${a.houseNumber}',
-                                    if (a.triggeredByName != null)
-                                      'by ${a.triggeredByName}',
-                                    a.subtitle,
-                                  ].join(' • '),
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12.5,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  'Raised ${_fmt(a.createdAt)}',
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                if (!active) ...[
-                                  const SizedBox(height: 6),
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.surfaceTint,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Cleared ${_fmt(a.clearedAt)}'
-                                          '${a.clearedByName != null ? ' by ${a.clearedByName}' : ''}',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 12.5,
-                                            color: AppColors.textPrimary,
-                                          ),
-                                        ),
-                                        if (a.clearRemarks?.isNotEmpty ??
-                                            false) ...[
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            'Remarks: ${a.clearRemarks}',
-                                            style: const TextStyle(
-                                              fontSize: 12.5,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
+                final rows = _status == 'all'
+                    ? all
+                    : all.where((a) => a.status == _status).toList();
+
+                return ReportTable<EmergencyAlert>(
+                  title: 'Alert History',
+                  subtitle: _status == 'all'
+                      ? 'All alerts'
+                      : 'Status: $_status',
+                  exportBaseName:
+                      'alert-history-${DateFormat('yyyyMMdd').format(DateTime.now())}',
+                  emptyMessage: 'No alerts match your filter.',
+                  rows: rows,
+                  filters: Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final s in ['all', 'Active', 'Resolved'])
+                        ChoiceChip(
+                          label: Text(s == 'all' ? 'All' : s),
+                          selected: _status == s,
+                          onSelected: (_) => setState(() => _status = s),
+                        ),
+                    ],
+                  ),
+                  columns: [
+                    ReportColumn(
+                      label: 'Raised',
+                      value: (a) => _fmt(a.createdAt),
+                      sortKey: (a) => a.createdAt,
+                    ),
+                    ReportColumn(
+                      label: 'Type',
+                      value: (a) => _typeLabel(a.type),
+                    ),
+                    ReportColumn(
+                      label: 'Title',
+                      value: (a) => a.title,
+                    ),
+                    ReportColumn(
+                      label: 'House',
+                      value: (a) => a.houseNumber ?? '-',
+                    ),
+                    ReportColumn(
+                      label: 'Raised by',
+                      value: (a) => a.triggeredByName ?? '-',
+                    ),
+                    ReportColumn(
+                      label: 'Status',
+                      value: (a) => a.status,
+                      cell: (a) => StatusPill(
+                        label: a.status.toUpperCase(),
+                        color: a.status == 'Active'
+                            ? AppColors.error
+                            : AppColors.success,
+                        dense: true,
                       ),
-                    );
-                  },
+                    ),
+                    ReportColumn(
+                      label: 'Resolution',
+                      value: _resolution,
+                    ),
+                    ReportColumn(
+                      label: 'Cleared',
+                      value: (a) => _fmt(a.clearedAt),
+                      sortKey: (a) => a.clearedAt ?? '',
+                    ),
+                    ReportColumn(
+                      label: 'Cleared by',
+                      value: (a) => a.clearedByName ?? '-',
+                    ),
+                    ReportColumn(
+                      label: 'Remarks',
+                      value: (a) => a.clearRemarks ?? '-',
+                    ),
+                  ],
                 );
               },
             ),
