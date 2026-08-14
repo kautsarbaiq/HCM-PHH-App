@@ -10,6 +10,7 @@ import '../../../../core/widgets/section_header.dart';
 import '../../../emergency/presentation/widgets/active_emergency_banner.dart';
 import '../../../emergency/presentation/widgets/emergency_broadcast_sheet.dart';
 import '../widgets/admin_attention_feed.dart';
+import '../widgets/dashboard_analytics.dart';
 
 typedef DashboardStats = ({
   int residents,
@@ -249,6 +250,15 @@ class AdminDashboardPage extends ConsumerWidget {
               );
             },
           ),
+          const SizedBox(height: 36),
+          // Analytics block (boss batch 08/08 point 14): KPI counts, monthly
+          // collection vs average, payment-method split and visitor flow.
+          const SectionHeader(
+            title: 'Analytics',
+            subtitle: 'Collections, billing and visitor flow',
+          ),
+          const SizedBox(height: 18),
+          const DashboardAnalytics(),
           const SizedBox(height: 36),
           // HCA (boss 16/07): a real "needs your attention" feed — pending
           // signups (approve/reject in-app), event proposals, bookings and
