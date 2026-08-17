@@ -5,6 +5,7 @@ import '../../../../core/repositories/admin_repository.dart';
 import '../../../../core/repositories/document_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
 import '../../../../core/repositories/storage_repository.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -308,18 +309,19 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.brand.withOpacity(0.12)),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.info_outline_rounded,
                 color: AppColors.brand,
                 size: 20,
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Residents register through the app directly. Use the edit action to assign a house or change status.',
-                  style: TextStyle(
+                  ref.trs('Residents register through the app directly. Use '
+                      'the edit action to assign a house or change status.'),
+                  style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 13,
                     height: 1.4,
@@ -339,7 +341,7 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
             });
           },
           decoration: InputDecoration(
-            hintText: 'Search residents by name or email...',
+            hintText: ref.trs('Search residents by name or email...'),
             hintStyle: const TextStyle(color: AppColors.textSecondary),
             prefixIcon: const Icon(
               Icons.search_rounded,

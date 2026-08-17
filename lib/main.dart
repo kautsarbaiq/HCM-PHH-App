@@ -53,7 +53,7 @@ class HCMApp extends ConsumerWidget {
             scaffoldMessengerKey: pushMessengerKey,
             theme: AppTheme.lightTheme,
             locale: lang.locale,
-            supportedLocales: const [Locale('en'), Locale('ms'), Locale('zh')],
+            supportedLocales: const [Locale('en'), Locale('ms')],
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,

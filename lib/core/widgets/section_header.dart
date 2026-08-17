@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../l10n/app_strings.dart';
 import '../../theme/app_colors.dart';
 
 /// A consistent section title with an optional subtitle and a trailing widget
 /// (e.g. a "See all" button). A short gradient accent bar anchors the title.
-class SectionHeader extends StatelessWidget {
+class SectionHeader extends ConsumerWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
@@ -18,7 +21,7 @@ class SectionHeader extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: padding,
       child: Row(
@@ -38,7 +41,9 @@ class SectionHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  // Phrase-translated: every screen that passes English text
+                  // gets Bahasa Malaysia without its own edit (feedback 16/08).
+                  ref.trs(title),
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
@@ -50,7 +55,7 @@ class SectionHeader extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
-                      subtitle!,
+                      ref.trs(subtitle!),
                       style: const TextStyle(
                         fontSize: 12.5,
                         color: AppColors.textSecondary,

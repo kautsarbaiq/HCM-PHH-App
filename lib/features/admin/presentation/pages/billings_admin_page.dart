@@ -5,6 +5,7 @@ import '../../../../core/repositories/billing_repository.dart';
 import '../../../../core/repositories/house_repository.dart';
 import '../../../../core/repositories/admin_repository.dart';
 import 'houses_admin_page.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -210,7 +211,7 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                 controller: _search,
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  hintText: 'Search invoice, resident, house…',
+                  hintText: ref.trs('Search invoice, resident, house…'),
                   prefixIcon: const Icon(Icons.search_rounded, size: 20),
                   isDense: true,
                   border: OutlineInputBorder(

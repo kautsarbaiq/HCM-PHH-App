@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../l10n/app_strings.dart';
 import '../../theme/app_colors.dart';
 
 /// Friendly empty-state placeholder: a soft gradient icon, a title and a hint,
@@ -79,7 +82,7 @@ class AppEmptyState extends StatelessWidget {
 }
 
 /// Error placeholder with a retry button.
-class AppErrorState extends StatelessWidget {
+class AppErrorState extends ConsumerWidget {
   final String message;
   final VoidCallback onRetry;
 
@@ -90,7 +93,7 @@ class AppErrorState extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -111,9 +114,9 @@ class AppErrorState extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Something went wrong',
-              style: TextStyle(
+            Text(
+              ref.tr('state.error'),
+              style: const TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -135,7 +138,7 @@ class AppErrorState extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Try again'),
+              label: Text(ref.tr('common.retry')),
             ),
           ],
         ),

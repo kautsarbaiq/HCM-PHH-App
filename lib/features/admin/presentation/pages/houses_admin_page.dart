@@ -4,6 +4,7 @@ import '../../../../core/repositories/admin_repository.dart';
 import '../../../../core/repositories/house_repository.dart';
 import '../../../../core/repositories/parking_repository.dart';
 import '../../../parking/parking_ui.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -671,7 +672,7 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
           TextField(
             onChanged: (value) => setState(() => _searchQuery = value),
             decoration: InputDecoration(
-              hintText: 'Search by house number or owner...',
+              hintText: ref.trs('Search by house number or owner...'),
               hintStyle: const TextStyle(color: AppColors.textSecondary),
               prefixIcon: const Icon(
                 Icons.search_rounded,

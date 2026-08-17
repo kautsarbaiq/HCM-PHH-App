@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/repositories/analytics_repository.dart';
 import '../../../../core/widgets/app_states.dart';
 import '../../../../core/widgets/premium_card.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 
 /// Analytics block on the admin dashboard (boss batch 08/08 point 14),
@@ -32,12 +33,12 @@ class DashboardAnalytics extends ConsumerWidget {
         // Period switch
         Row(
           children: [
-            _rangeChip(ref, 'This Year', DashRange.thisYear, range),
+            _rangeChip(ref, ref.tr('adash.thisYear'), DashRange.thisYear, range),
             const SizedBox(width: 8),
-            _rangeChip(ref, 'Last Year', DashRange.lastYear, range),
+            _rangeChip(ref, ref.tr('adash.lastYear'), DashRange.lastYear, range),
             const Spacer(),
             IconButton(
-              tooltip: 'Refresh',
+              tooltip: ref.tr('common.refresh'),
               icon: const Icon(Icons.refresh_rounded, color: AppColors.brand),
               onPressed: () => ref.invalidate(dashboardDataProvider),
             ),
@@ -56,9 +57,9 @@ class DashboardAnalytics extends ConsumerWidget {
           data: (d) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _kpiRow(d, wide),
+              _kpiRow(ref, d, wide),
               const SizedBox(height: 22),
-              _sectionLabel('REVENUE ANALYSIS'),
+              _sectionLabel(ref.tr('adash.revenueAnalysis')),
               const SizedBox(height: 12),
               if (wide)
                 SizedBox(
@@ -78,7 +79,7 @@ class DashboardAnalytics extends ConsumerWidget {
                 SizedBox(height: 300, child: _collectionCard(d)),
               ],
               const SizedBox(height: 22),
-              _sectionLabel('VISITOR FLOW'),
+              _sectionLabel(ref.tr('adash.visitorFlow')),
               const SizedBox(height: 12),
               if (wide)
                 SizedBox(
@@ -149,25 +150,25 @@ class DashboardAnalytics extends ConsumerWidget {
       );
 
   // ---- KPI row -------------------------------------------------------------
-  Widget _kpiRow(DashboardData d, bool wide) {
+  Widget _kpiRow(WidgetRef ref, DashboardData d, bool wide) {
     final pct = d.thisMonthVsAvgPct;
     final tiles = <Widget>[
-      _kpi(Icons.account_balance_wallet_rounded, 'Total Collection',
+      _kpi(Icons.account_balance_wallet_rounded, ref.tr('adash.totalCollection'),
           _money.format(d.totalCollection), AppColors.brand),
-      _kpi(Icons.bar_chart_rounded, 'Avg / Month',
+      _kpi(Icons.bar_chart_rounded, ref.tr('adash.avgMonth'),
           _money.format(d.avgPerMonth), AppColors.info),
       _kpi(
         Icons.calendar_month_rounded,
-        'This Month',
+        ref.tr('adash.thisMonth'),
         _money.format(d.thisMonthCollection),
         AppColors.success,
         delta: pct,
       ),
-      _kpi(Icons.people_alt_rounded, 'Residents', '${d.residents}',
+      _kpi(Icons.people_alt_rounded, ref.tr('adash.totalResidents'), '${d.residents}',
           AppColors.brandViolet),
-      _kpi(Icons.receipt_long_rounded, 'Bills / Paid',
+      _kpi(Icons.receipt_long_rounded, ref.tr('adash.billsPaid'),
           '${d.billsCreated} / ${d.paymentsReceived}', AppColors.accentAmber),
-      _kpi(Icons.pending_actions_rounded, 'Outstanding',
+      _kpi(Icons.pending_actions_rounded, ref.tr('adash.outstanding'),
           _money.format(d.outstanding), AppColors.error),
     ];
     return GridView.count(

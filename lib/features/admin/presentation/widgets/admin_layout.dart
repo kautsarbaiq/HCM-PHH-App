@@ -114,9 +114,9 @@ class AdminLayout extends ConsumerWidget {
     if (location.contains('residents')) {
       title = ref.tr('admin.residents');
     } else if (location.contains('communities')) {
-      title = 'Communities';
+      title = ref.tr('admin.communities');
     } else if (location.contains('alerts')) {
-      title = 'Alert History';
+      title = ref.tr('admin.alertHistory');
     } else if (location.contains('houses')) {
       title = ref.tr('admin.houses');
     } else if (location.contains('announcements')) {
@@ -128,23 +128,23 @@ class AdminLayout extends ConsumerWidget {
     } else if (location.contains('events')) {
       title = ref.tr('admin.events');
     } else if (location.contains('polls')) {
-      title = 'Polling';
+      title = ref.tr('admin.polling');
     } else if (location.contains('documents')) {
-      title = 'Documents';
+      title = ref.tr('admin.documents');
     } else if (location.contains('forms')) {
-      title = 'E-Forms';
+      title = ref.tr('admin.eforms');
     } else if (location.contains('contacts')) {
-      title = 'Contacts';
+      title = ref.tr('admin.contacts');
     } else if (location.contains('guards')) {
       title = ref.tr('admin.guards');
     } else if (location.contains('marketplace')) {
-      title = 'Market Square';
+      title = ref.tr('admin.marketSquare');
     } else if (location.contains('facilities')) {
       title = ref.tr('admin.facilities');
     } else if (location.contains('id-scans')) {
-      title = 'Resident IDs';
+      title = ref.tr('admin.residentIds');
     } else if (location.contains('bookings')) {
-      title = 'Bookings';
+      title = ref.tr('admin.bookings');
     } else if (location.contains('rewards')) {
       title = ref.tr('admin.rewards');
     } else if (location.contains('reports')) {
@@ -162,7 +162,8 @@ class AdminLayout extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Pages / Admin / $title',
+                  '${ref.tr('admin.pages')} / ${ref.tr('admin.admin')} / '
+                  '$title',
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 13,
@@ -294,7 +295,7 @@ class AdminLayout extends ConsumerWidget {
                     context,
                     ref,
                     Icons.house_rounded,
-                    'Houses & Units',
+                    ref.tr('admin.housesUnits'),
                     '/admin/houses',
                     location.startsWith('/admin/houses'),
                     isDesktop,
@@ -303,7 +304,7 @@ class AdminLayout extends ConsumerWidget {
                     context,
                     ref,
                     Icons.apartment_rounded,
-                    'Communities',
+                    ref.tr('admin.communities'),
                     '/admin/communities',
                     location.startsWith('/admin/communities'),
                     isDesktop,
@@ -312,7 +313,7 @@ class AdminLayout extends ConsumerWidget {
                     context,
                     ref,
                     Icons.notifications_active_rounded,
-                    'Alert History',
+                    ref.tr('admin.alertHistory'),
                     '/admin/alerts',
                     location.startsWith('/admin/alerts'),
                     isDesktop,
@@ -357,7 +358,7 @@ class AdminLayout extends ConsumerWidget {
                     context,
                     ref,
                     Icons.how_to_vote_rounded,
-                    'Polling',
+                    ref.tr('admin.polling'),
                     '/admin/polls',
                     location.startsWith('/admin/polls'),
                     isDesktop,
@@ -366,7 +367,7 @@ class AdminLayout extends ConsumerWidget {
                     context,
                     ref,
                     Icons.picture_as_pdf_rounded,
-                    'Documents',
+                    ref.tr('admin.documents'),
                     '/admin/documents',
                     location.startsWith('/admin/documents'),
                     isDesktop,
@@ -375,7 +376,7 @@ class AdminLayout extends ConsumerWidget {
                     context,
                     ref,
                     Icons.description_rounded,
-                    'Forms',
+                    ref.tr('admin.forms'),
                     '/admin/forms',
                     location.startsWith('/admin/forms'),
                     isDesktop,
@@ -384,7 +385,7 @@ class AdminLayout extends ConsumerWidget {
                     context,
                     ref,
                     Icons.contacts_rounded,
-                    'Contacts',
+                    ref.tr('admin.contacts'),
                     '/admin/contacts',
                     location.startsWith('/admin/contacts'),
                     isDesktop,
@@ -402,7 +403,7 @@ class AdminLayout extends ConsumerWidget {
                     context,
                     ref,
                     Icons.storefront_rounded,
-                    'Market',
+                    ref.tr('admin.market'),
                     '/admin/marketplace',
                     location.startsWith('/admin/marketplace'),
                     isDesktop,
@@ -420,7 +421,7 @@ class AdminLayout extends ConsumerWidget {
                     context,
                     ref,
                     Icons.event_available_rounded,
-                    'Bookings',
+                    ref.tr('admin.bookings'),
                     '/admin/bookings',
                     location.startsWith('/admin/bookings'),
                     isDesktop,

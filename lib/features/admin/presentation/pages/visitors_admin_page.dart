@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/repositories/visitor_repository.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/evidence_image.dart';
 import '../../../../core/widgets/premium_card.dart';
@@ -184,7 +185,7 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
           TextField(
             onChanged: (value) => setState(() => _searchQuery = value),
             decoration: InputDecoration(
-              hintText: 'Search by visitor, house, or who logged it...',
+              hintText: ref.trs('Search by visitor, house, or who logged it...'),
               hintStyle: const TextStyle(color: AppColors.textSecondary),
               prefixIcon: const Icon(
                 Icons.search,

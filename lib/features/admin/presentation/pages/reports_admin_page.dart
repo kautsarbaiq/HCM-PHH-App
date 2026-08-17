@@ -8,6 +8,7 @@ import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/report_table.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 
 // ============================================================================
@@ -18,12 +19,23 @@ import '../../../../theme/app_colors.dart';
 enum ReportKind { residents, visitors, bookings, payments, events }
 
 extension _ReportKindX on ReportKind {
+  /// English label — used for file names and PDF headers, which stay English
+  /// so exported files are consistent no matter the UI language.
   String get label => switch (this) {
         ReportKind.residents => 'Residents',
         ReportKind.visitors => 'Visitors',
         ReportKind.bookings => 'Facility Bookings',
         ReportKind.payments => 'Payments',
         ReportKind.events => 'Events',
+      };
+
+  /// Translation key for the on-screen chip.
+  String get labelKey => switch (this) {
+        ReportKind.residents => 'admin.residents',
+        ReportKind.visitors => 'admin.visitors',
+        ReportKind.bookings => 'reports.facilityBookings',
+        ReportKind.payments => 'reports.payments',
+        ReportKind.events => 'admin.events',
       };
   IconData get icon => switch (this) {
         ReportKind.residents => Icons.people_alt_rounded,
@@ -46,8 +58,12 @@ final reportRowsProvider =
     case ReportKind.residents:
       return (await db
               .from('profiles')
+              // `profiles` has TWO links to `houses` (profiles.house_id and
+              // houses.owner_id), so the FK must be named or PostgREST
+              // returns PGRST201 "more than one relationship was found".
               .select('full_name, email, phone, role, resident_type, '
-                  'approval_status, created_at, houses(house_number)')
+                  'approval_status, created_at, '
+                  'houses!profiles_house_id_fkey(house_number)')
               .order('created_at', ascending: false))
           .cast<Map<String, dynamic>>();
     case ReportKind.visitors:
@@ -55,7 +71,8 @@ final reportRowsProvider =
               .from('visitors')
               .select('visitor_name, purpose, registration_type, status, '
                   'vehicle_plate, ic_last4, expected_at, checked_in_at, '
-                  'checked_out_at, created_at, houses(house_number)')
+                  'checked_out_at, created_at, '
+                  'houses!visitors_house_id_fkey(house_number)')
               .order('created_at', ascending: false))
           .cast<Map<String, dynamic>>();
     case ReportKind.bookings:
@@ -226,14 +243,14 @@ class ReportsAdminPage extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: SectionHeader(
-                  title: 'Reports',
-                  subtitle: 'Search, sort and export any list as CSV or PDF',
+                  title: ref.tr('reports.title'),
+                  subtitle: ref.tr('reports.subtitle'),
                 ),
               ),
               IconButton(
-                tooltip: 'Refresh',
+                tooltip: ref.tr('common.refresh'),
                 icon: const Icon(Icons.refresh_rounded,
                     color: AppColors.brand),
                 onPressed: () => ref.invalidate(reportRowsProvider),
@@ -250,7 +267,7 @@ class ReportsAdminPage extends ConsumerWidget {
                   avatar: Icon(k.icon,
                       size: 16,
                       color: kind == k ? Colors.white : AppColors.brand),
-                  label: Text(k.label),
+                  label: Text(ref.tr(k.labelKey)),
                   selected: kind == k,
                   onSelected: (_) =>
                       ref.read(reportKindProvider.notifier).state = k,

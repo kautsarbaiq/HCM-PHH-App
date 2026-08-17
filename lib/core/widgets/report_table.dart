@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../export/table_export.dart';
+import '../../l10n/app_strings.dart';
 import '../../theme/app_colors.dart';
 
 /// One column of a report table.
@@ -25,7 +27,7 @@ class ReportColumn<T> {
 
 /// A searchable, sortable table with CSV + PDF export — the shared basis for
 /// the billing, alert and general reports (boss batch 08/08 points 4, 10, 13).
-class ReportTable<T> extends StatefulWidget {
+class ReportTable<T> extends ConsumerStatefulWidget {
   final String title;
   final String? subtitle;
   final List<ReportColumn<T>> columns;
@@ -47,10 +49,10 @@ class ReportTable<T> extends StatefulWidget {
   });
 
   @override
-  State<ReportTable<T>> createState() => _ReportTableState<T>();
+  ConsumerState<ReportTable<T>> createState() => _ReportTableState<T>();
 }
 
-class _ReportTableState<T> extends State<ReportTable<T>> {
+class _ReportTableState<T> extends ConsumerState<ReportTable<T>> {
   final _search = TextEditingController();
   int? _sortCol;
   bool _asc = true;
@@ -125,7 +127,7 @@ class _ReportTableState<T> extends State<ReportTable<T>> {
                 controller: _search,
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  hintText: 'Search…',
+                  hintText: '${ref.trs('Search')}…',
                   prefixIcon: const Icon(Icons.search_rounded, size: 20),
                   isDense: true,
                   border: OutlineInputBorder(
@@ -161,7 +163,9 @@ class _ReportTableState<T> extends State<ReportTable<T>> {
         ],
         const SizedBox(height: 10),
         Text(
-          '${rows.length} of ${widget.rows.length} records',
+          ref.watch(localeProvider) == AppLang.ms
+              ? '${rows.length} daripada ${widget.rows.length} rekod'
+              : '${rows.length} of ${widget.rows.length} records',
           style: const TextStyle(
               fontSize: 12, color: AppColors.textSecondary),
         ),
@@ -185,7 +189,7 @@ class _ReportTableState<T> extends State<ReportTable<T>> {
                         for (var i = 0; i < widget.columns.length; i++)
                           DataColumn(
                             label: Text(
-                              widget.columns[i].label,
+                              ref.trs(widget.columns[i].label),
                               style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 12.5),

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/config/brand.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -113,23 +114,24 @@ class AdminDashboardPage extends ConsumerWidget {
                       : Image.asset(Brand.logoAsset, fit: BoxFit.contain),
                 ),
                 const SizedBox(width: 18),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Welcome to ${Brand.appName}',
-                        style: TextStyle(
+                        "${ref.tr('adash.welcome')} ${Brand.appName}",
+                        style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
                           letterSpacing: -0.4,
                         ),
                       ),
-                      SizedBox(height: 6),
+                      const SizedBox(height: 6),
                       Text(
-                        'Here is an overview of the community.',
-                        style: TextStyle(fontSize: 14, color: Colors.white70),
+                        ref.tr('adash.welcomeSub'),
+                        style: const TextStyle(
+                            fontSize: 14, color: Colors.white70),
                       ),
                     ],
                   ),
@@ -192,9 +194,9 @@ class AdminDashboardPage extends ConsumerWidget {
             ),
           ],
           const SizedBox(height: 28),
-          const SectionHeader(
-            title: 'Overview',
-            subtitle: 'Key community metrics at a glance',
+          SectionHeader(
+            title: ref.tr('adash.overview'),
+            subtitle: ref.tr('adash.overviewSub'),
           ),
           const SizedBox(height: 18),
           // Dashboard Cards — balanced multi-column grid that fills the row
@@ -220,28 +222,28 @@ class AdminDashboardPage extends ConsumerWidget {
                 children: [
                   _buildStatCard(
                     cardWidth,
-                    'Total Residents',
+                    ref.tr('adash.totalResidents'),
                     fmt(stats?.residents),
                     Icons.people_rounded,
                     AppColors.brandGradient,
                   ),
                   _buildStatCard(
                     cardWidth,
-                    'Total Houses',
+                    ref.tr('adash.totalHouses'),
                     fmt(stats?.houses),
                     Icons.house_rounded,
                     AppColors.skyGradient,
                   ),
                   _buildStatCard(
                     cardWidth,
-                    'Active Billings',
+                    ref.tr('adash.activeBillings'),
                     fmt(stats?.activeBillings),
                     Icons.receipt_long_rounded,
                     AppColors.sunsetGradient,
                   ),
                   _buildStatCard(
                     cardWidth,
-                    'Today Visitors',
+                    ref.tr('adash.todayVisitors'),
                     fmt(stats?.todayVisitors),
                     Icons.badge_rounded,
                     AppColors.mintGradient,

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_colors.dart';
 
-/// Compact segmented EN / MS / 中 language switcher. Sets [localeProvider].
+/// Compact segmented EN / BM language switcher. Sets [localeProvider].
 class LanguageSwitcher extends ConsumerWidget {
   const LanguageSwitcher({super.key});
 
