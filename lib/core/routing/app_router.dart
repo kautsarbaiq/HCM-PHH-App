@@ -45,7 +45,6 @@ import '../../features/admin/presentation/pages/facilities_admin_page.dart';
 import '../../features/admin/presentation/pages/bookings_admin_page.dart';
 import '../../features/admin/presentation/pages/id_scans_admin_page.dart';
 import '../../features/admin/presentation/pages/rewards_admin_page.dart';
-import '../../features/admin/presentation/pages/reports_admin_page.dart';
 
 // Super admin imports
 import '../../features/superadmin/presentation/widgets/super_layout.dart';
@@ -355,10 +354,6 @@ class AppRouter {
           GoRoute(
             path: '/admin/rewards',
             builder: (context, state) => const RewardsAdminPage(),
-          ),
-          GoRoute(
-            path: '/admin/reports',
-            builder: (context, state) => const ReportsAdminPage(),
           ),
         ],
       ),

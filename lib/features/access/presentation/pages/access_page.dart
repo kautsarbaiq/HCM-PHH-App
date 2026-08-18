@@ -227,8 +227,12 @@ class _AccessPageState extends ConsumerState<AccessPage> {
       backgroundColor: AppColors.backgroundGrey,
       body: GradientBackground(
         child: SafeArea(
-          child: Column(
-            children: [
+          // Boss video 18/08: nothing above the footer may be pinned — the
+          // header and the tab switch have to scroll away with the content.
+          // Only the floating bottom nav stays fixed.
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
                 child: _buildHeader(context),
@@ -238,8 +242,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
                 child: _buildSegmentedControl(tabIndex),
               ),
               const SizedBox(height: 24),
-              Expanded(
-                child: IndexedStack(
+              IndexedStack(
                   index: tabIndex,
                   children: [
                     _buildPreRegisterForm()
@@ -252,8 +255,8 @@ class _AccessPageState extends ConsumerState<AccessPage> {
                         .slideY(begin: 0.1, end: 0),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -524,7 +527,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
   }
 
   Widget _buildPreRegisterForm() {
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -655,6 +658,8 @@ class _AccessPageState extends ConsumerState<AccessPage> {
         }
 
         return ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
           itemCount: activeVisitors.length,
           separatorBuilder: (context, index) => const SizedBox(height: 16),

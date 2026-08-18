@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/repositories/event_repository.dart';
 import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/report_table.dart';
+import '../../../../core/widgets/standard_list.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -653,13 +655,92 @@ class _EventsAdminPageState extends ConsumerState<EventsAdminPage> {
     );
   }
 
+  static DateTime? _dt(String? raw) =>
+      (raw == null || raw.isEmpty) ? null : DateTime.tryParse(raw);
+
+  static String _fmt(String? raw) {
+    final d = _dt(raw);
+    return d == null ? '-' : DateFormat('dd MMM yyyy, HH:mm').format(d.toLocal());
+  }
+
+  /// Boss voice note 18/08: one standard table format for every list.
+  List<ReportColumn<CommunityEvent>> _columns() => [
+        ReportColumn(label: 'Event', value: (e) => e.title),
+        ReportColumn(
+          label: 'When',
+          value: (e) => _fmt(e.date),
+          sortKey: (e) => e.date,
+        ),
+        ReportColumn(label: 'Location', value: (e) => e.location),
+        ReportColumn(
+          label: 'Attending',
+          numeric: true,
+          value: (e) => '${e.attending} / ${e.capacity}',
+          sortKey: (e) => e.attending,
+        ),
+        ReportColumn(
+          label: 'Status',
+          value: (e) => e.status,
+          cell: (e) => StatusPill(
+            label: e.status.toUpperCase(),
+            color: switch (e.status) {
+              'approved' => AppColors.success,
+              'rejected' => AppColors.error,
+              _ => AppColors.warning,
+            },
+            dense: true,
+          ),
+        ),
+      ];
+
   @override
   Widget build(BuildContext context) {
     final eventsAsync = ref.watch(adminEventsProvider);
 
-    return PremiumCard(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
+    return eventsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => AppErrorState(
+        message: '$error',
+        onRetry: () => ref.invalidate(adminEventsProvider),
+      ),
+      data: (events) => StandardList<CommunityEvent>(
+        title: 'Events',
+        subtitle: 'Schedule and manage community events',
+        rows: events,
+        columns: _columns(),
+        dateOf: (e) => _dt(e.date),
+        exportBaseName:
+            'events-${DateFormat('yyyyMMdd').format(DateTime.now())}',
+        emptyMessage: 'No events yet.',
+        rowAction: (e) => IconButton(
+          icon: const Icon(Icons.edit_outlined, size: 18),
+          color: AppColors.brand,
+          tooltip: 'Edit',
+          onPressed: () => _showForm(event: e),
+        ),
+        headerAction: ElevatedButton.icon(
+          onPressed: () => _showForm(),
+          icon: const Icon(Icons.add, size: 18),
+          label: const Text('Create Event'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.brand,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        cardView: (context) => _cardView(),
+      ),
+    );
+  }
+
+  Widget _cardView() {
+    final eventsAsync = ref.watch(adminEventsProvider);
+
+    return Builder(
+      builder: (context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(

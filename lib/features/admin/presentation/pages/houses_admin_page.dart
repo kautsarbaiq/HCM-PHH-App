@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/repositories/admin_repository.dart';
 import '../../../../core/repositories/house_repository.dart';
 import '../../../../core/repositories/parking_repository.dart';
 import '../../../parking/parking_ui.dart';
+import '../../../../core/widgets/report_table.dart';
+import '../../../../core/widgets/standard_list.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
@@ -628,16 +631,89 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
     );
   }
 
+  /// Boss voice note 18/08: one standard table format for every list.
+  List<ReportColumn<House>> _columns() => [
+        ReportColumn(label: 'House', value: (h) => h.houseNumber),
+        ReportColumn(label: 'Type', value: (h) => h.houseType),
+        ReportColumn(
+            label: 'Address', value: (h) => (h.address ?? '').isEmpty ? '-' : h.address!),
+        ReportColumn(
+          label: 'Owner',
+          value: (h) => h.owner?.fullName ?? _ownerName(h) ?? '-',
+        ),
+        ReportColumn(
+          label: 'Status',
+          value: (h) => h.status,
+          cell: (h) => StatusPill(
+            label: h.status.toUpperCase(),
+            color: h.status == 'occupied'
+                ? AppColors.success
+                : AppColors.textSecondary,
+            dense: true,
+          ),
+        ),
+      ];
+
+  /// Falls back to the residents list when the house row has no joined owner.
+  String? _ownerName(House h) {
+    if (h.ownerId == null) return null;
+    final residents = ref.read(adminResidentsProvider).valueOrNull;
+    if (residents == null) return null;
+    for (final r in residents) {
+      if (r.id == h.ownerId) return r.fullName;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final housesAsync = ref.watch(adminHousesProvider);
     // Warm the residents list so occupant names resolve in the Owner column.
     ref.watch(adminResidentsProvider);
 
-    return PremiumCard(
-      padding: const EdgeInsets.all(24.0),
-      radius: 22,
-      child: Column(
+    return housesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => AppErrorState(
+        message: '$error',
+        onRetry: () => ref.invalidate(adminHousesProvider),
+      ),
+      data: (houses) => StandardList<House>(
+        title: 'Houses & Units',
+        subtitle: 'Manage units and occupancy',
+        rows: houses,
+        columns: _columns(),
+        exportBaseName:
+            'houses-${DateFormat('yyyyMMdd').format(DateTime.now())}',
+        emptyMessage: 'No houses found.',
+        rowAction: (h) => IconButton(
+          icon: const Icon(Icons.edit_outlined, size: 18),
+          color: AppColors.brand,
+          tooltip: 'Edit',
+          onPressed: () => _showForm(house: h),
+        ),
+        headerAction: ElevatedButton.icon(
+          onPressed: () => _showForm(),
+          icon: const Icon(Icons.add_rounded, size: 18),
+          label: const Text('Add House'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.brand,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+        cardView: (context) => _cardView(houses),
+      ),
+    );
+  }
+
+  Widget _cardView(List<House> allHouses) {
+    final housesAsync = ref.watch(adminHousesProvider);
+
+    return Builder(
+      builder: (context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(

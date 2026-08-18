@@ -147,13 +147,14 @@ class AdminLayout extends ConsumerWidget {
       title = ref.tr('admin.bookings');
     } else if (location.contains('rewards')) {
       title = ref.tr('admin.rewards');
-    } else if (location.contains('reports')) {
-      title = ref.tr('admin.reports');
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
-      color: Colors.transparent,
+      padding: const EdgeInsets.fromLTRB(28, 16, 28, 16),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Color(0xFFE8EDF5))),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -174,7 +175,7 @@ class AdminLayout extends ConsumerWidget {
                   title,
                   style: const TextStyle(
                     color: AppColors.textPrimary,
-                    fontSize: 30,
+                    fontSize: 26,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
                   ),
@@ -246,7 +247,10 @@ class AdminLayout extends ConsumerWidget {
 
     return Container(
       width: sidebarWidth,
-      color: Colors.white,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(right: BorderSide(color: Color(0xFFE8EDF5))),
+      ),
       child: SafeArea(
         child: Column(
           children: [
@@ -271,190 +275,57 @@ class AdminLayout extends ConsumerWidget {
             const SizedBox(height: 16),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 children: [
-                  _item(
-                    context,
-                    ref,
-                    Icons.dashboard_rounded,
-                    ref.tr('admin.dashboard'),
-                    '/admin/dashboard',
-                    location == '/admin/dashboard',
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.people_alt_rounded,
-                    ref.tr('admin.residents'),
-                    '/admin/residents',
-                    location.startsWith('/admin/residents'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.house_rounded,
-                    ref.tr('admin.housesUnits'),
-                    '/admin/houses',
-                    location.startsWith('/admin/houses'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.apartment_rounded,
-                    ref.tr('admin.communities'),
-                    '/admin/communities',
-                    location.startsWith('/admin/communities'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.notifications_active_rounded,
-                    ref.tr('admin.alertHistory'),
-                    '/admin/alerts',
-                    location.startsWith('/admin/alerts'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.campaign_rounded,
-                    ref.tr('admin.announcements'),
-                    '/admin/announcements',
-                    location.startsWith('/admin/announcements'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.receipt_long_rounded,
-                    ref.tr('admin.billings'),
-                    '/admin/billings',
-                    location.startsWith('/admin/billings'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.badge_rounded,
-                    ref.tr('admin.visitors'),
-                    '/admin/visitors',
-                    location.startsWith('/admin/visitors'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.event_rounded,
-                    ref.tr('admin.events'),
-                    '/admin/events',
-                    location.startsWith('/admin/events'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.how_to_vote_rounded,
-                    ref.tr('admin.polling'),
-                    '/admin/polls',
-                    location.startsWith('/admin/polls'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.picture_as_pdf_rounded,
-                    ref.tr('admin.documents'),
-                    '/admin/documents',
-                    location.startsWith('/admin/documents'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.description_rounded,
-                    ref.tr('admin.forms'),
-                    '/admin/forms',
-                    location.startsWith('/admin/forms'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.contacts_rounded,
-                    ref.tr('admin.contacts'),
-                    '/admin/contacts',
-                    location.startsWith('/admin/contacts'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.shield_rounded,
-                    ref.tr('admin.guards'),
-                    '/admin/guards',
-                    location.startsWith('/admin/guards'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.storefront_rounded,
-                    ref.tr('admin.market'),
-                    '/admin/marketplace',
-                    location.startsWith('/admin/marketplace'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.pool_rounded,
-                    ref.tr('admin.facilities'),
-                    '/admin/facilities',
-                    location.startsWith('/admin/facilities'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.event_available_rounded,
-                    ref.tr('admin.bookings'),
-                    '/admin/bookings',
-                    location.startsWith('/admin/bookings'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.card_giftcard_rounded,
-                    ref.tr('admin.rewards'),
-                    '/admin/rewards',
-                    location.startsWith('/admin/rewards'),
-                    isDesktop,
-                  ),
-                  _item(
-                    context,
-                    ref,
-                    Icons.assessment_rounded,
-                    ref.tr('admin.reports'),
-                    '/admin/reports',
-                    location.startsWith('/admin/reports'),
-                    isDesktop,
-                  ),
+                  // Boss voice note 18/08: the sidebar was 19 flat rows —
+                  // grouped into labelled sections so the portal is
+                  // navigable at a glance.
+                  _sectionLabel(ref.trs('Main')),
+                  _item(context, ref, Icons.dashboard_rounded, ref.tr('admin.dashboard'),
+                      '/admin/dashboard', location == '/admin/dashboard', isDesktop),
+                  _item(context, ref, Icons.people_alt_rounded, ref.tr('admin.residents'),
+                      '/admin/residents', location.startsWith('/admin/residents'), isDesktop),
+                  _item(context, ref, Icons.house_rounded, ref.tr('admin.housesUnits'),
+                      '/admin/houses', location.startsWith('/admin/houses'), isDesktop),
+                  _item(context, ref, Icons.apartment_rounded, ref.tr('admin.communities'),
+                      '/admin/communities', location.startsWith('/admin/communities'), isDesktop),
+                  _sectionLabel(ref.trs('Operations')),
+                  _item(context, ref, Icons.badge_rounded, ref.tr('admin.visitors'),
+                      '/admin/visitors', location.startsWith('/admin/visitors'), isDesktop),
+                  _item(context, ref, Icons.event_available_rounded, ref.tr('admin.bookings'),
+                      '/admin/bookings', location.startsWith('/admin/bookings'), isDesktop),
+                  _item(context, ref, Icons.pool_rounded, ref.tr('admin.facilities'),
+                      '/admin/facilities', location.startsWith('/admin/facilities'), isDesktop),
+                  _item(context, ref, Icons.shield_rounded, ref.tr('admin.guards'),
+                      '/admin/guards', location.startsWith('/admin/guards'), isDesktop),
+                  _item(context, ref, Icons.notifications_active_rounded, ref.tr('admin.alertHistory'),
+                      '/admin/alerts', location.startsWith('/admin/alerts'), isDesktop),
+                  _sectionLabel(ref.trs('Finance')),
+                  _item(context, ref, Icons.receipt_long_rounded, ref.tr('admin.billings'),
+                      '/admin/billings', location.startsWith('/admin/billings'), isDesktop),
+                  _item(context, ref, Icons.card_giftcard_rounded, ref.tr('admin.rewards'),
+                      '/admin/rewards', location.startsWith('/admin/rewards'), isDesktop),
+                  _sectionLabel(ref.trs('Community')),
+                  _item(context, ref, Icons.campaign_rounded, ref.tr('admin.announcements'),
+                      '/admin/announcements', location.startsWith('/admin/announcements'), isDesktop),
+                  _item(context, ref, Icons.celebration_rounded, ref.tr('admin.events'),
+                      '/admin/events', location.startsWith('/admin/events'), isDesktop),
+                  _item(context, ref, Icons.how_to_vote_rounded, ref.tr('admin.polling'),
+                      '/admin/polls', location.startsWith('/admin/polls'), isDesktop),
+                  _item(context, ref, Icons.storefront_rounded, ref.tr('admin.market'),
+                      '/admin/marketplace', location.startsWith('/admin/marketplace'), isDesktop),
+                  _sectionLabel(ref.trs('Records')),
+                  _item(context, ref, Icons.picture_as_pdf_rounded, ref.tr('admin.documents'),
+                      '/admin/documents', location.startsWith('/admin/documents'), isDesktop),
+                  _item(context, ref, Icons.description_rounded, ref.tr('admin.forms'),
+                      '/admin/forms', location.startsWith('/admin/forms'), isDesktop),
+                  _item(context, ref, Icons.contacts_rounded, ref.tr('admin.contacts'),
+                      '/admin/contacts', location.startsWith('/admin/contacts'), isDesktop),
                   // Boss feedback 15/07: HCA doesn't use the ID-scan module.
                   if (Brand.isPhh)
-                    _item(
-                      context,
-                      ref,
-                      Icons.badge_rounded,
-                      'Resident IDs',
-                      '/admin/id-scans',
-                      location.startsWith('/admin/id-scans'),
-                      isDesktop,
-                    ),
+                    _item(context, ref, Icons.badge_outlined,
+                        ref.tr('admin.residentIds'), '/admin/id-scans',
+                        location.startsWith('/admin/id-scans'), isDesktop),
                 ],
               ),
             ),
@@ -481,6 +352,22 @@ class AdminLayout extends ConsumerWidget {
     );
   }
 
+  /// Small uppercase group heading in the sidebar.
+  Widget _sectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 16, 10, 8),
+      child: Text(
+        label.toUpperCase(),
+        style: TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.1,
+          color: AppColors.textSecondary.withValues(alpha: 0.65),
+        ),
+      ),
+    );
+  }
+
   Widget _item(
     BuildContext context,
     WidgetRef ref,
@@ -492,7 +379,7 @@ class AdminLayout extends ConsumerWidget {
     bool isLogout = false,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 3),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -508,41 +395,47 @@ class AdminLayout extends ConsumerWidget {
             }
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
             decoration: BoxDecoration(
-              gradient: selected ? AppColors.brandGradient : null,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: selected
-                  ? [
-                      BoxShadow(
-                        color: AppColors.brand.withOpacity(0.30),
-                        blurRadius: 14,
-                        offset: const Offset(0, 6),
-                      ),
-                    ]
-                  : null,
+              // Boss 18/08: the old full-width gradient + heavy shadow made the
+              // whole sidebar shout. A soft tint plus a brand accent bar reads
+              // as "you are here" without dominating the page.
+              color: selected
+                  ? AppColors.brand.withValues(alpha: 0.10)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  width: 3,
+                  height: 20,
+                  margin: const EdgeInsets.only(right: 11),
+                  decoration: BoxDecoration(
+                    color: selected ? AppColors.brand : Colors.transparent,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
                 Icon(
                   icon,
-                  size: 22,
+                  size: 20,
                   color: selected
-                      ? Colors.white
+                      ? AppColors.brand
                       : (isLogout ? AppColors.error : AppColors.textSecondary),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     title,
                     style: TextStyle(
                       color: selected
-                          ? Colors.white
+                          ? AppColors.brand
                           : (isLogout
                                 ? AppColors.error
                                 : AppColors.textPrimary),
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                      fontSize: 15,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                      fontSize: 14.5,
                     ),
                   ),
                 ),

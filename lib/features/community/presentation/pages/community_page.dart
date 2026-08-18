@@ -77,7 +77,10 @@ class CommunityPage extends ConsumerWidget {
       backgroundColor: AppColors.backgroundGrey,
       body: GradientBackground(
         child: SafeArea(
-          child: Column(
+          // Boss video 18/08: the header, category chips and tab switch must
+          // scroll away with the page — only the bottom nav stays fixed.
+          child: SingleChildScrollView(
+            child: Column(
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
@@ -113,8 +116,7 @@ class CommunityPage extends ConsumerWidget {
                 child: _buildSegmentedControl(ref, tabIndex),
               ),
               const SizedBox(height: 24),
-              Expanded(
-                child: IndexedStack(
+              IndexedStack(
                   index: tabIndex,
                   children: [
                     _buildNoticeBoard(ref)
@@ -127,8 +129,8 @@ class CommunityPage extends ConsumerWidget {
                         .slideY(begin: 0.1, end: 0),
                   ],
                 ),
-              ),
             ],
+          ),
           ),
         ),
       ),
@@ -296,6 +298,8 @@ class CommunityPage extends ConsumerWidget {
       ),
       data: (notices) {
         return ListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
           children: [
             const NoticeSlider()
@@ -355,8 +359,8 @@ class CommunityPage extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Expanded(
-          child: ticketsAsync.when(
+        Builder(
+          builder: (_) => ticketsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, stack) => AppErrorState(
               message: 'Error: $err',
@@ -373,6 +377,8 @@ class CommunityPage extends ConsumerWidget {
                 );
               }
               return ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
                 itemCount: tickets.length,
                 separatorBuilder: (context, index) =>

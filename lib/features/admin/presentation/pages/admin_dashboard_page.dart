@@ -277,6 +277,9 @@ class AdminDashboardPage extends ConsumerWidget {
     );
   }
 
+  /// Boss 18/08: the counts are the first thing on the portal, so they carry
+  /// the design — a tinted accent band behind a gradient icon tile, the number
+  /// as the loudest element, and the label above it.
   Widget _buildStatCard(
     double width,
     String title,
@@ -284,40 +287,77 @@ class AdminDashboardPage extends ConsumerWidget {
     IconData icon,
     Gradient gradient,
   ) {
+    final accent = gradient.colors.first;
     return SizedBox(
       width: width,
-      child: PremiumCard(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            GradientIconBadge(
-              icon: icon,
-              gradient: gradient,
-              size: 52,
-              iconSize: 26,
-              radius: 16,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE8EDF5)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6A7BA8).withValues(alpha: 0.07),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            // Soft colour wash so each metric is identifiable at a glance.
+            Positioned(
+              right: -26,
+              top: -26,
+              child: Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: accent.withValues(alpha: 0.10),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  GradientIconBadge(
+                    icon: icon,
+                    gradient: gradient,
+                    size: 52,
+                    iconSize: 26,
+                    radius: 16,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    value,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.1,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          value,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 30,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.8,
+                            height: 1.1,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

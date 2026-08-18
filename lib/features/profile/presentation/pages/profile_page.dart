@@ -306,9 +306,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              backgroundColor: Colors.transparent,
+              // Boss video 18/08: the bar used to be pinned AND transparent,
+              // so the page content scrolled underneath it and the text
+              // overlapped the Profile/logout row. It now has a solid
+              // background and scrolls away with the page.
+              backgroundColor: AppColors.primaryWhite,
               surfaceTintColor: Colors.transparent,
-              pinned: true,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              pinned: false,
+              floating: false,
               leading: IconButton(
                 icon: const Icon(
                   PhosphorIconsRegular.caretLeft,

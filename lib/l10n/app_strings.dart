@@ -806,6 +806,12 @@ const Map<String, String> _phrasesMs = {
   'Add': 'Tambah',
   'Edit': 'Sunting',
 
+  // Sidebar group headings
+  'Main': 'Utama',
+  'Operations': 'Operasi',
+  'Finance': 'Kewangan',
+  'Records': 'Rekod',
+
   // Search hints & inline help
   'Search residents by name or email...': 'Cari penghuni mengikut nama atau e-mel...',
   'Search by house number or owner...': 'Cari mengikut nombor rumah atau pemilik...',

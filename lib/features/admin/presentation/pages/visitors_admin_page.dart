@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/repositories/visitor_repository.dart';
+import '../../../../core/widgets/report_table.dart';
+import '../../../../core/widgets/standard_list.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/evidence_image.dart';
@@ -144,117 +146,164 @@ class _VisitorsAdminPageState extends ConsumerState<VisitorsAdminPage> {
     }).toList();
   }
 
+  static String _s(String? v) => (v == null || v.isEmpty) ? '-' : v;
+
+  static DateTime? _dt(String? raw) =>
+      (raw == null || raw.isEmpty) ? null : DateTime.tryParse(raw);
+
+  static String _fmt(String? raw) {
+    final d = _dt(raw);
+    return d == null ? '-' : DateFormat('dd MMM yyyy, HH:mm').format(d.toLocal());
+  }
+
+  /// Boss voice note 18/08: one standard table format — search, sorting,
+  /// date range and CSV/PDF export — while the cards stay available because
+  /// thousands of visitors are unreadable as cards.
+  List<ReportColumn<Visitor>> _columns() => [
+        ReportColumn(label: 'Visitor', value: (v) => v.visitorName),
+        ReportColumn(label: 'House', value: (v) => _s(v.house?.houseNumber)),
+        ReportColumn(label: 'Purpose', value: (v) => _s(v.purpose)),
+        ReportColumn(label: 'Entry', value: (v) => _s(v.registrationType)),
+        ReportColumn(label: 'Plate', value: (v) => _s(v.vehiclePlate)),
+        ReportColumn(label: 'IC last 4', value: (v) => _s(v.icLast4)),
+        ReportColumn(
+          label: 'Status',
+          value: (v) => v.status,
+          cell: (v) => StatusPill(
+            label: v.status.replaceAll('_', ' ').toUpperCase(),
+            color: _statusColor(v.status),
+            dense: true,
+          ),
+        ),
+        ReportColumn(
+          label: 'Checked in',
+          value: (v) => _fmt(v.checkedInAt),
+          sortKey: (v) => v.checkedInAt ?? '',
+        ),
+        ReportColumn(
+          label: 'Checked out',
+          value: (v) => _fmt(v.checkedOutAt),
+          sortKey: (v) => v.checkedOutAt ?? '',
+        ),
+        ReportColumn(label: 'Logged by', value: (v) => _s(v.creator?.fullName)),
+      ];
+
+  static Color _statusColor(String status) {
+    switch (status) {
+      case 'checked_in':
+        return AppColors.success;
+      case 'checked_out':
+        return AppColors.textSecondary;
+      case 'expired':
+        return AppColors.error;
+      default:
+        return AppColors.warning;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final visitorsAsync = ref.watch(adminVisitorsProvider);
 
-    return PremiumCard(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Expanded(
-                child: SectionHeader(
-                  title: 'Visitors Log',
-                  subtitle: 'Track check-ins, evidence photos and status',
-                ),
-              ),
-              const SizedBox(width: 12),
-              OutlinedButton.icon(
-                onPressed: () => ref.invalidate(adminVisitorsProvider),
-                icon: const Icon(Icons.refresh),
-                label: const Text('Refresh'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.brand,
-                  side: const BorderSide(color: AppColors.brand),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            onChanged: (value) => setState(() => _searchQuery = value),
-            decoration: InputDecoration(
-              hintText: ref.trs('Search by visitor, house, or who logged it...'),
-              hintStyle: const TextStyle(color: AppColors.textSecondary),
-              prefixIcon: const Icon(
-                Icons.search,
-                color: AppColors.textSecondary,
-              ),
-              filled: true,
-              fillColor: AppColors.surfaceTint,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-                borderSide: BorderSide.none,
-              ),
+    return visitorsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => AppErrorState(
+        message: '$error',
+        onRetry: () => ref.invalidate(adminVisitorsProvider),
+      ),
+      data: (allVisitors) => StandardList<Visitor>(
+        title: 'Visitors Log',
+        subtitle: 'Track check-ins, evidence photos and status',
+        rows: allVisitors,
+        columns: _columns(),
+        // Filter by when the visit happened, falling back to when it was
+        // registered so pre-registered passes are still reachable.
+        dateOf: (v) => _dt(v.checkedInAt) ?? _dt(v.expectedAt),
+        exportBaseName:
+            'visitors-${DateFormat('yyyyMMdd').format(DateTime.now())}',
+        emptyMessage: 'No visitors logged yet.',
+        headerAction: OutlinedButton.icon(
+          onPressed: () => ref.invalidate(adminVisitorsProvider),
+          icon: const Icon(Icons.refresh, size: 18),
+          label: Text(ref.tr('common.refresh')),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.brand,
+            side: const BorderSide(color: AppColors.brand),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: visitorsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => AppErrorState(
-                message: '$error',
-                onRetry: () => ref.invalidate(adminVisitorsProvider),
-              ),
-              data: (allVisitors) {
-                final visitors = _filter(allVisitors);
-                if (visitors.isEmpty) {
-                  return AppEmptyState(
-                    icon: Icons.badge_rounded,
-                    title: 'No visitors logged',
-                    message: _searchQuery.isEmpty
-                        ? 'Visitor check-ins logged by guards will appear here.'
-                        : 'No visitors match your search.',
-                    gradient: AppColors.skyGradient,
-                  );
-                }
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    // Single column on phones; two responsive columns on
-                    // laptop/wide screens so the view isn't sparse. No
-                    // horizontal scrolling at any width.
-                    if (constraints.maxWidth < 700) {
-                      return ListView.separated(
-                        itemCount: visitors.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) =>
-                            _VisitorLogCard(visitor: visitors[index]),
-                      );
-                    }
-                    const gap = 16.0;
-                    final cardWidth = (constraints.maxWidth - gap) / 2;
-                    return SingleChildScrollView(
-                      child: Wrap(
-                        spacing: gap,
-                        runSpacing: gap,
-                        children: visitors
-                            .map(
-                              (v) => SizedBox(
+        ),
+        cardView: (context) => _cardView(allVisitors),
+      ),
+    );
+  }
+
+  Widget _cardView(List<Visitor> allVisitors) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          onChanged: (value) => setState(() => _searchQuery = value),
+          decoration: InputDecoration(
+            hintText: ref.trs('Search by visitor, house, or who logged it...'),
+            hintStyle: const TextStyle(color: AppColors.textSecondary),
+            prefixIcon:
+                const Icon(Icons.search, color: AppColors.textSecondary),
+            filled: true,
+            fillColor: AppColors.surfaceTint,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Expanded(
+          child: Builder(
+            builder: (context) {
+              final visitors = _filter(allVisitors);
+              if (visitors.isEmpty) {
+                return AppEmptyState(
+                  icon: Icons.badge_rounded,
+                  title: 'No visitors logged',
+                  message: _searchQuery.isEmpty
+                      ? 'Visitor check-ins logged by guards will appear here.'
+                      : 'No visitors match your search.',
+                  gradient: AppColors.skyGradient,
+                );
+              }
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth < 700) {
+                    return ListView.separated(
+                      itemCount: visitors.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) =>
+                          _VisitorLogCard(visitor: visitors[index]),
+                    );
+                  }
+                  const gap = 16.0;
+                  final cardWidth = (constraints.maxWidth - gap) / 2;
+                  return SingleChildScrollView(
+                    child: Wrap(
+                      spacing: gap,
+                      runSpacing: gap,
+                      children: visitors
+                          .map((v) => SizedBox(
                                 width: cardWidth,
                                 child: _VisitorLogCard(visitor: v),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+                              ))
+                          .toList(),
+                    ),
+                  );
+                },
+              );
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
