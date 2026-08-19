@@ -7,6 +7,7 @@ import '../../../../core/widgets/app_states.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/responsive.dart';
 import '../../../../theme/app_colors.dart';
 
 /// Merchant portal → Offers (boss batch 08/08 point 2): number of vouchers,
@@ -46,7 +47,7 @@ class MerchantOffersPage extends ConsumerWidget {
           return AlertDialog(
             title: const Text('New offer'),
             content: SizedBox(
-              width: 380,
+              width: Responsive.dialogWidth(context, 380),
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -167,14 +168,12 @@ class MerchantOffersPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Expanded(
-                child: SectionHeader(
-                  title: 'My offers',
-                  subtitle: 'Discounts residents can claim at your shop',
-                ),
-              ),
+          PageHeaderRow(
+            header: const SectionHeader(
+              title: 'My offers',
+              subtitle: 'Discounts residents can claim at your shop',
+            ),
+            actions: [
               ElevatedButton.icon(
                 onPressed: () => _add(context, ref),
                 icon: const Icon(Icons.local_offer_rounded),

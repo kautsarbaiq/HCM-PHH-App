@@ -10,6 +10,7 @@ import '../../../../core/widgets/app_states.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/responsive.dart';
 import '../../../../theme/app_colors.dart';
 
 /// Merchant portal → Redeem (boss batch 08/08 point 2, second bullet).
@@ -92,8 +93,8 @@ class _MerchantRedeemPageState extends ConsumerState<MerchantRedeemPage> {
       context: context,
       builder: (d) => Dialog(
         child: SizedBox(
-          width: 420,
-          height: 420,
+          width: Responsive.dialogWidth(context, 420),
+          height: Responsive.dialogHeight(context, 420),
           child: Column(
             children: [
               const Padding(

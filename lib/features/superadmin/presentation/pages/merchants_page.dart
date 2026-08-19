@@ -6,6 +6,7 @@ import '../../../../core/widgets/app_states.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/responsive.dart';
 import '../../../../theme/app_colors.dart';
 
 /// Super admin → Merchants (boss batch 08/08 point 1, third bullet).
@@ -23,14 +24,12 @@ class SuperMerchantsPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Expanded(
-                child: SectionHeader(
-                  title: 'Merchants',
-                  subtitle: 'Shops offering rewards to residents',
-                ),
-              ),
+          PageHeaderRow(
+            header: const SectionHeader(
+              title: 'Merchants',
+              subtitle: 'Shops offering rewards to residents',
+            ),
+            actions: [
               ElevatedButton.icon(
                 onPressed: () async {
                   await showDialog<void>(
@@ -295,7 +294,7 @@ class _CreateMerchantDialogState
     return AlertDialog(
       title: const Text('Add merchant'),
       content: SizedBox(
-        width: 440,
+        width: Responsive.dialogWidth(context, 440),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,

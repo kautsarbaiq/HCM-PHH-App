@@ -5,6 +5,7 @@ import '../../l10n/app_strings.dart';
 import '../../theme/app_colors.dart';
 import 'premium_card.dart';
 import 'report_table.dart';
+import 'responsive.dart';
 import 'section_header.dart';
 
 /// The one standard shape every list screen in the web portal uses
@@ -65,21 +66,17 @@ class _StandardListState<T> extends ConsumerState<StandardList<T>> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: SectionHeader(
-                  title: widget.title,
-                  subtitle: widget.subtitle,
-                ),
-              ),
-              if (hasCards) ...[
+          PageHeaderRow(
+            header: SectionHeader(
+              title: widget.title,
+              subtitle: widget.subtitle,
+            ),
+            actions: [
+              if (hasCards)
                 _ViewSwitch(
                   cards: _cards,
                   onChanged: (v) => setState(() => _cards = v),
                 ),
-                const SizedBox(width: 10),
-              ],
               if (widget.headerAction != null) widget.headerAction!,
             ],
           ),

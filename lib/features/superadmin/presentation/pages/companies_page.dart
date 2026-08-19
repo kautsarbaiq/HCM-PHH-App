@@ -6,6 +6,7 @@ import '../../../../core/widgets/app_states.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/responsive.dart';
 import '../../../../theme/app_colors.dart';
 
 /// Super admin → Companies (boss batch 08/08 point 1).
@@ -22,7 +23,7 @@ class CompaniesPage extends ConsumerWidget {
       builder: (d) => AlertDialog(
         title: const Text('Add company'),
         content: SizedBox(
-          width: 360,
+          width: Responsive.dialogWidth(context, 360),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -105,14 +106,12 @@ class CompaniesPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Expanded(
-                child: SectionHeader(
-                  title: 'Companies',
-                  subtitle: 'Communities, their admin account and app modules',
-                ),
-              ),
+          PageHeaderRow(
+            header: const SectionHeader(
+              title: 'Companies',
+              subtitle: 'Communities, their admin account and app modules',
+            ),
+            actions: [
               ElevatedButton.icon(
                 onPressed: () => _addCompany(context, ref),
                 icon: const Icon(Icons.add_business_rounded),
@@ -163,38 +162,48 @@ class CompaniesPage extends ConsumerWidget {
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      subtitle: Text(
-                        [
-                          c.adminEmail == null
-                              ? 'No admin account yet'
-                              : 'Admin: ${c.adminName ?? c.adminEmail}',
-                          '${c.residentCount} residents',
-                        ].join('  •  '),
-                        style: const TextStyle(fontSize: 12.5),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      // Actions live in the subtitle, not `trailing`: a
+                      // trailing Row cannot wrap and clipped on phones.
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          StatusPill(
-                            label:
-                                '${c.enabledCount}/${kAppModules.length} MODULES',
-                            color: AppColors.info,
-                            dense: true,
+                          const SizedBox(height: 2),
+                          Text(
+                            [
+                              c.adminEmail == null
+                                  ? 'No admin account yet'
+                                  : 'Admin: ${c.adminName ?? c.adminEmail}',
+                              '${c.residentCount} residents',
+                            ].join('  •  '),
+                            style: const TextStyle(fontSize: 12.5),
                           ),
-                          const SizedBox(width: 8),
-                          TextButton.icon(
-                            onPressed: () => _createAdmin(context, ref, c),
-                            icon: const Icon(
-                                Icons.admin_panel_settings_rounded, size: 18),
-                            label: Text(c.adminEmail == null
-                                ? 'Create admin'
-                                : 'Add admin'),
-                          ),
-                          const SizedBox(width: 4),
-                          TextButton.icon(
-                            onPressed: () => _manageModules(context, ref, c),
-                            icon: const Icon(Icons.tune_rounded, size: 18),
-                            label: const Text('Modules'),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              StatusPill(
+                                label:
+                                    '${c.enabledCount}/${kAppModules.length} MODULES',
+                                color: AppColors.info,
+                                dense: true,
+                              ),
+                              TextButton.icon(
+                                onPressed: () => _createAdmin(context, ref, c),
+                                icon: const Icon(
+                                    Icons.admin_panel_settings_rounded,
+                                    size: 18),
+                                label: Text(c.adminEmail == null
+                                    ? 'Create admin'
+                                    : 'Add admin'),
+                              ),
+                              TextButton.icon(
+                                onPressed: () => _manageModules(context, ref, c),
+                                icon: const Icon(Icons.tune_rounded, size: 18),
+                                label: const Text('Modules'),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -251,8 +260,8 @@ class _ModulesDialogState extends ConsumerState<_ModulesDialog> {
     return AlertDialog(
       title: Text('Modules — ${widget.company.name}'),
       content: SizedBox(
-        width: 420,
-        height: 420,
+        width: Responsive.dialogWidth(context, 420),
+        height: Responsive.dialogHeight(context, 420),
         child: Column(
           children: [
             const Align(
@@ -368,7 +377,7 @@ class _CreateAdminDialogState extends ConsumerState<_CreateAdminDialog> {
     return AlertDialog(
       title: Text('Admin account — ${widget.company.name}'),
       content: SizedBox(
-        width: 400,
+        width: Responsive.dialogWidth(context, 400),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
