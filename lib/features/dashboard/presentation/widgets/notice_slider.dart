@@ -6,6 +6,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/repositories/announcement_repository.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../community/presentation/pages/community_page.dart';
 
@@ -22,8 +23,8 @@ class NoticeSlider extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Latest Notice',
+            Text(
+              ref.trs('Latest Notice'),
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -33,8 +34,8 @@ class NoticeSlider extends ConsumerWidget {
             GestureDetector(
               onTap: () => context.go('/community'),
               behavior: HitTestBehavior.opaque,
-              child: const Text(
-                'See All',
+              child: Text(
+                ref.trs('See All'),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

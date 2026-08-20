@@ -69,3 +69,72 @@ class PageHeaderRow extends StatelessWidget {
     );
   }
 }
+
+/// A [ListTile] whose trailing controls drop below the text on narrow screens.
+///
+/// `ListTile.trailing` is laid out at its natural width and the title gets
+/// whatever is left — so a trailing Row of pill + switch + delete squeezes the
+/// title into a one-word-per-line column on a phone (user report 18/08).
+/// Above [breakpoint] this behaves exactly like a normal ListTile.
+class ResponsiveListTile extends StatelessWidget {
+  final Widget? leading;
+  final Widget? title;
+  final Widget? subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+  final EdgeInsetsGeometry? contentPadding;
+  final bool isThreeLine;
+  final double breakpoint;
+
+  const ResponsiveListTile({
+    super.key,
+    this.leading,
+    this.title,
+    this.subtitle,
+    this.trailing,
+    this.onTap,
+    this.contentPadding,
+    this.isThreeLine = false,
+    this.breakpoint = 620,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, c) {
+        final wide = c.maxWidth >= breakpoint || trailing == null;
+        if (wide) {
+          return ListTile(
+            leading: leading,
+            title: title,
+            subtitle: subtitle,
+            trailing: trailing,
+            onTap: onTap,
+            contentPadding: contentPadding,
+            isThreeLine: isThreeLine,
+          );
+        }
+        return ListTile(
+          leading: leading,
+          title: title,
+          onTap: onTap,
+          contentPadding: contentPadding,
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (subtitle != null) subtitle!,
+              const SizedBox(height: 6),
+              // Horizontal scroll is the safety net: even an unusually wide
+              // action row can never overflow the tile.
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: trailing!,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}

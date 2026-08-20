@@ -591,7 +591,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         children: [
           _buildInfoRow(
             PhosphorIconsRegular.phone,
-            'Phone',
+            ref.trs('Phone'),
             profileAsync.value?.phone ?? '-',
             AppColors.skyGradient,
             onEdit: () => _editPhone(profileAsync.value?.phone),
@@ -599,14 +599,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           const Divider(height: 32, thickness: 0.5),
           _buildInfoRow(
             PhosphorIconsRegular.envelopeSimple,
-            'Email',
+            ref.trs('Email'),
             email,
             AppColors.brandGradient,
           ),
           const Divider(height: 32, thickness: 0.5),
           _buildInfoRow(
             PhosphorIconsRegular.mapPin,
-            'House Address',
+            ref.trs('House Address'),
             houseAddress,
             AppColors.mintGradient,
             // HCA: the house is assigned by the management office — residents
@@ -1160,14 +1160,14 @@ class _DocCardIconButton extends StatelessWidget {
 /// Shows whether THIS device is registered to receive push notifications.
 /// Added after testers reported "no notification" when the real cause was that
 /// the phone had never registered a device token (boss retest 01/08).
-class _PushStatusCard extends StatefulWidget {
+class _PushStatusCard extends ConsumerStatefulWidget {
   const _PushStatusCard();
 
   @override
-  State<_PushStatusCard> createState() => _PushStatusCardState();
+  ConsumerState<_PushStatusCard> createState() => _PushStatusCardState();
 }
 
-class _PushStatusCardState extends State<_PushStatusCard> {
+class _PushStatusCardState extends ConsumerState<_PushStatusCard> {
   PushStatus? _status;
   bool _busy = false;
 
@@ -1223,7 +1223,9 @@ class _PushStatusCardState extends State<_PushStatusCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  ok ? 'Push notifications active' : 'Push not registered',
+                  ok
+                      ? ref.trs('Push notifications active')
+                      : ref.trs('Push not registered'),
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
@@ -1232,7 +1234,9 @@ class _PushStatusCardState extends State<_PushStatusCard> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _busy ? 'Checking…' : (s?.detail ?? 'Checking…'),
+                  // detail comes from PushService; run it through the phrase
+                  // table so the known messages appear in Bahasa Malaysia.
+                  ref.trs(_busy ? 'Checking…' : (s?.detail ?? 'Checking…')),
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
@@ -1244,7 +1248,7 @@ class _PushStatusCardState extends State<_PushStatusCard> {
           if (!ok)
             TextButton(
               onPressed: _busy ? null : _retry,
-              child: const Text('Retry'),
+              child: Text(ref.trs('Retry')),
             ),
         ],
       ),

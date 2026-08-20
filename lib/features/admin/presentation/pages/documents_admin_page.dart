@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import '../../../../core/repositories/document_repository.dart';
 import '../../../../core/repositories/storage_repository.dart';
+import '../../../../core/widgets/responsive.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -517,7 +518,7 @@ class _DocumentsAdminPageState extends ConsumerState<DocumentsAdminPage> {
                         margin: const EdgeInsets.only(bottom: 16),
                         radius: 18,
                         padding: const EdgeInsets.all(16),
-                        child: ListTile(
+                        child: ResponsiveListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: const GradientIconBadge(
                             icon: Icons.picture_as_pdf_rounded,

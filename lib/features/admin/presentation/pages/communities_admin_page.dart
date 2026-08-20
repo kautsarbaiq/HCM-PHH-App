@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/widgets/app_states.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../../core/widgets/responsive.dart';
 import '../../../../theme/app_colors.dart';
 
 /// One residential community (condo/apartment complex). Residents join it at
@@ -296,7 +297,7 @@ class _CommunitiesAdminPageState extends ConsumerState<CommunitiesAdminPage> {
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (context, i) {
                     final c = items[i];
-                    return ListTile(
+                    return ResponsiveListTile(
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 8,
                         vertical: 4,

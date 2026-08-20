@@ -9,6 +9,7 @@ import '../../../../core/widgets/app_states.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/widgets/responsive.dart';
 import '../../../../theme/app_colors.dart';
 
 /// Admin management for the rewards program (meeting 20/07 point 9): partner
@@ -204,7 +205,7 @@ class _PartnersTab extends ConsumerWidget {
                 separatorBuilder: (_, __) => const Divider(height: 1),
                 itemBuilder: (context, i) {
                   final p = partners[i];
-                  return ListTile(
+                  return ResponsiveListTile(
                     leading: CircleAvatar(
                       backgroundColor: AppColors.surfaceTint,
                       backgroundImage: (p.logoUrl ?? '').isNotEmpty
@@ -397,7 +398,7 @@ class _OffersTab extends ConsumerWidget {
                 separatorBuilder: (_, __) => const Divider(height: 1),
                 itemBuilder: (context, i) {
                   final o = offers[i];
-                  return ListTile(
+                  return ResponsiveListTile(
                     leading: CircleAvatar(
                       backgroundColor: AppColors.brand,
                       child: Text('${o.discountPercent}%',

@@ -806,6 +806,58 @@ const Map<String, String> _phrasesMs = {
   'Add': 'Tambah',
   'Edit': 'Sunting',
 
+  // Mobile resident app — Access screen
+  'Visitor Access': 'Akses Pelawat',
+  'Pre-register guests & manage passes': 'Pra-daftar tetamu & urus pas',
+  'Pre-Register': 'Pra-Daftar',
+  'Active Passes': 'Pas Aktif',
+  'Guest details': 'Butiran Tetamu',
+  'We will generate a QR pass for entry':
+      'Kami akan jana pas QR untuk kemasukan',
+  'Visitor Name': 'Nama Pelawat',
+  'Purpose (e.g. Guest, Delivery)': 'Tujuan (cth. Tetamu, Penghantaran)',
+  'Single': 'Sekali',
+  'Multiple': 'Berkali',
+  'Long term': 'Jangka panjang',
+  'Date & Time (Optional)': 'Tarikh & Masa (Pilihan)',
+  'Vehicle Plate (Optional)': 'Nombor Plat (Pilihan)',
+  'IC last 4 digits (Optional)': '4 digit akhir IC (Pilihan)',
+  'Time window — tap to pick': 'Tempoh masa — ketik untuk pilih',
+  'Add a day': 'Tambah hari',
+  'Generate Pass': 'Jana Pas',
+  'Visitor Name is required.': 'Nama pelawat diperlukan.',
+  'No active passes': 'Tiada pas aktif',
+  'Pre-register a guest to generate a visitor QR pass.':
+      'Pra-daftar tetamu untuk menjana pas QR pelawat.',
+  'Pre-register a guest': 'Pra-daftar tetamu',
+
+  // Mobile resident app — Community screen
+  'News, events & your feedback': 'Berita, acara & maklum balas anda',
+  'Community': 'Komuniti',
+
+  // Mobile resident app — Profile screen
+  'Push notifications active': 'Pemberitahuan tolak aktif',
+  'Push not registered': 'Pemberitahuan tolak belum didaftarkan',
+  'This device will receive alerts': 'Peranti ini akan menerima amaran',
+  'Not supported on web': 'Tidak disokong pada web',
+  'Checking…': 'Menyemak…',
+  'This device will receive alerts.': 'Peranti ini akan menerima amaran.',
+  'Device not registered yet.': 'Peranti belum didaftarkan.',
+  'Retry': 'Cuba semula',
+  'House Address': 'Alamat Rumah',
+  'Not assigned': 'Belum ditetapkan',
+  'Notice Board': 'Papan Notis',
+  'Feedback': 'Maklum Balas',
+  'Latest Notice': 'Notis Terkini',
+  'All Announcements': 'Semua Pengumuman',
+  'No announcements yet': 'Tiada pengumuman lagi',
+  'No tickets yet': 'Tiada tiket lagi',
+  'Create New Ticket': 'Cipta Tiket Baharu',
+  'E-Polling': 'E-Undian',
+  'See All': 'Lihat Semua',
+  'Community updates will appear here.':
+      'Kemas kini komuniti akan dipaparkan di sini.',
+
   // Sidebar group headings
   'Main': 'Utama',
   'Operations': 'Operasi',

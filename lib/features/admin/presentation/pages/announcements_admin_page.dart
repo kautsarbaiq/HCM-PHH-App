@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import '../../../../core/repositories/announcement_repository.dart';
 import '../../../../core/repositories/storage_repository.dart';
+import '../../../../core/widgets/responsive.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -641,7 +642,7 @@ class _AnnouncementsAdminPageState
                         margin: const EdgeInsets.only(bottom: 16),
                         radius: 18,
                         padding: const EdgeInsets.all(16),
-                        child: ListTile(
+                        child: ResponsiveListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: GradientIconBadge(
                             icon: a.isUrgent

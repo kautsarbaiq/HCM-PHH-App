@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/repositories/parking_repository.dart';
 import '../../core/widgets/premium_card.dart';
+import '../../l10n/app_strings.dart';
 import '../../theme/app_colors.dart';
 
 /// ADMIN (point 14): manage a house's parking bays — add numbered bays,
@@ -214,12 +215,13 @@ class MyParkingSection extends ConsumerWidget {
       children: [
         const SizedBox(height: 32),
         Row(
-          children: const [
-            Icon(PhosphorIconsFill.car, color: AppColors.brand, size: 20),
-            SizedBox(width: 8),
+          children: [
+            const Icon(PhosphorIconsFill.car,
+                color: AppColors.brand, size: 20),
+            const SizedBox(width: 8),
             Text(
-              'My Parking',
-              style: TextStyle(
+              ref.trs('My Parking'),
+              style: const TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,

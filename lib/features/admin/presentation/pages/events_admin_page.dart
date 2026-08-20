@@ -6,6 +6,7 @@ import '../../../../core/repositories/event_repository.dart';
 import '../../../../core/widgets/status_pill.dart';
 import '../../../../core/widgets/report_table.dart';
 import '../../../../core/widgets/standard_list.dart';
+import '../../../../core/widgets/responsive.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -798,7 +799,7 @@ class _EventsAdminPageState extends ConsumerState<EventsAdminPage> {
                         margin: const EdgeInsets.only(bottom: 16),
                         radius: 18,
                         padding: const EdgeInsets.all(16),
-                        child: ListTile(
+                        child: ResponsiveListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: const GradientIconBadge(
                             icon: Icons.celebration_rounded,

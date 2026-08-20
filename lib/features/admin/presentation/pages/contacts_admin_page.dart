@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/repositories/contact_repository.dart';
+import '../../../../core/widgets/responsive.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -475,7 +476,7 @@ class _ContactsAdminPageState extends ConsumerState<ContactsAdminPage> {
                         margin: const EdgeInsets.only(bottom: 16),
                         radius: 18,
                         padding: const EdgeInsets.all(16),
-                        child: ListTile(
+                        child: ResponsiveListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: GradientIconBadge(
                             icon: _categoryIcon(c.category),

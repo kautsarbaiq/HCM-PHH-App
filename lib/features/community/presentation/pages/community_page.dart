@@ -10,6 +10,7 @@ import '../../../../core/widgets/app_states.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/notice_card.dart';
 import '../widgets/ticket_card.dart';
@@ -95,7 +96,7 @@ class CommunityPage extends ConsumerWidget {
                     _buildFilterChip(
                       context,
                       icon: PhosphorIconsRegular.calendarCheck,
-                      label: 'Events',
+                      label: ref.trs('Events'),
                       route: '/events',
                       gradient: AppColors.sunsetGradient,
                     ),
@@ -103,7 +104,7 @@ class CommunityPage extends ConsumerWidget {
                     _buildFilterChip(
                       context,
                       icon: PhosphorIconsRegular.chartBar,
-                      label: 'E-Polling',
+                      label: ref.trs('E-Polling'),
                       route: '/epolling',
                       gradient: AppColors.skyGradient,
                     ),
@@ -145,9 +146,9 @@ class CommunityPage extends ConsumerWidget {
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text(
-              'Community',
+              ref.trs('Community'),
               style: TextStyle(
                 fontSize: 28,
                 color: AppColors.textPrimary,
@@ -157,7 +158,7 @@ class CommunityPage extends ConsumerWidget {
             ),
             SizedBox(height: 2),
             Text(
-              'News, events & your feedback',
+              ref.trs('News, events & your feedback'),
               style: TextStyle(
                 fontSize: 13.5,
                 color: AppColors.textSecondary,
@@ -237,10 +238,10 @@ class CommunityPage extends ConsumerWidget {
       child: Row(
         children: [
           Expanded(
-            child: _buildSegmentButton(ref, 0, 'Notice Board', currentIndex),
+            child: _buildSegmentButton(ref, 0, ref.trs('Notice Board'), currentIndex),
           ),
           Expanded(
-            child: _buildSegmentButton(ref, 1, 'Feedback', currentIndex),
+            child: _buildSegmentButton(ref, 1, ref.trs('Feedback'), currentIndex),
           ),
         ],
       ),
@@ -307,15 +308,15 @@ class CommunityPage extends ConsumerWidget {
                 .fade(duration: 400.ms)
                 .slideY(begin: 0.1, end: 0),
             const SizedBox(height: 24),
-            const SectionHeader(title: 'All Announcements'),
+            SectionHeader(title: ref.trs('All Announcements')),
             const SizedBox(height: 16),
             if (notices.isEmpty)
-              const Padding(
-                padding: EdgeInsets.only(top: 24),
+              Padding(
+                padding: const EdgeInsets.only(top: 24),
                 child: AppEmptyState(
                   icon: PhosphorIconsRegular.megaphone,
-                  title: 'No announcements yet',
-                  message: 'Community updates will appear here.',
+                  title: ref.trs('No announcements yet'),
+                  message: ref.trs('Community updates will appear here.'),
                   gradient: AppColors.sunsetGradient,
                 ),
               ),
@@ -345,7 +346,7 @@ class CommunityPage extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           child: ActionButton(
-            label: 'Create New Ticket',
+            label: ref.trs('Create New Ticket'),
             onPressed: () {
               showModalBottomSheet(
                 context: context,
@@ -368,9 +369,9 @@ class CommunityPage extends ConsumerWidget {
             ),
             data: (tickets) {
               if (tickets.isEmpty) {
-                return const AppEmptyState(
+                return AppEmptyState(
                   icon: PhosphorIconsRegular.chatCircleText,
-                  title: 'No tickets yet',
+                  title: ref.trs('No tickets yet'),
                   message:
                       'Raise a request or report an issue and track it here.',
                   gradient: AppColors.brandGradient,

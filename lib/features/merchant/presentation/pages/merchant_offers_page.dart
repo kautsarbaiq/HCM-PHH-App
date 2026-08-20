@@ -203,7 +203,7 @@ class MerchantOffersPage extends ConsumerWidget {
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (context, i) {
                     final o = offers[i];
-                    return ListTile(
+                    return ResponsiveListTile(
                       leading: CircleAvatar(
                         backgroundColor: AppColors.brand,
                         child: Text('${o.discountPercent}%',

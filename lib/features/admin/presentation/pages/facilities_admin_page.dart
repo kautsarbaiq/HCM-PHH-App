@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/repositories/facility_repository.dart';
+import '../../../../core/widgets/responsive.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -476,7 +477,7 @@ class _FacilitiesAdminPageState extends ConsumerState<FacilitiesAdminPage> {
                         margin: const EdgeInsets.only(bottom: 16),
                         radius: 18,
                         padding: const EdgeInsets.all(16),
-                        child: ListTile(
+                        child: ResponsiveListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: GradientIconBadge(
                             icon: _iconFor(f.iconName),

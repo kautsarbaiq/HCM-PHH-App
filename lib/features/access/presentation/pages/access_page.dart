@@ -11,6 +11,7 @@ import '../../../../core/widgets/glass_text_field.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/visitor_pass_card.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -271,9 +272,9 @@ class _AccessPageState extends ConsumerState<AccessPage> {
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text(
-              'Visitor Access',
+              ref.trs('Visitor Access'),
               style: TextStyle(
                 fontSize: 28,
                 color: AppColors.textPrimary,
@@ -283,7 +284,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
             ),
             SizedBox(height: 2),
             Text(
-              'Pre-register guests & manage passes',
+              ref.trs('Pre-register guests & manage passes'),
               style: TextStyle(
                 fontSize: 13.5,
                 color: AppColors.textSecondary,
@@ -362,9 +363,9 @@ class _AccessPageState extends ConsumerState<AccessPage> {
       ),
       child: Row(
         children: [
-          Expanded(child: _buildSegmentButton(0, 'Pre-Register', currentIndex)),
+          Expanded(child: _buildSegmentButton(0, ref.trs('Pre-Register'), currentIndex)),
           Expanded(
-            child: _buildSegmentButton(1, 'Active Passes', currentIndex),
+            child: _buildSegmentButton(1, ref.trs('Active Passes'), currentIndex),
           ),
         ],
       ),
@@ -407,10 +408,10 @@ class _AccessPageState extends ConsumerState<AccessPage> {
   }
 
   Widget _buildEntryTypeSelector() {
-    const opts = [
-      ('single', 'Single', PhosphorIconsRegular.calendarDot),
-      ('multiple', 'Multiple', PhosphorIconsRegular.calendarDots),
-      ('long_term', 'Long term', PhosphorIconsRegular.calendarPlus),
+    final opts = [
+      ('single', ref.trs('Single'), PhosphorIconsRegular.calendarDot),
+      ('multiple', ref.trs('Multiple'), PhosphorIconsRegular.calendarDots),
+      ('long_term', ref.trs('Long term'), PhosphorIconsRegular.calendarPlus),
     ];
     return Row(
       children: [
@@ -505,7 +506,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
             }
           },
           icon: const Icon(PhosphorIconsRegular.plus, size: 16),
-          label: const Text('Add a day'),
+          label: Text(ref.trs('Add a day')),
         ),
         if (_visitDays.isNotEmpty)
           Padding(
@@ -536,20 +537,20 @@ class _AccessPageState extends ConsumerState<AccessPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader(
-                  title: 'Guest details',
-                  subtitle: 'We will generate a QR pass for entry',
+                SectionHeader(
+                  title: ref.trs('Guest details'),
+                  subtitle: ref.trs('We will generate a QR pass for entry'),
                 ),
                 const SizedBox(height: 18),
                 GlassTextField(
                   controller: _nameController,
-                  hintText: 'Visitor Name',
+                  hintText: ref.trs('Visitor Name'),
                   prefixIcon: PhosphorIconsRegular.user,
                 ),
                 const SizedBox(height: 16),
                 GlassTextField(
                   controller: _typeController,
-                  hintText: 'Purpose (e.g. Guest, Delivery)',
+                  hintText: ref.trs('Purpose (e.g. Guest, Delivery)'),
                   prefixIcon: PhosphorIconsRegular.tag,
                 ),
                 const SizedBox(height: 16),
@@ -565,7 +566,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
                     child: AbsorbPointer(
                       child: GlassTextField(
                         controller: _dateController,
-                        hintText: 'Date & Time (Optional)',
+                        hintText: ref.trs('Date & Time (Optional)'),
                         prefixIcon: PhosphorIconsRegular.calendar,
                       ),
                     ),
@@ -592,7 +593,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
                     child: AbsorbPointer(
                       child: GlassTextField(
                         controller: _timeWindowController,
-                        hintText: 'Time window — tap to pick',
+                        hintText: ref.trs('Time window — tap to pick'),
                         prefixIcon: PhosphorIconsRegular.clock,
                       ),
                     ),
@@ -601,14 +602,14 @@ class _AccessPageState extends ConsumerState<AccessPage> {
                 const SizedBox(height: 16),
                 GlassTextField(
                   controller: _plateController,
-                  hintText: 'Vehicle Plate (Optional)',
+                  hintText: ref.trs('Vehicle Plate (Optional)'),
                   prefixIcon: PhosphorIconsRegular.carProfile,
                 ),
                 const SizedBox(height: 16),
                 // Point 2 (20/07): optional last-4 IC digits for gate ID check.
                 GlassTextField(
                   controller: _icController,
-                  hintText: 'IC last 4 digits (Optional)',
+                  hintText: ref.trs('IC last 4 digits (Optional)'),
                   prefixIcon: PhosphorIconsRegular.identificationCard,
                   keyboardType: TextInputType.number,
                 ),
@@ -621,7 +622,7 @@ class _AccessPageState extends ConsumerState<AccessPage> {
                   child: CircularProgressIndicator(color: AppColors.brand),
                 )
               : ActionButton(
-                  label: 'Generate Pass',
+                  label: ref.trs('Generate Pass'),
                   onPressed: _submitForm,
                   backgroundColor: AppColors.brand,
                   icon: PhosphorIconsRegular.qrCode,
@@ -649,10 +650,10 @@ class _AccessPageState extends ConsumerState<AccessPage> {
         if (activeVisitors.isEmpty) {
           return AppEmptyState(
             icon: PhosphorIconsRegular.qrCode,
-            title: 'No active passes',
-            message: 'Pre-register a guest to generate a visitor QR pass.',
+            title: ref.trs('No active passes'),
+            message: ref.trs('Pre-register a guest to generate a visitor QR pass.'),
             gradient: AppColors.skyGradient,
-            actionLabel: 'Pre-register a guest',
+            actionLabel: ref.trs('Pre-register a guest'),
             onAction: () => ref.read(accessTabIndexProvider.notifier).state = 0,
           );
         }
