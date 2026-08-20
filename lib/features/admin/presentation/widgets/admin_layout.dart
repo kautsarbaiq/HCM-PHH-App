@@ -9,6 +9,7 @@ import '../../../../core/config/brand.dart';
 import '../../../../core/widgets/language_switcher.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../emergency/presentation/widgets/emergency_broadcast_sheet.dart';
 
 class AdminLayout extends ConsumerWidget {
   final Widget child;
@@ -67,8 +68,8 @@ class AdminLayout extends ConsumerWidget {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0,
-                      vertical: 12.0,
+                      horizontal: 18.0,
+                      vertical: 8.0,
                     ),
                     child: child,
                   ),
@@ -148,7 +149,7 @@ class AdminLayout extends ConsumerWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(28, 16, 28, 16),
+      padding: const EdgeInsets.fromLTRB(28, 10, 28, 10),
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: Color(0xFFE8EDF5))),
@@ -166,7 +167,7 @@ class AdminLayout extends ConsumerWidget {
                   title,
                   style: const TextStyle(
                     color: AppColors.textPrimary,
-                    fontSize: 26,
+                    fontSize: 22,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
                   ),
@@ -174,6 +175,19 @@ class AdminLayout extends ConsumerWidget {
               ],
             ),
           ),
+          // Boss 19/08: the blue welcome bar is gone; its Broadcast action
+          // now lives here in the header so it is reachable on every page.
+          IconButton(
+            onPressed: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => const EmergencyBroadcastSheet(),
+            ),
+            icon: const Icon(Icons.campaign_rounded, color: AppColors.brand),
+            tooltip: 'Broadcast emergency alert',
+          ),
+          const SizedBox(width: 4),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(

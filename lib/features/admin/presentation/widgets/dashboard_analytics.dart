@@ -175,87 +175,95 @@ class DashboardAnalytics extends ConsumerWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: wide ? 6 : 2,
-      childAspectRatio: wide ? 1.25 : 1.45,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
+      // Boss 19/08: flatter tiles so the whole analytics block fits the fold.
+      childAspectRatio: wide ? 2.0 : 1.9,
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
       children: tiles,
     );
   }
 
   Widget _kpi(IconData icon, String label, String value, Color color,
       {double? delta}) {
+    // Same shape as the Overview stat cards: icon tile on the left, label
+    // above the number, identical type scale (boss 19/08).
     return PremiumCard(
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+      padding: const EdgeInsets.all(12),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: Icon(icon, size: 16, color: color),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(icon, size: 17, color: color),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.textSecondary,
+                    letterSpacing: 0.1,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-          if (delta != null && delta.abs() > 0.01) ...[
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(
-                  delta >= 0
-                      ? Icons.trending_up_rounded
-                      : Icons.trending_down_rounded,
-                  size: 14,
-                  color: delta >= 0 ? AppColors.success : AppColors.error,
-                ),
-                const SizedBox(width: 3),
-                Flexible(
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
                   child: Text(
-                    '${delta.abs().toStringAsFixed(1)}% vs avg',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      color:
-                          delta >= 0 ? AppColors.success : AppColors.error,
+                    value,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.4,
+                      height: 1.1,
                     ),
                   ),
                 ),
+                if (delta != null && delta.abs() > 0.01)
+                  Row(
+                    children: [
+                      Icon(
+                        delta >= 0
+                            ? Icons.trending_up_rounded
+                            : Icons.trending_down_rounded,
+                        size: 13,
+                        color:
+                            delta >= 0 ? AppColors.success : AppColors.error,
+                      ),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          '${delta.abs().toStringAsFixed(1)}% vs avg',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: delta >= 0
+                                ? AppColors.success
+                                : AppColors.error,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ),
-          ],
+          ),
         ],
       ),
     );

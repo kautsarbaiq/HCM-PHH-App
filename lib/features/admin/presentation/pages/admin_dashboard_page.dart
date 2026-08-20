@@ -89,88 +89,29 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           // Live emergency feed (resident panic alerts + broadcasts). Admin can
           // resolve. Renders nothing when there are no active emergencies.
           const ActiveEmergencyBanner(canResolve: true),
-          // Boss 19/08: the big welcome card was taking the space that the
-          // priority task list should own. Reduced to a slim strip that keeps
-          // the emergency broadcast (buzzer) prominent and nothing else.
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: AppColors.brandGradient,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    Brand.appName,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                // The buzzer stays big — it is the one urgent action here.
-                Tooltip(
-                  message: 'Broadcast emergency alert',
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(30),
-                    onTap: () => showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (_) => const EmergencyBroadcastSheet(),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.campaign_rounded,
-                              color: Colors.white, size: 24),
-                          SizedBox(width: 8),
-                          Text(
-                            'Broadcast',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                IconButton(
-                  onPressed: () => ref.invalidate(adminDashboardStatsProvider),
-                  icon: isLoading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.refresh_rounded,
-                          color: Colors.white, size: 20),
-                  tooltip: 'Refresh stats',
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          _TabSwitch(
-            tab: _tab,
-            onChanged: (t) => setState(() => _tab = t),
+          // Boss 19/08: the blue welcome bar is gone entirely — Broadcast
+          // moved to the shared top header (admin_layout.dart).
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              _TabSwitch(
+                tab: _tab,
+                onChanged: (t) => setState(() => _tab = t),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () => ref.invalidate(adminDashboardStatsProvider),
+                icon: isLoading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh_rounded,
+                        color: AppColors.brand, size: 20),
+                tooltip: 'Refresh stats',
+              ),
+            ],
           ),
           if (hasError) ...[
             const SizedBox(height: 16),
@@ -203,17 +144,16 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             ),
           ],
           if (_tab == _DashTab.dashboard) ...[
-          const SizedBox(height: 28),
-          SectionHeader(
-            title: ref.tr('adash.overview'),
-            subtitle: ref.tr('adash.overviewSub'),
-          ),
-          const SizedBox(height: 18),
+          // Boss 19/08: subtitles removed and gaps tightened so most of the
+          // data fits on one screen without scrolling.
+          const SizedBox(height: 14),
+          SectionHeader(title: ref.tr('adash.overview')),
+          const SizedBox(height: 10),
           // Dashboard Cards — balanced multi-column grid that fills the row
           // on wide laptops and stacks down to one/two-up on phones.
           LayoutBuilder(
             builder: (context, constraints) {
-              const spacing = 18.0;
+              const spacing = 14.0;
               final maxW = constraints.maxWidth;
               // Columns scale with width; cards share the row evenly so they
               // neither stretch too wide nor leave large empty gaps.
@@ -262,14 +202,11 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               );
             },
           ),
-          const SizedBox(height: 36),
+          const SizedBox(height: 16),
           // Analytics block (boss batch 08/08 point 14): KPI counts, monthly
           // collection vs average, payment-method split and visitor flow.
-          const SectionHeader(
-            title: 'Analytics',
-            subtitle: 'Collections, billing and visitor flow',
-          ),
-          const SizedBox(height: 18),
+          const SectionHeader(title: 'Analytics'),
+          const SizedBox(height: 10),
           const DashboardAnalytics(),
           ] else ...[
             // Tasks tab — the approvals and reviews the admin must act on.
@@ -330,17 +267,17 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(14),
               child: Row(
                 children: [
                   GradientIconBadge(
                     icon: icon,
                     gradient: gradient,
-                    size: 52,
-                    iconSize: 26,
-                    radius: 16,
+                    size: 42,
+                    iconSize: 21,
+                    radius: 13,
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -361,9 +298,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                           value,
                           style: const TextStyle(
                             color: AppColors.textPrimary,
-                            fontSize: 30,
+                            fontSize: 24,
                             fontWeight: FontWeight.w800,
-                            letterSpacing: -0.8,
+                            letterSpacing: -0.6,
                             height: 1.1,
                           ),
                         ),
