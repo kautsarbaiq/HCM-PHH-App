@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -60,7 +61,13 @@ class MerchantAccount {
   final String? logoUrl;
   final String? contact;
   final String? ownerEmail;
+  final String? ownerName;
   final String? communityName;
+  final String? address;
+  final String? location;
+  final String? description;
+  final List<String> photos;
+  final DateTime? createdAt;
   final bool isActive;
 
   MerchantAccount({
@@ -70,7 +77,13 @@ class MerchantAccount {
     this.logoUrl,
     this.contact,
     this.ownerEmail,
+    this.ownerName,
     this.communityName,
+    this.address,
+    this.location,
+    this.description,
+    this.photos = const [],
+    this.createdAt,
     this.isActive = true,
   });
 
@@ -84,7 +97,17 @@ class MerchantAccount {
       logoUrl: j['logo_url'] as String?,
       contact: j['contact'] as String?,
       ownerEmail: owner?['email'] as String?,
+      ownerName: owner?['full_name'] as String?,
       communityName: comm?['name'] as String?,
+      address: j['address'] as String?,
+      location: j['location'] as String?,
+      description: j['description'] as String?,
+      photos: (j['photos'] as List?)
+              ?.map((e) => e.toString())
+              .where((e) => e.isNotEmpty)
+              .toList() ??
+          const [],
+      createdAt: DateTime.tryParse((j['created_at'] ?? '').toString()),
       isActive: j['is_active'] as bool? ?? true,
     );
   }
@@ -181,7 +204,8 @@ class SuperAdminRepository {
   Future<List<MerchantAccount>> merchants() async {
     final rows = await _db
         .from('merchants')
-        .select('*, profiles!merchants_owner_id_fkey(email), communities(name)')
+        .select('*, profiles!merchants_owner_id_fkey(email, full_name), '
+        'communities(name)')
         .order('created_at', ascending: false);
     return (rows as List)
         .map((j) => MerchantAccount.fromJson(j as Map<String, dynamic>))
@@ -194,6 +218,44 @@ class SuperAdminRepository {
 
   Future<void> deleteMerchant(String id) async {
     await _db.from('merchants').delete().eq('id', id);
+  }
+
+  /// Super admin can edit a shop's own details (boss 19/08: he wants to see
+  /// and fix a merchant's info without waiting for the merchant to log in).
+  Future<void> updateMerchant(
+    String id, {
+    String? shopName,
+    String? category,
+    String? contact,
+    String? address,
+    String? description,
+    String? logoUrl,
+  }) async {
+    await _db.from('merchants').update({
+      if (shopName != null) 'shop_name': shopName,
+      if (category != null) 'category': category,
+      if (contact != null) 'contact': contact,
+      if (address != null) 'address': address,
+      if (description != null) 'description': description,
+      if (logoUrl != null) 'logo_url': logoUrl,
+    }).eq('id', id);
+  }
+
+  /// Uploads a shop logo to the public `avatars` bucket and returns its URL.
+  Future<String> uploadMerchantLogo(Uint8List bytes, String ext) async {
+    final clean = ext.replaceAll('.', '').toLowerCase();
+    final path =
+        'merchant/${DateTime.now().millisecondsSinceEpoch}.'
+        '${clean.isEmpty ? 'jpg' : clean}';
+    await _db.storage.from('avatars').uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(
+            upsert: true,
+            contentType: 'image/${clean == 'png' ? 'png' : 'jpeg'}',
+          ),
+        );
+    return _db.storage.from('avatars').getPublicUrl(path);
   }
 
   // ---- account creation (boss batch 08/08 point 1) ----

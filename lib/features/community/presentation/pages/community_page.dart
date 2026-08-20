@@ -117,19 +117,18 @@ class CommunityPage extends ConsumerWidget {
                 child: _buildSegmentedControl(ref, tabIndex),
               ),
               const SizedBox(height: 24),
-              IndexedStack(
-                  index: tabIndex,
-                  children: [
-                    _buildNoticeBoard(ref)
-                        .animate(target: tabIndex == 0 ? 1 : 0)
-                        .fade(duration: 300.ms)
-                        .slideY(begin: 0.1, end: 0),
-                    _buildFeedbackTickets(ref, context)
-                        .animate(target: tabIndex == 1 ? 1 : 0)
-                        .fade(duration: 300.ms)
-                        .slideY(begin: 0.1, end: 0),
-                  ],
-                ),
+              // Same as Access: build only the visible tab so the scroll
+              // extent matches the content instead of the tallest tab.
+              if (tabIndex == 0)
+                _buildNoticeBoard(ref)
+                    .animate()
+                    .fade(duration: 300.ms)
+                    .slideY(begin: 0.1, end: 0)
+              else
+                _buildFeedbackTickets(ref, context)
+                    .animate()
+                    .fade(duration: 300.ms)
+                    .slideY(begin: 0.1, end: 0),
             ],
           ),
           ),

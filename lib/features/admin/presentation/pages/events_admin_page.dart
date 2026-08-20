@@ -744,30 +744,8 @@ class _EventsAdminPageState extends ConsumerState<EventsAdminPage> {
       builder: (context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Expanded(
-                child: SectionHeader(
-                  title: 'Events',
-                  subtitle: 'Schedule and manage community events',
-                ),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: () => _showForm(),
-                icon: const Icon(Icons.add),
-                label: const Text('Create Event'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.brand,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          // Header + Create button live in StandardList now; this copy
+          // rendered a duplicate in Cards mode.
           const SizedBox(height: 24),
           Expanded(
             child: eventsAsync.when(

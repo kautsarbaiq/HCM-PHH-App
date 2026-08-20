@@ -54,11 +54,22 @@ final adminDashboardStatsProvider = FutureProvider.autoDispose<DashboardStats>((
   );
 });
 
-class AdminDashboardPage extends ConsumerWidget {
+/// Boss 19/08: the dashboard is split into two tabs so the admin can jump
+/// straight to the priority list instead of scrolling past the charts.
+enum _DashTab { dashboard, tasks }
+
+class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminDashboardPage> createState() => _AdminDashboardPageState();
+}
+
+class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
+  _DashTab _tab = _DashTab.dashboard;
+
+  @override
+  Widget build(BuildContext context) {
     final statsAsync = ref.watch(adminDashboardStatsProvider);
     final stats = statsAsync.valueOrNull;
     final isLoading = statsAsync.isLoading;
@@ -78,90 +89,88 @@ class AdminDashboardPage extends ConsumerWidget {
           // Live emergency feed (resident panic alerts + broadcasts). Admin can
           // resolve. Renders nothing when there are no active emergencies.
           const ActiveEmergencyBanner(canResolve: true),
-          // Hero welcome banner — brand gradient with a logo badge.
+          // Boss 19/08: the big welcome card was taking the space that the
+          // priority task list should own. Reduced to a slim strip that keeps
+          // the emergency broadcast (buzzer) prominent and nothing else.
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             decoration: BoxDecoration(
               gradient: AppColors.brandGradient,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.brand.withOpacity(0.30),
-                  blurRadius: 24,
-                  offset: const Offset(0, 12),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
               children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  padding: EdgeInsets.all(Brand.isPhh ? 0 : 6),
-                  decoration: BoxDecoration(
-                    color: Brand.isPhh
-                        ? Colors.white.withOpacity(0.18)
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Brand.isPhh
-                      ? const Icon(
-                          Icons.holiday_village_rounded,
-                          color: Colors.white,
-                          size: 30,
-                        )
-                      : Image.asset(Brand.logoAsset, fit: BoxFit.contain),
-                ),
-                const SizedBox(width: 18),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "${ref.tr('adash.welcome')} ${Brand.appName}",
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        ref.tr('adash.welcomeSub'),
-                        style: const TextStyle(
-                            fontSize: 14, color: Colors.white70),
-                      ),
-                    ],
+                  child: Text(
+                    Brand.appName,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () => showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (_) => const EmergencyBroadcastSheet(),
+                // The buzzer stays big — it is the one urgent action here.
+                Tooltip(
+                  message: 'Broadcast emergency alert',
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(30),
+                    onTap: () => showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => const EmergencyBroadcastSheet(),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.campaign_rounded,
+                              color: Colors.white, size: 24),
+                          SizedBox(width: 8),
+                          Text(
+                            'Broadcast',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  icon: const Icon(Icons.campaign_rounded, color: Colors.white),
-                  tooltip: 'Broadcast emergency alert',
                 ),
+                const SizedBox(width: 6),
                 IconButton(
                   onPressed: () => ref.invalidate(adminDashboardStatsProvider),
                   icon: isLoading
                       ? const SizedBox(
-                          width: 20,
-                          height: 20,
+                          width: 18,
+                          height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.refresh_rounded, color: Colors.white),
+                      : const Icon(Icons.refresh_rounded,
+                          color: Colors.white, size: 20),
                   tooltip: 'Refresh stats',
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 16),
+          _TabSwitch(
+            tab: _tab,
+            onChanged: (t) => setState(() => _tab = t),
           ),
           if (hasError) ...[
             const SizedBox(height: 16),
@@ -193,6 +202,7 @@ class AdminDashboardPage extends ConsumerWidget {
               ),
             ),
           ],
+          if (_tab == _DashTab.dashboard) ...[
           const SizedBox(height: 28),
           SectionHeader(
             title: ref.tr('adash.overview'),
@@ -261,17 +271,17 @@ class AdminDashboardPage extends ConsumerWidget {
           ),
           const SizedBox(height: 18),
           const DashboardAnalytics(),
-          const SizedBox(height: 36),
-          // HCA (boss 16/07): a real "needs your attention" feed — pending
-          // signups (approve/reject in-app), event proposals, bookings and
-          // form submissions waiting for review. PHH keeps the placeholder.
+          ] else ...[
+            // Tasks tab — the approvals and reviews the admin must act on.
+            const SizedBox(height: 24),
             const SectionHeader(
               title: 'Needs Your Attention',
               subtitle: 'Approvals and reviews waiting for you',
             ),
             const SizedBox(height: 18),
             const AdminAttentionFeed(),
-          
+          ],
+          const SizedBox(height: 32),
         ],
       ),
     );
@@ -361,6 +371,76 @@ class AdminDashboardPage extends ConsumerWidget {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// DASHBOARD | TASKS switch shown at the top of the admin dashboard
+/// (boss 19/08).
+class _TabSwitch extends StatelessWidget {
+  final _DashTab tab;
+  final ValueChanged<_DashTab> onChanged;
+  const _TabSwitch({required this.tab, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5FB),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE3E9F4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _seg(Icons.dashboard_rounded, 'DASHBOARD', _DashTab.dashboard),
+          _seg(Icons.task_alt_rounded, 'TASKS', _DashTab.tasks),
+        ],
+      ),
+    );
+  }
+
+  Widget _seg(IconData icon, String label, _DashTab value) {
+    final active = tab == value;
+    return GestureDetector(
+      onTap: () => onChanged(value),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: active ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(11),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF6A7BA8).withValues(alpha: 0.14),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 16,
+                color: active ? AppColors.brand : AppColors.textSecondary),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.4,
+                color: active ? AppColors.brand : AppColors.textSecondary,
               ),
             ),
           ],

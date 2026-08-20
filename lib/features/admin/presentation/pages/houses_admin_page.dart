@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/repositories/admin_repository.dart';
+import '../../../../core/repositories/profile_repository.dart';
 import '../../../../core/repositories/house_repository.dart';
 import '../../../../core/repositories/parking_repository.dart';
 import '../../../parking/parking_ui.dart';
 import '../../../../core/widgets/report_table.dart';
+import '../../../../core/widgets/tenancy_doc_button.dart';
 import '../../../../core/widgets/standard_list.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
@@ -631,15 +633,69 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
     );
   }
 
+  /// The resident record assigned to this house, if any.
+  Profile? _occupant(House house) {
+    final residents = ref.watch(adminResidentsProvider).valueOrNull;
+    if (residents == null) return null;
+    for (final r in residents) {
+      if (r.houseId == house.id) return r;
+    }
+    return null;
+  }
+
   /// Boss voice note 18/08: one standard table format for every list.
+  /// Boss 19/08: the table must carry EVERYTHING the cards show — parking bay
+  /// and the resident's contact details were missing. (Passwords are never
+  /// stored in readable form, so there is nothing to show for those.)
   List<ReportColumn<House>> _columns() => [
         ReportColumn(label: 'House', value: (h) => h.houseNumber),
         ReportColumn(label: 'Type', value: (h) => h.houseType),
         ReportColumn(
-            label: 'Address', value: (h) => (h.address ?? '').isEmpty ? '-' : h.address!),
+            label: 'Address',
+            value: (h) => (h.address ?? '').isEmpty ? '-' : h.address!),
         ReportColumn(
           label: 'Owner',
-          value: (h) => h.owner?.fullName ?? _ownerName(h) ?? '-',
+          value: (h) => _occupant(h)?.fullName ?? _ownerName(h) ?? '-',
+        ),
+        ReportColumn(
+          label: 'Resident Type',
+          value: (h) {
+            final o = _occupant(h);
+            if (o == null) return '-';
+            return o.isTenant ? 'Tenant' : 'Owner';
+          },
+        ),
+        ReportColumn(
+          label: 'Phone',
+          value: (h) => _occupant(h)?.phone ?? '-',
+        ),
+        ReportColumn(
+          label: 'Email',
+          value: (h) => _occupant(h)?.email ?? '-',
+        ),
+        ReportColumn(
+          label: 'Approval',
+          value: (h) => _occupant(h)?.approvalStatus ?? '-',
+          cell: (h) {
+            final o = _occupant(h);
+            if (o == null) {
+              return const Text('-', style: TextStyle(fontSize: 12.8));
+            }
+            return StatusPill(
+              label: o.approvalStatus.toUpperCase(),
+              color: o.isApproved ? AppColors.success : AppColors.warning,
+              dense: true,
+            );
+          },
+        ),
+        ReportColumn(label: 'Parking', value: (h) => _bayNumbers(h)),
+        ReportColumn(
+          label: 'Tenancy Agreement',
+          value: (h) => (_occupant(h)?.tenancyDocUrl ?? '').isEmpty
+              ? 'No document'
+              : 'Uploaded',
+          cell: (h) =>
+              TenancyDocButton(docPath: _occupant(h)?.tenancyDocUrl, dense: true),
         ),
         ReportColumn(
           label: 'Status',
@@ -685,11 +741,23 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
         exportBaseName:
             'houses-${DateFormat('yyyyMMdd').format(DateTime.now())}',
         emptyMessage: 'No houses found.',
-        rowAction: (h) => IconButton(
-          icon: const Icon(Icons.edit_outlined, size: 18),
-          color: AppColors.brand,
-          tooltip: 'Edit',
-          onPressed: () => _showForm(house: h),
+        rowAction: (h) => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.local_parking_rounded, size: 18),
+              color: AppColors.brand,
+              tooltip: 'Parking bays',
+              onPressed: () =>
+                  showAdminParkingSheet(context, h.id, h.houseNumber),
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              color: AppColors.brand,
+              tooltip: 'Edit',
+              onPressed: () => _showForm(house: h),
+            ),
+          ],
         ),
         headerAction: ElevatedButton.icon(
           onPressed: () => _showForm(),
@@ -716,34 +784,8 @@ class _HousesAdminPageState extends ConsumerState<HousesAdminPage> {
       builder: (context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Expanded(
-                child: SectionHeader(
-                  title: 'Houses & Units',
-                  subtitle: 'Manage units and occupancy',
-                ),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: () => _showForm(),
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Add House'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.brand,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          // Header + Add button live in StandardList now; the copy that
+          // used to sit here rendered a duplicate in Cards mode.
           const SizedBox(height: 24),
           TextField(
             onChanged: (value) => setState(() => _searchQuery = value),

@@ -113,8 +113,6 @@ class AdminLayout extends ConsumerWidget {
     String title = ref.tr('admin.dashboard');
     if (location.contains('residents')) {
       title = ref.tr('admin.residents');
-    } else if (location.contains('communities')) {
-      title = ref.tr('admin.communities');
     } else if (location.contains('alerts')) {
       title = ref.tr('admin.alertHistory');
     } else if (location.contains('houses')) {
@@ -162,15 +160,8 @@ class AdminLayout extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${ref.tr('admin.pages')} / ${ref.tr('admin.admin')} / '
-                  '$title',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 4),
+                // Boss 19/08: the "Pages / Admin / X" breadcrumb was noise
+                // above the page heading — removed.
                 Text(
                   title,
                   style: const TextStyle(
@@ -287,8 +278,8 @@ class AdminLayout extends ConsumerWidget {
                       '/admin/residents', location.startsWith('/admin/residents'), isDesktop),
                   _item(context, ref, Icons.house_rounded, ref.tr('admin.housesUnits'),
                       '/admin/houses', location.startsWith('/admin/houses'), isDesktop),
-                  _item(context, ref, Icons.apartment_rounded, ref.tr('admin.communities'),
-                      '/admin/communities', location.startsWith('/admin/communities'), isDesktop),
+                  // Boss 19/08: Communities is managed by the SUPER ADMIN
+                  // portal, so it is no longer part of the per-company admin.
                   _sectionLabel(ref.trs('Operations')),
                   _item(context, ref, Icons.badge_rounded, ref.tr('admin.visitors'),
                       '/admin/visitors', location.startsWith('/admin/visitors'), isDesktop),

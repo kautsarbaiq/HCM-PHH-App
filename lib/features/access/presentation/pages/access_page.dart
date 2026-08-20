@@ -243,19 +243,21 @@ class _AccessPageState extends ConsumerState<AccessPage> {
                 child: _buildSegmentedControl(tabIndex),
               ),
               const SizedBox(height: 24),
-              IndexedStack(
-                  index: tabIndex,
-                  children: [
-                    _buildPreRegisterForm()
-                        .animate(target: tabIndex == 0 ? 1 : 0)
-                        .fade(duration: 300.ms)
-                        .slideY(begin: 0.1, end: 0),
-                    _buildActivePasses()
-                        .animate(target: tabIndex == 1 ? 1 : 0)
-                        .fade(duration: 300.ms)
-                        .slideY(begin: 0.1, end: 0),
-                  ],
-                ),
+              // Only the selected tab is built. An IndexedStack keeps every
+              // child alive and sizes itself to the TALLEST one, so the short
+              // Pre-Register form inherited the height of the long pass list
+              // and the page scrolled far past its content into blank space
+              // (user report 19/08).
+              if (tabIndex == 0)
+                _buildPreRegisterForm()
+                    .animate()
+                    .fade(duration: 300.ms)
+                    .slideY(begin: 0.1, end: 0)
+              else
+                _buildActivePasses()
+                    .animate()
+                    .fade(duration: 300.ms)
+                    .slideY(begin: 0.1, end: 0),
               ],
             ),
           ),
