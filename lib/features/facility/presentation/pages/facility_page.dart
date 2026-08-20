@@ -11,6 +11,7 @@ import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/booking_bottom_sheet.dart';
 import '../widgets/facility_card.dart';
@@ -100,8 +101,8 @@ class FacilityPage extends ConsumerWidget {
                 ),
                 onPressed: () => context.pop(),
               ),
-              title: const Text(
-                'Book Facilities',
+              title: Text(
+                ref.trs('Pre-Booking'),
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w700,

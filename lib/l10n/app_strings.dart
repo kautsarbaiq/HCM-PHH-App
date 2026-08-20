@@ -361,8 +361,10 @@ const Map<String, Map<AppLang, String>> _strings = {
     AppLang.ms: 'Perkhidmatan rumah dipercayai',
   },
   'menu.facility': {
-    AppLang.en: 'Book Facilities',
-    AppLang.ms: 'Tempah Kemudahan',
+    // Boss 19/08: renamed to "Pre-Booking"; the booking flow itself is
+    // unchanged.
+    AppLang.en: 'Pre-Booking',
+    AppLang.ms: 'Pra-Tempahan',
   },
   'menu.facilitySub': {
     AppLang.en: 'Pool, gym, BBQ & more',
@@ -846,6 +848,7 @@ const Map<String, String> _phrasesMs = {
   'Retry': 'Cuba semula',
   'House Address': 'Alamat Rumah',
   'Not assigned': 'Belum ditetapkan',
+  'Pre-Booking': 'Pra-Tempahan',
   'Notice Board': 'Papan Notis',
   'Feedback': 'Maklum Balas',
   'Latest Notice': 'Notis Terkini',

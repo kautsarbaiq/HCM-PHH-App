@@ -6,7 +6,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:hcm_app/core/config/brand.dart';
 import 'package:hcm_app/core/repositories/profile_repository.dart';
 import 'package:hcm_app/theme/app_colors.dart';
-import '../../../emergency/presentation/widgets/emergency_bottom_sheet.dart';
 import '../../../../l10n/app_strings.dart';
 import '../widgets/app_drawer.dart';
 
@@ -65,48 +64,10 @@ class MainNavigationPage extends ConsumerWidget {
       body: Stack(
         children: [
           child,
-          // SOS FAB
-          if (!hideFloatingUi)
-            Positioned(
-            right: 24,
-            bottom: 120,
-            child: GestureDetector(
-              onTap: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => const EmergencyBottomSheet(),
-                );
-              },
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEF4444).withOpacity(0.12),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: const Color(0xFFEF4444).withOpacity(0.25),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFEF4444).withOpacity(0.15),
-                      blurRadius: 20,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(
-                    PhosphorIconsFill.warning,
-                    color: Color(0xFFEF4444),
-                    size: 24,
-                  ),
-                ),
-              ),
-            ),
-          ),
+          // Boss 19/08: the red emergency FAB is gone from every screen.
+          // Emergency already lives in the Quick Access / Features grid
+          // (quick_access_grid.dart + dashboard_page.dart), so residents
+          // still reach the same EmergencyBottomSheet from there.
           // Floating Nav Bar
           if (!hideFloatingUi)
             Positioned(
