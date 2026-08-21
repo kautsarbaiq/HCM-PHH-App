@@ -8,7 +8,6 @@ import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/evidence_image.dart';
 import '../../../../core/widgets/premium_card.dart';
-import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
 import '../../../../core/widgets/app_states.dart';
 

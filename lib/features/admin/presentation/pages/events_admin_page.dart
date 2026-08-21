@@ -9,7 +9,6 @@ import '../../../../core/widgets/standard_list.dart';
 import '../../../../core/widgets/responsive.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
-import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/app_states.dart';
 
 final adminEventsProvider =

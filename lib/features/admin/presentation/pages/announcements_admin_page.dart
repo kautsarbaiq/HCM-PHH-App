@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import '../../../../core/repositories/announcement_repository.dart';
 import '../../../../core/repositories/storage_repository.dart';
-import '../../../../core/widgets/responsive.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -630,110 +629,211 @@ class _AnnouncementsAdminPageState
                     onAction: () => _showForm(),
                   );
                 }
+                // Boss 19/08: announcements now show as full cards — the
+                // wallpaper, the whole notice and Edit/Delete right on the
+                // card — instead of a cramped one-line list.
                 return RefreshIndicator(
                   onRefresh: () async =>
                       ref.invalidate(adminAnnouncementsProvider),
-                  // Full-width list reaching the right edge on web.
-                  child: ListView.builder(
-                    itemCount: announcements.length,
-                    itemBuilder: (context, index) {
-                      final a = announcements[index];
-                      return PremiumCard(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        radius: 18,
-                        padding: const EdgeInsets.all(16),
-                        child: ResponsiveListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: GradientIconBadge(
-                            icon: a.isUrgent
-                                ? Icons.warning_amber_rounded
-                                : Icons.campaign_rounded,
-                            gradient: a.isUrgent
-                                ? AppColors.sunsetGradient
-                                : AppColors.brandGradient,
-                            size: 46,
-                          ),
-                          title: Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  a.title,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.textPrimary,
-                                  ),
+                  child: LayoutBuilder(
+                    builder: (context, c) {
+                      const gap = 16.0;
+                      final cols = (c.maxWidth / 420).floor().clamp(1, 3);
+                      final cardWidth =
+                          (c.maxWidth - gap * (cols - 1)) / cols;
+                      return SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          children: [
+                            for (final a in announcements)
+                              SizedBox(
+                                width: cardWidth,
+                                child: _AnnouncementCard(
+                                  announcement: a,
+                                  dateLabel: _formatDate(a.publishedAt),
+                                  onView: () => _showDetails(a),
+                                  onEdit: () => _showForm(announcement: a),
+                                  onDelete: () => _deleteAnnouncement(a),
                                 ),
                               ),
-                              if (a.isUrgent) ...[
-                                const SizedBox(width: 8),
-                                const StatusPill(
-                                  label: 'URGENT',
-                                  color: AppColors.error,
-                                  dense: true,
-                                ),
-                              ],
-                            ],
-                          ),
-                          subtitle: Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  a.content,
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  _formatDate(a.publishedAt),
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.visibility,
-                                  color: AppColors.brand,
-                                ),
-                                onPressed: () => _showDetails(a),
-                                tooltip: 'View Announcement',
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.edit,
-                                  color: AppColors.accentAmber,
-                                ),
-                                onPressed: () => _showForm(announcement: a),
-                                tooltip: 'Edit Announcement',
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: AppColors.error,
-                                ),
-                                onPressed: () => _deleteAnnouncement(a),
-                                tooltip: 'Delete Announcement',
-                              ),
-                            ],
-                          ),
+                          ],
                         ),
                       );
                     },
                   ),
                 );
               },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Full announcement card for the admin portal (boss 19/08): the wallpaper,
+/// the complete notice, and Edit / Delete right on the card — the same shape
+/// residents see, plus the management actions.
+class _AnnouncementCard extends StatelessWidget {
+  final Announcement announcement;
+  final String dateLabel;
+  final VoidCallback onView;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _AnnouncementCard({
+    required this.announcement,
+    required this.dateLabel,
+    required this.onView,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final a = announcement;
+    final hasImage = (a.imageUrl ?? '').isNotEmpty;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: a.isUrgent
+              ? AppColors.error.withValues(alpha: 0.35)
+              : const Color(0xFFE8EDF5),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6A7BA8).withValues(alpha: 0.07),
+            blurRadius: 16,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ---- wallpaper -----------------------------------------------
+          if (hasImage)
+            SizedBox(
+              height: 148,
+              width: double.infinity,
+              child: Image.network(
+                a.imageUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: AppColors.surfaceTint,
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.image_not_supported_rounded,
+                      color: AppColors.textSecondary),
+                ),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ---- badges + date ---------------------------------------
+                Row(
+                  children: [
+                    StatusPill(
+                      label: a.isUrgent ? 'URGENT' : 'NOTICE',
+                      color: a.isUrgent ? AppColors.error : AppColors.info,
+                      dense: true,
+                    ),
+                    const Spacer(),
+                    Text(
+                      dateLabel,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  a.title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    height: 1.25,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                // The whole notice, not a one-line preview.
+                Text(
+                  a.content,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    height: 1.45,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                if ((a.linkUrl ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      const Icon(Icons.link_rounded,
+                          size: 15, color: AppColors.brand),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          a.linkUrl!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.brand,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // ---- actions ---------------------------------------------------
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              children: [
+                TextButton.icon(
+                  onPressed: onView,
+                  icon: const Icon(Icons.visibility_outlined, size: 17),
+                  label: const Text('View'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.brand,
+                  ),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined, size: 17),
+                  label: const Text('Edit'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.accentAmber,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.delete_outline_rounded, size: 17),
+                  label: const Text('Delete'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
