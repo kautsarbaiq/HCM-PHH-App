@@ -265,15 +265,40 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
         await refreshUserRole();
         if (!mounted) return;
 
-        // Boss batch 08/08 point 3: management accounts are web-portal only —
-        // they must not be able to sign in on the mobile app.
+        // Each role belongs to exactly one platform (boss 19/08):
+        //   WEB   → admin, super_admin        (management portals)
+        //   MOBILE→ resident, guard, merchant (on-the-ground users)
+        // Guard and merchant moved to mobile because their real work is at a
+        // gate or a shop counter with a camera — mobile_scanner only opens a
+        // real camera off the web build anyway.
         final role = appUserRoleNotifier.value;
-        if (!kIsWeb && (role == 'admin' || role == 'super_admin')) {
+        final isManagement = role == 'admin' || role == 'super_admin';
+        final isFieldUser =
+            role == null || role == 'resident' || role == 'guard' ||
+            role == 'merchant';
+
+        if (!kIsWeb && isManagement) {
           await authService.signOut();
           if (!mounted) return;
           _showMessage(
             'Management accounts can only be used on the web portal, not the '
             'mobile app.',
+          );
+          setState(() => _isLoading = false);
+          return;
+        }
+        if (kIsWeb && isFieldUser) {
+          await authService.signOut();
+          if (!mounted) return;
+          _showMessage(
+            role == 'guard'
+                ? 'Security accounts are for the mobile app. Please sign in '
+                    'from the app on your phone or tablet.'
+                : role == 'merchant'
+                    ? 'Merchant accounts are for the mobile app. Please sign '
+                        'in from the app on your phone.'
+                    : 'Resident accounts are for the mobile app. Please sign '
+                        'in from the app on your phone.',
           );
           setState(() => _isLoading = false);
           return;

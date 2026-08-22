@@ -74,17 +74,25 @@ class GuardLayout extends ConsumerWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        // Boss 19/08 moved this portal to mobile. At phone width the drawer
+        // button + title + two actions no longer fit, so the title must be
+        // allowed to shrink instead of overflowing the bar.
+        titleSpacing: 0,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _logoBadge(28),
-            const SizedBox(width: 10),
-            const Text(
-              'Security Portal',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
-                fontSize: 18,
+            _logoBadge(26),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                isWide ? 'Security Portal' : 'Security',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                ),
               ),
             ),
           ],
