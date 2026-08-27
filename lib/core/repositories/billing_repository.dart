@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../services/session_guard.dart';
 import 'profile_repository.dart';
 
 class Billing {
@@ -88,15 +90,22 @@ class BillingRepository {
     return (response as List).map((json) => Billing.fromJson(json)).toList();
   }
 
-  /// Bills belonging to the current resident (RLS `resident_read_own` filters
-  /// to rows where resident_id = auth.uid()).
-  Future<List<Billing>> getMyBillings() async {
-    final response = await _supabase
-        .from('billings')
-        .select(_selectWithResident)
-        .order('due_date', ascending: false);
+  /// Bills the current resident may see. RLS (`resident_read_own`, migration
+  /// 34) returns bills addressed to them, to their household's main account,
+  /// and bills raised against the unit they live in — a house can hold several
+  /// resident accounts, and a maintenance bill belongs to the unit.
+  ///
+  /// Wrapped in [SessionGuard] so a stale access token refreshes and retries
+  /// instead of failing the page.
+  Future<List<Billing>> getMyBillings() {
+    return SessionGuard.run(() async {
+      final response = await _supabase
+          .from('billings')
+          .select(_selectWithResident)
+          .order('due_date', ascending: false);
 
-    return (response as List).map((json) => Billing.fromJson(json)).toList();
+      return (response as List).map((json) => Billing.fromJson(json)).toList();
+    });
   }
 
   Future<void> createBilling(Billing billing) async {

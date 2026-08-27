@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/services/session_guard.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
@@ -21,6 +23,14 @@ typedef DashboardStats = ({
 final adminDashboardStatsProvider = FutureProvider.autoDispose<DashboardStats>((
   ref,
 ) async {
+  // These are HEAD `.count()` calls. A stale access token makes them fail with
+  // a bodiless 401 whose message is empty, which is what the admin saw on
+  // 26/08. Run them behind the session guard so the token is refreshed first
+  // and the batch is retried once if it still slips through.
+  return SessionGuard.run(() => _loadDashboardStats());
+});
+
+Future<DashboardStats> _loadDashboardStats() async {
   final supabase = Supabase.instance.client;
   final now = DateTime.now();
   final startOfDay = DateTime(
@@ -50,7 +60,7 @@ final adminDashboardStatsProvider = FutureProvider.autoDispose<DashboardStats>((
     activeBillings: activeBillings,
     todayVisitors: todayVisitors,
   );
-});
+}
 
 /// Boss 19/08: the dashboard is split into two tabs so the admin can jump
 /// straight to the priority list instead of scrolling past the charts.
@@ -130,7 +140,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Could not load stats: ${statsAsync.error}',
+                      _statsErrorText(statsAsync.error),
                       style: const TextStyle(
                         color: AppColors.error,
                         fontSize: 13,
@@ -384,3 +394,26 @@ class _TabSwitch extends StatelessWidget {
     );
   }
 }
+
+/// A readable message for a failed stats load.
+///
+/// `.count()` uses HEAD, and a HEAD response has no body — so PostgREST's
+/// `message` comes back empty and the raw error reads
+/// "PostgrestException(message: , code: 401, ...)", which tells the admin
+/// nothing. Translate the codes we actually see into plain words.
+String _statsErrorText(Object? error) {
+  if (error is PostgrestException) {
+    if (error.code == '401' || error.code == 'PGRST301') {
+      return 'Your session expired while loading the dashboard. '
+          'Please refresh the page or sign in again.';
+    }
+    final msg = error.message.trim();
+    if (msg.isNotEmpty) return 'Could not load stats: $msg';
+    return 'Could not load stats (server returned ${error.code}).';
+  }
+  return 'Could not load stats: $error';
+}
+
+/// Test-only entry point for [_statsErrorText].
+@visibleForTesting
+String statsErrorTextForTest(Object? error) => _statsErrorText(error);
