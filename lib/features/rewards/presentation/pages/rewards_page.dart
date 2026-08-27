@@ -11,6 +11,8 @@ import '../../../../core/widgets/app_states.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
+import '../../../../core/rewards/reward_tier.dart';
+import '../../../../core/rewards/reward_tier_widgets.dart';
 import '../../../../theme/app_colors.dart';
 
 /// The URL a shop opens when it scans a voucher QR — the public redeem page.
@@ -20,6 +22,19 @@ String voucherRedeemUrl(String token) =>
 /// Owner rewards (meeting 20/07 point 9): pay bills on time in a row to unlock
 /// partner-brand discounts. Owners claim an offer here; an admin approves it
 /// and issues a voucher code.
+/// Partner brand chips for a tier, taken from the offers actually published
+/// for that level — so the ladder shows real merchants, not placeholders.
+List<String> _partnerNamesFor(WidgetRef ref, RewardTier tier) {
+  final offers = ref.read(rewardOffersProvider).valueOrNull ?? const [];
+  final names = <String>{};
+  for (final o in offers) {
+    if (RewardTierX.fromMinStreak(o.minStreak) != tier) continue;
+    final n = o.partnerName.trim();
+    if (n.isNotEmpty) names.add(n);
+  }
+  return names.take(4).toList();
+}
+
 class RewardsPage extends ConsumerWidget {
   const RewardsPage({super.key});
 
@@ -32,6 +47,7 @@ class RewardsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final streakAsync = ref.watch(myOntimeStreakProvider);
+    final standing = ref.watch(myRewardStandingProvider).valueOrNull;
     final offersAsync = ref.watch(rewardOffersProvider);
     final claimsAsync = ref.watch(myRewardClaimsProvider);
 
@@ -59,6 +75,18 @@ class RewardsPage extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
           children: [
             _StreakCard(streakAsync: streakAsync),
+            const SizedBox(height: 20),
+            // Client mockup 27/08: the three membership levels, with the
+            // resident's own level highlighted.
+            const SectionHeader(
+              title: 'Reward Tiers',
+              subtitle: 'Membership levels',
+            ),
+            const SizedBox(height: 8),
+            RewardTierLadder(
+              current: standing?.tier,
+              partnersFor: (tier) => _partnerNamesFor(ref, tier),
+            ),
             const SizedBox(height: 20),
             const SectionHeader(
               title: 'Available rewards',

@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../rewards/reward_tier.dart';
+
 // ============================================================================
 // Rewards program (meeting 20/07 point 9). Owners unlock partner-brand discount
 // offers by paying consecutive monthly bills on time; they claim an offer and
@@ -209,6 +211,12 @@ final adminClaimsProvider = FutureProvider.autoDispose<List<RewardClaim>>((ref) 
   return ref.watch(rewardsRepositoryProvider).allClaims();
 });
 
+/// The signed-in resident's membership level.
+final myRewardStandingProvider =
+    FutureProvider.autoDispose<RewardStanding>((ref) {
+  return ref.read(rewardsRepositoryProvider).myStanding();
+});
+
 class RewardsRepository {
   final SupabaseClient _db;
   RewardsRepository(this._db);
@@ -221,6 +229,23 @@ class RewardsRepository {
   Future<int> ownerStreak(String uid) async {
     final v = await _db.rpc('owner_ontime_streak', params: {'p_uid': uid});
     return (v as num?)?.toInt() ?? 0;
+  }
+
+  /// The signed-in resident's membership level (migration 35). Computed in
+  /// SQL so web and mobile always agree on the level.
+  Future<RewardStanding> myStanding() async {
+    final rows = await _db.rpc('my_reward_tier');
+    if (rows is List && rows.isNotEmpty) {
+      return RewardStanding.fromJson(rows.first as Map<String, dynamic>);
+    }
+    if (rows is Map<String, dynamic>) return RewardStanding.fromJson(rows);
+    return RewardStanding.empty;
+  }
+
+  /// A given owner's level — used by the admin portal's resident views.
+  Future<RewardTier> ownerTier(String uid) async {
+    final v = await _db.rpc('owner_reward_tier', params: {'p_uid': uid});
+    return RewardTierX.fromName(v as String?);
   }
 
   // ---- offers / partners (read) ----

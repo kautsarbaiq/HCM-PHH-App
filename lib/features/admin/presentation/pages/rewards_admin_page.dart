@@ -10,6 +10,8 @@ import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
 import '../../../../core/widgets/responsive.dart';
+import '../../../../core/rewards/reward_tier.dart';
+import '../../../../core/rewards/reward_tier_widgets.dart';
 import '../../../../theme/app_colors.dart';
 
 /// Admin management for the rewards program (meeting 20/07 point 9): partner
@@ -24,7 +26,7 @@ class RewardsAdminPage extends ConsumerStatefulWidget {
 
 class _RewardsAdminPageState extends ConsumerState<RewardsAdminPage>
     with SingleTickerProviderStateMixin {
-  late final TabController _tabs = TabController(length: 3, vsync: this);
+  late final TabController _tabs = TabController(length: 4, vsync: this);
 
   @override
   void dispose() {
@@ -50,6 +52,7 @@ class _RewardsAdminPageState extends ConsumerState<RewardsAdminPage>
             unselectedLabelColor: AppColors.textSecondary,
             indicatorColor: AppColors.brand,
             tabs: const [
+              Tab(text: 'Tiers'),
               Tab(text: 'Partners'),
               Tab(text: 'Offers'),
               Tab(text: 'Claims'),
@@ -60,6 +63,9 @@ class _RewardsAdminPageState extends ConsumerState<RewardsAdminPage>
             child: TabBarView(
               controller: _tabs,
               children: const [
+                // Client mockup 27/08 — the membership scheme, shown here so
+                // admins can see which level each offer's streak maps to.
+                _TiersTab(),
                 _PartnersTab(),
                 _OffersTab(),
                 _ClaimsTab(),
@@ -410,8 +416,18 @@ class _OffersTab extends ConsumerWidget {
                     title: Text(o.title,
                         style:
                             const TextStyle(fontWeight: FontWeight.w700)),
-                    subtitle: Text(
-                        '${o.partnerName} • unlock at ${o.minStreak} on-time bills'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('${o.partnerName} • unlock at '
+                            '${o.minStreak} on-time bills'),
+                        const SizedBox(height: 5),
+                        RewardTierBadge(
+                          tier: RewardTierX.fromMinStreak(o.minStreak),
+                          dense: true,
+                        ),
+                      ],
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -657,6 +673,33 @@ class _ClaimsTab extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Reference view of the three membership levels (client mockup 27/08).
+/// Read-only: the levels are decided in SQL by `owner_reward_tier`, so there
+/// is nothing here for an admin to mis-configure.
+class _TiersTab extends StatelessWidget {
+  const _TiersTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(top: 6, bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Levels are awarded automatically from payment history. An offer '
+            'lands in a level based on the streak it unlocks at: 3+ Silver, '
+            '6+ Gold, 12+ Platinum.',
+            style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 14),
+          const RewardTierLadder(),
+        ],
+      ),
     );
   }
 }

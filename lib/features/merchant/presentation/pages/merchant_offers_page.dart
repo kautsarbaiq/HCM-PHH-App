@@ -8,6 +8,8 @@ import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
 import '../../../../core/widgets/responsive.dart';
+import '../../../../core/rewards/reward_tier.dart';
+import '../../../../core/rewards/reward_tier_widgets.dart';
 import '../../../../theme/app_colors.dart';
 
 /// Merchant portal → Offers (boss batch 08/08 point 2): number of vouchers,
@@ -215,9 +217,21 @@ class MerchantOffersPage extends ConsumerWidget {
                       title: Text(o.title,
                           style:
                               const TextStyle(fontWeight: FontWeight.w700)),
-                      subtitle: Text(
-                        'Unlocks at ${o.minStreak} on-time bills',
-                        style: const TextStyle(fontSize: 12.5),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Unlocks at ${o.minStreak} on-time bills',
+                            style: const TextStyle(fontSize: 12.5),
+                          ),
+                          const SizedBox(height: 5),
+                          // Client mockup 27/08: show the membership level
+                          // this offer sits in.
+                          RewardTierBadge(
+                            tier: RewardTierX.fromMinStreak(o.minStreak),
+                            dense: true,
+                          ),
+                        ],
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
