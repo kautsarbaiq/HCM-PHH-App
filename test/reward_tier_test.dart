@@ -86,4 +86,33 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  group('medal', () {
+    testWidgets('each earned tier draws its own medal colour',
+        (tester) async {
+      for (final tier in [
+        RewardTier.silver,
+        RewardTier.gold,
+        RewardTier.platinum,
+      ]) {
+        await tester.pumpWidget(
+          MaterialApp(home: Scaffold(body: RewardTierMedal(tier: tier))),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(RewardTierMedal), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      }
+    });
+
+    testWidgets('badge shows the tier name', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: RewardTierBadge(tier: RewardTier.gold)),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('GOLD'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
 }

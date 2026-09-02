@@ -74,7 +74,7 @@ class RewardsPage extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
           children: [
-            _StreakCard(streakAsync: streakAsync),
+            _StreakCard(streakAsync: streakAsync, standing: standing),
             const SizedBox(height: 20),
             // Client mockup 27/08: the three membership levels, with the
             // resident's own level highlighted.
@@ -172,11 +172,13 @@ class RewardsPage extends ConsumerWidget {
 
 class _StreakCard extends StatelessWidget {
   final AsyncValue<int> streakAsync;
-  const _StreakCard({required this.streakAsync});
+  final RewardStanding? standing;
+  const _StreakCard({required this.streakAsync, this.standing});
 
   @override
   Widget build(BuildContext context) {
     final streak = streakAsync.valueOrNull ?? 0;
+    final tier = standing?.tier ?? RewardTier.none;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -192,7 +194,31 @@ class _StreakCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(PhosphorIconsFill.medal, color: Colors.white, size: 40),
+          // Client mockup 27/08: the hero card carries the resident's actual
+          // membership medal, so the colour alone says Silver / Gold /
+          // Platinum. Falls back to a plain medal before any tier is earned.
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (tier.isEarned)
+                RewardTierMedal(tier: tier, size: 44)
+              else
+                const Icon(PhosphorIconsFill.medal,
+                    color: Colors.white, size: 40),
+              if (tier.isEarned) ...[
+                const SizedBox(height: 5),
+                Text(
+                  tier.label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ],
+            ],
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
