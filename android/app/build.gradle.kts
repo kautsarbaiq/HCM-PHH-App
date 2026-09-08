@@ -40,7 +40,12 @@ android {
         applicationId = "com.bluesoft.hcm_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23
+        // Was a hardcoded 23. Do NOT put a number back here: Flutter's
+        // MinSdkVersionMigration rewrites any minSdk of 16-23 to
+        // flutter.minSdkVersion on EVERY build, so a pin silently reverts.
+        // On Flutter 3.44 that value is 24, i.e. Android 7.0 - upgrading the
+        // SDK dropped Android 6 support. That is Flutter's floor, not ours.
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

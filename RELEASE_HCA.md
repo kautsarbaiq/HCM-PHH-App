@@ -6,6 +6,48 @@ Read the "Do not get this wrong" section before building anything.
 
 ---
 
+## Toolchain (check this first)
+
+Verified on:
+
+| | Version |
+|---|---|
+| Flutter | **3.44.8** (stable) |
+| Dart | 3.12.2 |
+| Java | 21 (Android Studio's bundled JDK is fine) |
+
+```bash
+flutter --version   # expect 3.44.8 or newer
+```
+
+**Do not build on Flutter 3.32.x or older.** The project was originally locked to
+3.32 and would not compile on a newer SDK; that has been fixed, and the fix is
+one-way. Two things changed in the SDK between those releases:
+
+- `IconData` became a `final class` (for icon tree-shaking), which permanently
+  broke `phosphor_flutter`. It is abandoned at 2.1.0 and there is no fixed
+  release, so the project moved to the maintained fork `phosphor_icons`.
+- `CupertinoPageTransitionsBuilder` moved out of `material.dart` into
+  `cupertino.dart`.
+
+If `flutter build` fails with `The class 'IconData' can't be extended` or
+`CupertinoPageTransitionsBuilder isn't defined`, you are on a stale checkout —
+run `flutter pub get` and make sure you have the latest `main`.
+
+### Minimum Android version changed
+
+The app now requires **Android 7.0 (API 24)**, up from Android 6.0 (API 23).
+
+This is Flutter's floor, not a choice: Flutter's `MinSdkVersionMigration`
+rewrites any `minSdk` between 16 and 23 back to `flutter.minSdkVersion` (= 24)
+on **every build**, so it cannot be pinned lower. Do not put a number back into
+`android/app/build.gradle.kts` — it will silently revert on the next build.
+
+Play Console will show the reduced device count when the first build is
+uploaded. That is expected.
+
+---
+
 ## Do not get this wrong
 
 `--flavor hca` and `--dart-define=BRAND=hca` are **two separate switches**:

@@ -12,3 +12,7 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Kotlin build session cache, created by the Kotlin plugin used from
+# Flutter 3.44 onwards. Build output, never source.
+/.kotlin/

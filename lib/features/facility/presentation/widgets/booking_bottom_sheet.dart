@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import '../../../../core/widgets/action_button.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/repositories/facility_repository.dart';

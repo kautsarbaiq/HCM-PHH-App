@@ -19,7 +19,11 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.8.1
+  # Raised from ^3.8.1 when the project moved off Flutter 3.32. The resolved
+  # dependency set needs Dart >=3.10 (see the `sdks:` block in pubspec.lock),
+  # so an older SDK now fails at `pub get` with a clear message instead of a
+  # confusing compile error. Verified on Flutter 3.44.8 / Dart 3.12.2.
+  sdk: ^3.10.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -37,7 +41,11 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   google_fonts: ^6.3.2
-  phosphor_flutter: ^2.1.0
+  # phosphor_flutter is abandoned at 2.1.0 and cannot compile on Flutter 3.43+:
+  # it subclasses IconData, which Flutter made a final class for icon
+  # tree-shaking. phosphor_icons is the maintained fork - same class names,
+  # same icon names, byte-identical font files, so the UI is unchanged.
+  phosphor_icons: ^3.0.1
   flutter_screenutil: ^5.9.3
   flutter_animate: ^4.5.2
   flutter_riverpod: ^2.5.1
