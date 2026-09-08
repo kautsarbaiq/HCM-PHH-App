@@ -213,3 +213,48 @@ and is linked to the user's account.
 4. **The launcher icon is shared by both flavors.** Currently it is the
    HomeCloudAsia logo, which is correct for this release, but a future PHH
    build would show the wrong icon.
+
+---
+
+## Account deletion (store requirement — must be live before review)
+
+Apple guideline 5.1.1(v) and Google Play's data-deletion policy both require an
+account created in the app to be deletable **from inside the app**. The button
+exists on all three mobile logins (resident, guard, merchant), but it does
+nothing until the backend below is deployed. **Ship these first, or review will
+fail on a dead button** — which is worse than not having it.
+
+```bash
+# 1. database column + push-token guard
+#    run security/36_account_deletion.sql against the HCA project
+
+# 2. the function that actually deletes (needs the service_role key)
+supabase functions deploy delete-my-account --project-ref dogbmkricfvaizjgjanu
+```
+
+Verify after deploying: sign in on a throwaway account, delete it, confirm the
+app returns to the login screen and that the same credentials no longer work.
+
+### What deletion actually does
+
+| Erased | Kept |
+|---|---|
+| Name, email, phone, photo | Bills and payment history |
+| Uploaded documents | Visitor / access logs |
+| Push tokens (notifications stop) | |
+| The login itself (permanently) | |
+
+The account is soft-deleted in `auth.users` and every personal field is
+blanked. It is **not** a row-level `DELETE`: 22 of the 27 foreign keys into
+`profiles` are `RESTRICT`, so a hard delete fails the moment the resident has a
+single bill — and those bills are the management company's accounting records,
+not the resident's to erase. The person becomes unidentifiable; the community's
+books stay intact. Family (sub) logins are deleted along with the parent.
+
+### Still needed for Play Store
+
+Google also requires a **publicly reachable web page** describing account
+deletion, linked from the Play Console listing — reachable *without* installing
+the app. That page does not exist yet. It can live on the marketing site, e.g.
+`https://homecloudasia.com/delete-account`, and must state what is deleted and
+what is retained (the table above).

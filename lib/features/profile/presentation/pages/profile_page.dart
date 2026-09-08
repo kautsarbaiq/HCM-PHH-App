@@ -17,6 +17,7 @@ import '../../../main/presentation/pages/main_navigation_page.dart'
     show hideBillsForTenant;
 import '../../../main/presentation/widgets/app_drawer.dart';
 import '../widgets/family_logins_section.dart';
+import '../../../../core/widgets/delete_account_tile.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../parking/parking_ui.dart';
 import '../../../../theme/app_colors.dart';
@@ -437,6 +438,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       const SizedBox(height: 16),
                       _buildFinanceList(),
                     ],
+                    const SizedBox(height: 32),
+                    // App Store 5.1.1(v) / Play: the account must be
+                    // deletable from inside the app.
+                    const DeleteAccountTile(),
                     const SizedBox(height: 28),
                     const _AppVersionLabel(),
                     const SizedBox(height: 100),

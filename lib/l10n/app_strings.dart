@@ -189,6 +189,48 @@ const Map<String, Map<AppLang, String>> _strings = {
   },
 
   // Profile
+  // App Store 5.1.1(v) / Play data-deletion: the account must be removable
+  // from inside the app, in the user's own language.
+  'account.delete': {
+    AppLang.en: 'Delete Account',
+    AppLang.ms: 'Padam Akaun',
+  },
+  'account.deleteTitle': {
+    AppLang.en: 'Delete your account?',
+    AppLang.ms: 'Padam akaun anda?',
+  },
+  'account.deleteBody': {
+    AppLang.en:
+        'This cannot be undone. Your name, email, phone number and photo are '
+        'permanently erased and you will not be able to sign in again.\n\n'
+        'Your household bills and visitor records stay with the management '
+        'as their own accounting and security records, but they will no '
+        'longer carry your personal details.',
+    AppLang.ms:
+        'Tindakan ini tidak boleh dibatalkan. Nama, e-mel, nombor telefon dan '
+        'gambar anda akan dipadam terus dan anda tidak akan boleh log masuk '
+        'lagi.\n\nBil rumah dan rekod pelawat kekal dengan pihak pengurusan '
+        'sebagai rekod perakaunan dan keselamatan mereka, tetapi tidak lagi '
+        'membawa maklumat peribadi anda.',
+  },
+  'account.deleteFamilyWarning': {
+    AppLang.en:
+        'Any family logins you created will be deleted at the same time.',
+    AppLang.ms:
+        'Sebarang log masuk keluarga yang anda buat akan dipadam serentak.',
+  },
+  'account.deleteConfirmHint': {
+    AppLang.en: 'Type DELETE to confirm',
+    AppLang.ms: 'Taip DELETE untuk sahkan',
+  },
+  'account.deleteCta': {
+    AppLang.en: 'Delete my account',
+    AppLang.ms: 'Padam akaun saya',
+  },
+  'account.deleteFailed': {
+    AppLang.en: 'Could not delete the account.',
+    AppLang.ms: 'Akaun tidak dapat dipadam.',
+  },
   'profile.title': {
     AppLang.en: 'Profile',
     AppLang.ms: 'Profil',

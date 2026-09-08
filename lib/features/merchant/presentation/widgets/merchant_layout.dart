@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/widgets/delete_account_tile.dart';
 import '../../../../core/repositories/merchant_repository.dart';
 import '../../../../theme/app_colors.dart';
 
@@ -164,6 +165,9 @@ class MerchantLayout extends ConsumerWidget {
                       color: AppColors.error, fontWeight: FontWeight.w600)),
               onTap: () => Supabase.instance.client.auth.signOut(),
             ),
+            // App Store 5.1.1(v) / Play: merchants sign in on mobile, so they
+            // need the same in-app deletion path as residents and guards.
+            const DeleteAccountTile(dense: true),
             const SizedBox(height: 12),
           ],
         ),
