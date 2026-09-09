@@ -12,12 +12,12 @@ Verified on:
 
 | | Version |
 |---|---|
-| Flutter | **3.44.8** (stable) |
-| Dart | 3.12.2 |
+| Flutter | **3.47.2** (stable) |
+| Dart | 3.13.2 |
 | Java | 21 (Android Studio's bundled JDK is fine) |
 
 ```bash
-flutter --version   # expect 3.44.8 or newer
+flutter --version   # expect 3.47.2 or newer
 ```
 
 **Do not build on Flutter 3.32.x or older.** The project was originally locked to
@@ -33,6 +33,12 @@ one-way. Two things changed in the SDK between those releases:
 If `flutter build` fails with `The class 'IconData' can't be extended` or
 `CupertinoPageTransitionsBuilder isn't defined`, you are on a stale checkout —
 run `flutter pub get` and make sure you have the latest `main`.
+
+### Minimum iOS version is 15.0
+
+Flutter 3.47 raised the iOS floor: `podhelper.rb` pins the Flutter pod to
+`s.ios.deployment_target = '15.0'`, so the project was moved 13.0 -> 15.0.
+Building against an older target fails at `pod install`.
 
 ### Minimum Android version changed
 

@@ -22,7 +22,7 @@ environment:
   # Raised from ^3.8.1 when the project moved off Flutter 3.32. The resolved
   # dependency set needs Dart >=3.10 (see the `sdks:` block in pubspec.lock),
   # so an older SDK now fails at `pub get` with a clear message instead of a
-  # confusing compile error. Verified on Flutter 3.44.8 / Dart 3.12.2.
+  # confusing compile error. Verified on Flutter 3.47.2 / Dart 3.13.2.
   sdk: ^3.10.0
 
 # Dependencies specify other packages that your package needs in order to work.
