@@ -51,3 +51,5 @@ android/key.properties
 
 # Supabase CLI scratch (records the CLI version it last checked for)
 supabase/.temp/
+# Widget Preview related
+.widget_preview/
