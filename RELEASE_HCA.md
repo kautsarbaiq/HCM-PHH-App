@@ -20,6 +20,11 @@ Verified on:
 flutter --version   # expect 3.47.2 or newer
 ```
 
+**Vercel pins its own copy of Flutter** in `vercel.json` (`buildCommand`
+clones the SDK at a fixed tag). When the SDK version changes, that tag must be
+bumped too, or the web deploy fails with a compile error while local builds
+keep working. It currently says `3.47.2`.
+
 **Do not build on Flutter 3.32.x or older.** The project was originally locked to
 3.32 and would not compile on a newer SDK; that has been fixed, and the fix is
 one-way. Two things changed in the SDK between those releases:
