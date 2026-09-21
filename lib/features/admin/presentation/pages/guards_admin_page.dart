@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/repositories/account_admin_repository.dart';
 import '../../../../core/repositories/admin_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
+import '../../../../core/widgets/set_password_dialog.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -20,6 +22,205 @@ class _GuardsAdminPageState extends ConsumerState<GuardsAdminPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Failed: $error'), backgroundColor: Colors.red),
+    );
+  }
+
+  Future<void> _resetPassword(Profile guard) async {
+    final pw = await showSetPasswordDialog(
+      context,
+      title: 'Reset password',
+      subtitle: 'Set a new password for ${guard.fullName}. Hand it to them '
+          'in person and ask them to change it from their profile.',
+      confirmLabel: 'Reset',
+    );
+    if (pw == null || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref
+          .read(accountAdminRepositoryProvider)
+          .resetPassword(userId: guard.id, newPassword: pw);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Password reset for ${guard.fullName}.'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      _showError(e);
+    }
+  }
+
+  void _showCreateForm() {
+    final name = TextEditingController();
+    final email = TextEditingController();
+    final phone = TextEditingController();
+    final password = TextEditingController();
+    final confirm = TextEditingController();
+    bool obscure = true;
+    bool isSaving = false;
+    String? error;
+
+    InputDecoration deco(String label, {Widget? suffix}) => InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          suffixIcon: suffix,
+        );
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: const Text(
+            'Add security guard',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          content: SizedBox(
+            width: 460,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    key: const Key('guard-name'),
+                    controller: name,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: deco('Full name'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const Key('guard-email'),
+                    controller: email,
+                    keyboardType: TextInputType.emailAddress,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    textCapitalization: TextCapitalization.none,
+                    decoration: deco('Email (used to log in)'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: phone,
+                    keyboardType: TextInputType.phone,
+                    decoration: deco('Phone (optional)'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const Key('guard-password'),
+                    controller: password,
+                    obscureText: obscure,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    decoration: deco(
+                      'Password',
+                      suffix: IconButton(
+                        icon: Icon(obscure
+                            ? Icons.visibility_off
+                            : Icons.visibility),
+                        onPressed: () =>
+                            setDialogState(() => obscure = !obscure),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const Key('guard-confirm'),
+                    controller: confirm,
+                    obscureText: obscure,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    decoration: deco('Confirm password'),
+                  ),
+                  if (error != null) ...[
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        error!,
+                        key: const Key('guard-error'),
+                        style: const TextStyle(
+                          color: AppColors.error,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: isSaving ? null : () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              key: const Key('guard-create'),
+              onPressed: isSaving
+                  ? null
+                  : () async {
+                      if (name.text.trim().length < 2) {
+                        setDialogState(() => error = 'Name is required');
+                        return;
+                      }
+                      if (!email.text.contains('@')) {
+                        setDialogState(() => error = 'Enter a valid email');
+                        return;
+                      }
+                      final pwErr =
+                          validateNewPassword(password.text, confirm.text);
+                      if (pwErr != null) {
+                        setDialogState(() => error = pwErr);
+                        return;
+                      }
+                      final navigator = Navigator.of(context);
+                      setDialogState(() {
+                        error = null;
+                        isSaving = true;
+                      });
+                      try {
+                        await ref
+                            .read(accountAdminRepositoryProvider)
+                            .createGuard(
+                              fullName: name.text,
+                              email: email.text,
+                              password: password.text,
+                              phone: phone.text.trim().isEmpty
+                                  ? null
+                                  : phone.text.trim(),
+                            );
+                        ref.invalidate(adminGuardsProvider);
+                        navigator.pop();
+                      } catch (e) {
+                        setDialogState(() {
+                          isSaving = false;
+                          error = e.toString().replaceFirst('Exception: ', '');
+                        });
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.brand,
+                foregroundColor: Colors.white,
+              ),
+              child: isSaving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Create account'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -92,6 +293,17 @@ class _GuardsAdminPageState extends ConsumerState<GuardsAdminPage> {
                 ),
               ),
               actions: [
+                TextButton.icon(
+                  key: const Key('guard-reset-password'),
+                  onPressed: isSaving
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          _resetPassword(guard);
+                        },
+                  icon: const Icon(Icons.lock_reset_rounded, size: 18),
+                  label: const Text('Reset password'),
+                ),
                 TextButton(
                   onPressed: isSaving ? null : () => Navigator.pop(context),
                   child: const Text(
@@ -189,13 +401,23 @@ class _GuardsAdminPageState extends ConsumerState<GuardsAdminPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
+              const Expanded(
                 child: SectionHeader(
                   title: 'Security Guards',
                   subtitle: 'Manage guard duty status, shift and post',
+                ),
+              ),
+              ElevatedButton.icon(
+                key: const Key('add-guard'),
+                onPressed: _showCreateForm,
+                icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                label: const Text('Add guard'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.brand,
+                  foregroundColor: Colors.white,
                 ),
               ),
             ],

@@ -17,6 +17,7 @@ import '../../../main/presentation/pages/main_navigation_page.dart'
     show hideBillsForTenant;
 import '../../../main/presentation/widgets/app_drawer.dart';
 import '../widgets/family_logins_section.dart';
+import '../../../../core/widgets/change_password_tile.dart';
 import '../../../../core/widgets/delete_account_tile.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../parking/parking_ui.dart';
@@ -439,6 +440,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       _buildFinanceList(),
                     ],
                     const SizedBox(height: 32),
+                    // Lets a resident replace the password the office gave
+                    // them after a reset, so nobody but them ever holds a
+                    // working credential.
+                    const ChangePasswordTile(),
+                    const SizedBox(height: 12),
                     // App Store 5.1.1(v) / Play: the account must be
                     // deletable from inside the app.
                     const DeleteAccountTile(),

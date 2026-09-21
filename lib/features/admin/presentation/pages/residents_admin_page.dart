@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/repositories/account_admin_repository.dart';
 import '../../../../core/repositories/admin_repository.dart';
 import '../../../../core/repositories/document_repository.dart';
 import '../../../../core/repositories/profile_repository.dart';
@@ -9,6 +10,7 @@ import '../../../../core/repositories/storage_repository.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
+import '../../../../core/widgets/set_password_dialog.dart';
 import '../../../../core/widgets/status_pill.dart';
 import '../../../../core/widgets/app_states.dart';
 import '../../../../core/widgets/report_table.dart';
@@ -50,6 +52,36 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
       }
     }
     return 'Assigned';
+  }
+
+  Future<void> _resetPassword(Profile resident) async {
+    final pw = await showSetPasswordDialog(
+      context,
+      title: 'Reset password',
+      subtitle: 'Set a new password for ${resident.fullName}. Hand it to '
+          'them in person and ask them to change it from their profile.',
+      confirmLabel: 'Reset',
+    );
+    if (pw == null || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref
+          .read(accountAdminRepositoryProvider)
+          .resetPassword(userId: resident.id, newPassword: pw);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Password reset for ${resident.fullName}.'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   void _showDetails(Profile resident) {
@@ -128,6 +160,15 @@ class _ResidentsAdminPageState extends ConsumerState<ResidentsAdminPage> {
             ),
           ),
           actions: [
+            TextButton.icon(
+              key: const Key('resident-reset-password'),
+              onPressed: () {
+                Navigator.pop(context);
+                _resetPassword(resident);
+              },
+              icon: const Icon(Icons.lock_reset_rounded, size: 18),
+              label: const Text('Reset password'),
+            ),
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text(

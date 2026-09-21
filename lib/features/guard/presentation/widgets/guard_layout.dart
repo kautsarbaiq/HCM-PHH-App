@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/widgets/language_switcher.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../../core/widgets/change_password_tile.dart';
 import '../../../../core/widgets/delete_account_tile.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../../emergency/presentation/widgets/active_emergency_banner.dart';
@@ -257,6 +258,10 @@ class GuardLayout extends ConsumerWidget {
             ),
             // App Store 5.1.1(v) / Play: guards sign in on mobile too, so the
             // deletion path has to be reachable from their portal as well.
+            const Padding(
+              padding: EdgeInsets.fromLTRB(12, 0, 12, 0),
+              child: ChangePasswordTile(dense: true),
+            ),
             const Padding(
               padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: DeleteAccountTile(dense: true),
