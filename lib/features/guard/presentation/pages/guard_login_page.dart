@@ -30,7 +30,7 @@ class _GuardLoginPageState extends ConsumerState<GuardLoginPage> {
     try {
       final authService = ref.read(authServiceProvider);
       await authService.signInWithEmailPassword(
-        _emailController.text.trim(),
+        _emailController.text.trim().toLowerCase(),
         _passwordController.text,
       );
 
@@ -144,6 +144,9 @@ class _GuardLoginPageState extends ConsumerState<GuardLoginPage> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      textCapitalization: TextCapitalization.none,
                       textInputAction: TextInputAction.next,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -167,6 +170,8 @@ class _GuardLoginPageState extends ConsumerState<GuardLoginPage> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
+                      autocorrect: false,
+                      enableSuggestions: false,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _handleLogin(),
                       validator: (value) {

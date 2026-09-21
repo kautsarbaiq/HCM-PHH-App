@@ -156,7 +156,10 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
   }
 
   void _handleAuth() async {
-    final email = _emailController.text.trim();
+    // Supabase stores emails lower-cased; normalise here too so a phone
+    // keyboard capitalising the first letter can never be the difference
+    // between signing in and "Invalid login credentials".
+    final email = _emailController.text.trim().toLowerCase();
     final password = _passwordController.text;
     if (email.isEmpty || password.isEmpty) {
       _showMessage('Please fill in email and password.');
@@ -530,6 +533,8 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
                             hintText: ref.tr('login.email'),
                             prefixIcon: Icons.email_outlined,
                             controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            isCredential: true,
                           ),
                           const SizedBox(height: 16),
                           GlassTextField(

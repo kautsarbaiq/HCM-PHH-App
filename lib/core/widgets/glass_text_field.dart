@@ -11,6 +11,14 @@ class GlassTextField extends StatefulWidget {
   final bool isPassword;
   final ValueChanged<String>? onChanged;
 
+  /// True for login credentials. Turns off every keyboard "help" that
+  /// silently rewrites what the user typed: autocorrect, word suggestions and
+  /// first-letter capitalisation. Android keyboards do all three in a plain
+  /// text field, and a single inserted space or swapped letter makes Supabase
+  /// answer "Invalid login credentials" even though the person typed the
+  /// right thing. Password fields are always treated as credentials.
+  final bool isCredential;
+
   const GlassTextField({
     super.key,
     required this.hintText,
@@ -19,6 +27,7 @@ class GlassTextField extends StatefulWidget {
     this.keyboardType = TextInputType.text,
     this.maxLines = 1,
     this.isPassword = false,
+    this.isCredential = false,
     this.onChanged,
   });
 
@@ -86,6 +95,14 @@ class _GlassTextFieldState extends State<GlassTextField> {
             keyboardType: widget.keyboardType,
             maxLines: widget.isPassword ? 1 : widget.maxLines,
             obscureText: widget.isPassword && _obscured,
+            // Revealing a password with the eye button turns it into a plain
+            // field, at which point the keyboard would start autocorrecting
+            // it — so these are pinned off rather than left to obscureText.
+            autocorrect: !(widget.isPassword || widget.isCredential),
+            enableSuggestions: !(widget.isPassword || widget.isCredential),
+            textCapitalization: (widget.isPassword || widget.isCredential)
+                ? TextCapitalization.none
+                : TextCapitalization.sentences,
             onChanged: widget.onChanged,
             style: const TextStyle(
               fontSize: 15,

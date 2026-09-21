@@ -26,7 +26,7 @@ class _AdminLoginPageState extends ConsumerState<AdminLoginPage> {
     try {
       final authService = ref.read(authServiceProvider);
       await authService.signInWithEmailPassword(
-        _emailController.text.trim(),
+        _emailController.text.trim().toLowerCase(),
         _passwordController.text,
       );
 
@@ -134,6 +134,10 @@ class _AdminLoginPageState extends ConsumerState<AdminLoginPage> {
                           const SizedBox(height: 8),
                           TextField(
                             controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            textCapitalization: TextCapitalization.none,
                             decoration: _inputDecoration('mail@simmmple.com'),
                           ),
                           const SizedBox(height: 18),
@@ -151,6 +155,8 @@ class _AdminLoginPageState extends ConsumerState<AdminLoginPage> {
                           TextField(
                             controller: _passwordController,
                             obscureText: true,
+                            autocorrect: false,
+                            enableSuggestions: false,
                             decoration: _inputDecoration('Min. 8 characters'),
                           ),
                           const SizedBox(height: 26),
