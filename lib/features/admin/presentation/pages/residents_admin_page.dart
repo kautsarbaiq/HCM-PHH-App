@@ -783,6 +783,53 @@ class _ResidentEditDialogState extends ConsumerState<_ResidentEditDialog> {
         ),
       ),
       actions: [
+        // The pencil is where the office looks first, so the reset lives here
+        // as well as in the details dialog. Opens on top of this dialog and
+        // leaves it open, so the house/status edits are not lost.
+        TextButton.icon(
+          key: const Key('resident-edit-reset-password'),
+          onPressed: _isLoading
+              ? null
+              : () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final pw = await showSetPasswordDialog(
+                    context,
+                    title: 'Reset password',
+                    subtitle: 'Set a new password for '
+                        '${widget.resident.fullName}. Hand it to them in '
+                        'person and ask them to change it from their profile.',
+                    confirmLabel: 'Reset',
+                  );
+                  if (pw == null || !mounted) return;
+                  try {
+                    await ref
+                        .read(accountAdminRepositoryProvider)
+                        .resetPassword(
+                          userId: widget.resident.id,
+                          newPassword: pw,
+                        );
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Password reset for ${widget.resident.fullName}.',
+                        ),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
+                  } catch (e) {
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          e.toString().replaceFirst('Exception: ', ''),
+                        ),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                  }
+                },
+          icon: const Icon(Icons.lock_reset_rounded, size: 18),
+          label: const Text('Reset password'),
+        ),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
