@@ -1,34 +1,49 @@
 {
   "framework": null,
   "installCommand": "echo 'no npm install needed for Flutter'",
-  "buildCommand": "git clone https://github.com/flutter/flutter.git --depth 1 -b 3.47.2 && flutter/bin/flutter config --enable-web && flutter/bin/flutter build web --release --pwa-strategy=none --dart-define=BRAND=${BRAND:-phh} && bash scripts/apply_web_brand.sh ${BRAND:-phh}",
+  "buildCommand": "bash scripts/vercel_build.sh",
   "outputDirectory": "build/web",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/flutter_service_worker.js",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
       ]
     },
     {
       "source": "/version.json",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
       ]
     },
     {
       "source": "/index.html",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
       ]
     },
     {
       "source": "/",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
       ]
     }
   ]
