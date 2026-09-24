@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/user_role.dart';
+import '../../../../core/services/auth_error_text.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/gradient_background.dart';
@@ -36,13 +37,13 @@ class _AdminLoginPageState extends ConsumerState<AdminLoginPage> {
     } on AuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        SnackBar(content: Text(friendlyAuthError(e)), backgroundColor: Colors.red),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unexpected error occurred'),
+        SnackBar(
+          content: Text(friendlyAuthError(e)),
           backgroundColor: Colors.red,
         ),
       );

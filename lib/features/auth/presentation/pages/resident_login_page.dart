@@ -16,6 +16,7 @@ import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/glass_text_field.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/language_switcher.dart';
+import '../../../../core/services/auth_error_text.dart';
 import '../../../../l10n/app_strings.dart';
 
 class ResidentLoginPage extends ConsumerStatefulWidget {
@@ -137,23 +138,7 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
   }
 
   /// Translate raw GoTrue errors into something the user can act on.
-  String _friendlyAuthError(AuthException e) {
-    final m = e.message.toLowerCase();
-    if (m.contains('invalid login credentials')) {
-      return 'Email or password is incorrect. Please check your email is '
-          'typed correctly (for example: name@gmail.com).';
-    }
-    if (m.contains('email not confirmed')) {
-      // Accounts are activated by the management office, so point the
-      // resident there instead of at their email inbox.
-      return 'Please contact the management office for approval of your '
-          'account.';
-    }
-    if (m.contains('already registered')) {
-      return 'This email is already registered — please log in instead.';
-    }
-    return e.message;
-  }
+  String _friendlyAuthError(AuthException e) => friendlyAuthError(e);
 
   void _handleAuth() async {
     // Supabase stores emails lower-cased; normalise here too so a phone
@@ -313,7 +298,7 @@ class _ResidentLoginPageState extends ConsumerState<ResidentLoginPage> {
       _showMessage(_friendlyAuthError(e));
     } catch (e) {
       if (!mounted) return;
-      _showMessage('Unexpected error occurred');
+      _showMessage(friendlyAuthError(e));
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
