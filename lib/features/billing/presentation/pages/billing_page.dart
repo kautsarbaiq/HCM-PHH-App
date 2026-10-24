@@ -12,6 +12,7 @@ import '../../../../core/widgets/gradient_background.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../theme/app_colors.dart';
 import '../widgets/bill_card.dart';
+import '../widgets/receipt_bill_card.dart';
 import '../widgets/transaction_history_item.dart';
 
 // State Management
@@ -282,21 +283,19 @@ class BillingPage extends ConsumerWidget {
             separatorBuilder: (context, index) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
               final bill = active[index];
-              return BillCard(
-                title: bill.title,
-                period: bill.period?.isNotEmpty == true
-                    ? bill.period!
-                    : 'Invoice ${bill.invoiceNumber}',
-                amount: bill.amount,
-                status: bill.status == 'overdue' ? 'Overdue' : 'Unpaid',
-                dueDate: _formatDate(bill.dueDate),
+              return ReceiptBillCard(
+                bill: bill,
+                dueDateLabel: _formatDate(bill.dueDate),
                 onPay: () {
-                  // Real payment requires an external payment gateway (e.g. Stripe/
-                  // local provider) + a server webhook to mark the bill paid.
+                  // Real card payment still needs a gateway + a server
+                  // webhook. Until then the receipt upload below IS the
+                  // payment path, so point people at it instead of leaving
+                  // them at a dead end.
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text(
-                        'Online payment for "${bill.title}" is not yet connected to a payment provider.',
+                        'Card payment is not connected yet. Please transfer to '
+                        'the management account, then upload your receipt below.',
                       ),
                       backgroundColor: AppColors.primaryBlue,
                     ),

@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -10,11 +11,21 @@ class Billing {
   final String title;
   final double amount;
   final String? dueDate; // ISO date (yyyy-MM-dd)
-  final String status; // unpaid | paid | overdue
+  /// unpaid | submitted | paid | overdue
+  ///
+  /// 'submitted' means the resident uploaded proof of a bank transfer but
+  /// nobody in the office has confirmed the money arrived yet. It is
+  /// deliberately not 'paid': a photo is a claim, not a settled debt.
+  final String status;
   final String? period;
   final String? paidAt;
   final String residentId;
   final String houseId;
+
+  /// Storage path in the private `payment_receipts` bucket, not a URL.
+  /// Open it with [BillingRepository.receiptSignedUrl].
+  final String? receiptUrl;
+  final String? receiptUploadedAt;
 
   // Joined
   final Profile? resident;
@@ -30,8 +41,15 @@ class Billing {
     this.paidAt,
     required this.residentId,
     required this.houseId,
+    this.receiptUrl,
+    this.receiptUploadedAt,
     this.resident,
   });
+
+  bool get hasReceipt => (receiptUrl ?? '').isNotEmpty;
+
+  /// Waiting for someone in the office to check the receipt.
+  bool get awaitingConfirmation => status == 'submitted';
 
   factory Billing.fromJson(Map<String, dynamic> json) {
     final rawAmount = json['amount'];
@@ -48,6 +66,8 @@ class Billing {
       paidAt: json['paid_at'] as String?,
       residentId: json['resident_id'] as String,
       houseId: json['house_id'] as String,
+      receiptUrl: json['receipt_url'] as String?,
+      receiptUploadedAt: json['receipt_uploaded_at'] as String?,
       resident: json['resident'] != null
           ? Profile.fromJson(json['resident'] as Map<String, dynamic>)
           : null,
@@ -106,6 +126,79 @@ class BillingRepository {
 
       return (response as List).map((json) => Billing.fromJson(json)).toList();
     });
+  }
+
+  static const _receiptBucket = 'payment_receipts';
+
+  /// Uploads the resident's proof of a bank transfer and moves the bill to
+  /// 'submitted'.
+  ///
+  /// The status change goes through the `submit_payment_receipt` SQL function
+  /// rather than a plain update: residents must not hold a general UPDATE
+  /// grant on billings, or the same grant would let them set their own bills
+  /// to 'paid'. The function checks ownership and refuses an already-paid
+  /// bill.
+  ///
+  /// The file is stored under `<user id>/...` because the bucket's policies
+  /// key off that first folder segment — a resident can only ever read or
+  /// replace files inside their own folder.
+  Future<void> submitReceipt({
+    required String billingId,
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    final uid = _supabase.auth.currentUser?.id;
+    if (uid == null) throw Exception('Not signed in');
+
+    final ext = fileName.contains('.') ? fileName.split('.').last : 'jpg';
+    final path = '$uid/$billingId-${DateTime.now().millisecondsSinceEpoch}.$ext';
+
+    await SessionGuard.run(() async {
+      await _supabase.storage.from(_receiptBucket).uploadBinary(
+            path,
+            bytes,
+            fileOptions: FileOptions(
+              upsert: true,
+              contentType: _contentTypeFor(ext),
+            ),
+          );
+      await _supabase.rpc('submit_payment_receipt', params: {
+        'p_billing_id': billingId,
+        'p_receipt_path': path,
+      });
+    });
+  }
+
+  /// Receipts live in a private bucket — a receipt shows a bank account and a
+  /// name, so it must not be readable by guessing a URL. Management opens one
+  /// through a short-lived signed link instead.
+  Future<String> receiptSignedUrl(String path) {
+    return SessionGuard.run(
+      () => _supabase.storage.from(_receiptBucket).createSignedUrl(path, 3600),
+    );
+  }
+
+  /// Management confirms the money arrived. Separate from the resident's
+  /// upload on purpose: only a human decision clears a debt.
+  Future<void> confirmPayment(String billingId) {
+    return SessionGuard.run(
+      () => _supabase.rpc('confirm_payment', params: {
+        'p_billing_id': billingId,
+      }),
+    );
+  }
+
+  static String _contentTypeFor(String ext) {
+    switch (ext.toLowerCase()) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'png':
+        return 'image/png';
+      case 'webp':
+        return 'image/webp';
+      default:
+        return 'image/jpeg';
+    }
   }
 
   Future<void> createBilling(Billing billing) async {

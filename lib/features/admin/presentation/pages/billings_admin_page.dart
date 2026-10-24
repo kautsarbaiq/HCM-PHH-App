@@ -10,6 +10,9 @@ import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/premium_card.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/status_pill.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../billing/presentation/widgets/receipt_bill_card.dart'
+    show formatReceiptStamp;
 import '../../../../core/widgets/app_states.dart';
 import '../../../../core/export/table_export.dart';
 
@@ -64,6 +67,10 @@ String _formatDate(String? iso) {
   switch (status) {
     case 'paid':
       return (label: 'Paid', color: AppColors.success);
+    case 'submitted':
+      // Money claimed but not yet verified by a human — deliberately not
+      // 'Paid', so nobody reads an uploaded photo as a settled debt.
+      return (label: 'Submitted', color: AppColors.accentSky);
     case 'overdue':
       return (label: 'Overdue', color: AppColors.warning);
     case 'unpaid':
@@ -82,7 +89,7 @@ class BillingsAdminPage extends ConsumerStatefulWidget {
 class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
   // ---- Boss batch 08/08 point 13: filters, search and export ---------------
   final _search = TextEditingController();
-  String _statusFilter = 'all'; // all | paid | unpaid | overdue
+  String _statusFilter = 'all'; // all | paid | submitted | unpaid | overdue
   int _ageingDays = 0; // 0 = off, else unpaid for more than N days
   DateTime? _from;
   DateTime? _to;
@@ -902,6 +909,128 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
     );
   }
 
+  /// Opens the resident's proof of transfer and lets the office confirm it.
+  ///
+  /// Receipts sit in a PRIVATE bucket — one shows a bank account and a name —
+  /// so this fetches a short-lived signed URL rather than a public link.
+  Future<void> _showReceipt(Billing billing) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final repo = ref.read(billingRepositoryProvider);
+
+    String? url;
+    try {
+      url = await repo.receiptSignedUrl(billing.receiptUrl!);
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Could not open the receipt: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
+
+    final isPdf = billing.receiptUrl!.toLowerCase().endsWith('.pdf');
+    final alreadyPaid = billing.status == 'paid';
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Payment receipt — ${billing.invoiceNumber}',
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: SizedBox(
+          width: 520,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Sent ${formatReceiptStamp(billing.receiptUploadedAt)}',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                if (isPdf)
+                  // A PDF cannot be shown inline here; hand it to the browser.
+                  OutlinedButton.icon(
+                    onPressed: () => launchUrl(
+                      Uri.parse(url!),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                    icon: const Icon(Icons.picture_as_pdf_rounded, size: 18),
+                    label: const Text('Open receipt (PDF)'),
+                  )
+                else
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      url!,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text('Could not load the receipt image.'),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Close', style: TextStyle(color: Colors.grey)),
+          ),
+          if (!alreadyPaid)
+            ElevatedButton.icon(
+              key: const Key('confirm-payment'),
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                try {
+                  await repo.confirmPayment(billing.id);
+                  ref.invalidate(adminBillingsProvider);
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        '${billing.invoiceNumber} marked as paid.',
+                      ),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                } catch (e) {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        e.toString().replaceFirst('Exception: ', ''),
+                      ),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.check_circle_rounded, size: 18),
+              label: const Text('Mark as paid'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                foregroundColor: Colors.white,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   void _deleteBilling(Billing billing) {
     showDialog(
       context: context,
@@ -1213,6 +1342,22 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
                                                 mainAxisAlignment:
                                                     MainAxisAlignment.end,
                                                 children: [
+                                                  if (b.hasReceipt)
+                                                    IconButton(
+                                                      key: const Key(
+                                                          'view-receipt'),
+                                                      icon: const Icon(
+                                                        Icons
+                                                            .receipt_long_rounded,
+                                                        color: AppColors
+                                                            .accentSky,
+                                                        size: 18,
+                                                      ),
+                                                      onPressed: () =>
+                                                          _showReceipt(b),
+                                                      tooltip:
+                                                          'View payment receipt',
+                                                    ),
                                                   IconButton(
                                                     icon: const Icon(
                                                       Icons.visibility,
@@ -1324,6 +1469,17 @@ class _BillingsAdminPageState extends ConsumerState<BillingsAdminPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              if (b.hasReceipt)
+                IconButton(
+                  key: const Key('view-receipt-card'),
+                  icon: const Icon(
+                    Icons.receipt_long_rounded,
+                    color: AppColors.accentSky,
+                    size: 20,
+                  ),
+                  onPressed: () => _showReceipt(b),
+                  tooltip: 'View payment receipt',
+                ),
               IconButton(
                 icon: const Icon(
                   Icons.visibility,
