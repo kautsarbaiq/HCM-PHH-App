@@ -72,9 +72,16 @@ SECURITY DEFINER
 SET search_path = public
 AS $function$
 DECLARE
+  v_caller uuid := auth.uid();
   v_owner uuid;
   v_status text;
 BEGIN
+  -- Must come first: with v_caller NULL every comparison below evaluates to
+  -- NULL, an IF on NULL does not fire, and the guards are skipped entirely.
+  IF v_caller IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
   SELECT b.resident_id, b.status INTO v_owner, v_status
   FROM public.billings b
   WHERE b.id = p_billing_id;
@@ -85,7 +92,8 @@ BEGIN
 
   -- The bill may belong to the household's main account rather than the
   -- signed-in sub-login, so accept either (mirrors the billings read policy).
-  IF v_owner <> auth.uid() AND v_owner <> public.my_household_id() THEN
+  IF v_owner IS DISTINCT FROM v_caller
+     AND v_owner IS DISTINCT FROM public.my_household_id() THEN
     RAISE EXCEPTION 'That bill does not belong to you';
   END IF;
 
@@ -114,17 +122,23 @@ SECURITY DEFINER
 SET search_path = public
 AS $function$
 DECLARE
+  v_caller uuid := auth.uid();
   v_role text;
 BEGIN
-  SELECT role INTO v_role FROM public.profiles WHERE id = auth.uid();
-  IF v_role NOT IN ('admin', 'super_admin') THEN
+  IF v_caller IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  SELECT role INTO v_role FROM public.profiles WHERE id = v_caller;
+  -- COALESCE: a caller with no profile row must be unauthorised, not NULL.
+  IF COALESCE(v_role, '') NOT IN ('admin', 'super_admin') THEN
     RAISE EXCEPTION 'Only management can confirm a payment';
   END IF;
 
   UPDATE public.billings
   SET status = 'paid',
       paid_at = now(),
-      payment_confirmed_by = auth.uid()
+      payment_confirmed_by = v_caller
   WHERE id = p_billing_id;
 END;
 $function$;
