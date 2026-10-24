@@ -46,51 +46,18 @@ CREATE INDEX IF NOT EXISTS billings_submitted_idx
   WHERE status = 'submitted';
 
 -- ---------------------------------------------------------------------------
--- 2) Storage bucket — PRIVATE
---    A receipt shows a bank account and a name. It must never be readable by
---    guessing a URL, so this bucket is private and the app uses signed URLs.
 -- ---------------------------------------------------------------------------
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('payment_receipts', 'payment_receipts', false)
-ON CONFLICT (id) DO UPDATE SET public = false;
-
--- Residents upload into a folder named after their own user id, so one
--- resident can never read or overwrite another's receipt.
-DROP POLICY IF EXISTS receipts_owner_insert ON storage.objects;
-CREATE POLICY receipts_owner_insert ON storage.objects
-  FOR INSERT TO authenticated
-  WITH CHECK (
-    bucket_id = 'payment_receipts'
-    AND (storage.foldername(name))[1] = auth.uid()::text
-  );
-
-DROP POLICY IF EXISTS receipts_owner_read ON storage.objects;
-CREATE POLICY receipts_owner_read ON storage.objects
-  FOR SELECT TO authenticated
-  USING (
-    bucket_id = 'payment_receipts'
-    AND (
-      (storage.foldername(name))[1] = auth.uid()::text
-      -- Management must be able to open any receipt to verify it.
-      OR EXISTS (
-        SELECT 1 FROM public.profiles p
-        WHERE p.id = auth.uid() AND p.role IN ('admin', 'super_admin')
-      )
-    )
-  );
-
--- A resident may replace their own receipt (wrong photo, unreadable scan)
--- but only while the office has not yet confirmed the payment.
-DROP POLICY IF EXISTS receipts_owner_update ON storage.objects;
-CREATE POLICY receipts_owner_update ON storage.objects
-  FOR UPDATE TO authenticated
-  USING (
-    bucket_id = 'payment_receipts'
-    AND (storage.foldername(name))[1] = auth.uid()::text
-  );
-
+-- ORDER NOTE
+--   The storage section is deliberately LAST. On the first run of this file
+--   the columns landed but the functions did not, which means the editor
+--   stopped partway — and everything before the functions was storage DDL.
+--   Policies on storage.objects need ownership of a table the SQL editor does
+--   not always own, so if that section fails now, the app still works: the
+--   columns and both functions are already in, and the bucket can be created
+--   from Storage -> New bucket in the dashboard instead.
 -- ---------------------------------------------------------------------------
--- 3) Submitting a receipt
+
+-- 2) Submitting a receipt
 --    SECURITY DEFINER so a resident can move their own bill to 'submitted'
 --    without being granted a general UPDATE on billings — otherwise the same
 --    grant would let them set it to 'paid' themselves.
@@ -138,7 +105,7 @@ GRANT EXECUTE ON FUNCTION public.submit_payment_receipt(uuid, text)
   TO authenticated;
 
 -- ---------------------------------------------------------------------------
--- 4) Confirming payment — management only
+-- 3) Confirming payment — management only
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.confirm_payment(p_billing_id uuid)
 RETURNS void
@@ -163,3 +130,48 @@ END;
 $function$;
 
 GRANT EXECUTE ON FUNCTION public.confirm_payment(uuid) TO authenticated;
+
+-- 4) Storage bucket — PRIVATE
+--    A receipt shows a bank account and a name. It must never be readable by
+--    guessing a URL, so this bucket is private and the app uses signed URLs.
+-- ---------------------------------------------------------------------------
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('payment_receipts', 'payment_receipts', false)
+ON CONFLICT (id) DO UPDATE SET public = false;
+
+-- Residents upload into a folder named after their own user id, so one
+-- resident can never read or overwrite another's receipt.
+DROP POLICY IF EXISTS receipts_owner_insert ON storage.objects;
+CREATE POLICY receipts_owner_insert ON storage.objects
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    bucket_id = 'payment_receipts'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+DROP POLICY IF EXISTS receipts_owner_read ON storage.objects;
+CREATE POLICY receipts_owner_read ON storage.objects
+  FOR SELECT TO authenticated
+  USING (
+    bucket_id = 'payment_receipts'
+    AND (
+      (storage.foldername(name))[1] = auth.uid()::text
+      -- Management must be able to open any receipt to verify it.
+      OR EXISTS (
+        SELECT 1 FROM public.profiles p
+        WHERE p.id = auth.uid() AND p.role IN ('admin', 'super_admin')
+      )
+    )
+  );
+
+-- A resident may replace their own receipt (wrong photo, unreadable scan)
+-- but only while the office has not yet confirmed the payment.
+DROP POLICY IF EXISTS receipts_owner_update ON storage.objects;
+CREATE POLICY receipts_owner_update ON storage.objects
+  FOR UPDATE TO authenticated
+  USING (
+    bucket_id = 'payment_receipts'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+-- ---------------------------------------------------------------------------
